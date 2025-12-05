@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
@@ -24,7 +25,7 @@ function viteStaticCopyPyodide() {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), viteStaticCopyPyodide()],
+  plugins: [react(), tailwindcss(), viteStaticCopyPyodide()],
   optimizeDeps: {
     exclude: ['pyodide'],
   },

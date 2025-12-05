@@ -28,26 +28,46 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, onPatternO
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
   const [stageScale, setStageScale] = useState(1);
   const [patternOffset, setPatternOffset] = useState({ x: 0, y: 0 });
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const initialScaleRef = useRef<number>(1);
+
+  // Track container size
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const updateSize = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.clientWidth;
+        const height = containerRef.current.clientHeight;
+        setContainerSize({ width, height });
+      }
+    };
+
+    // Initial size
+    updateSize();
+
+    // Watch for resize
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(containerRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, []);
 
   // Calculate initial scale when pattern or hoop changes
   useEffect(() => {
-    if (!pesData || !containerRef.current) return;
+    if (!pesData || containerSize.width === 0) return;
 
     const { bounds } = pesData;
     const viewWidth = machineInfo ? machineInfo.maxWidth : bounds.maxX - bounds.minX;
     const viewHeight = machineInfo ? machineInfo.maxHeight : bounds.maxY - bounds.minY;
 
-    const width = containerRef.current.offsetWidth;
-    const height = containerRef.current.offsetHeight;
-
-    const initialScale = calculateInitialScale(width, height, viewWidth, viewHeight);
+    const initialScale = calculateInitialScale(containerSize.width, containerSize.height, viewWidth, viewHeight);
     initialScaleRef.current = initialScale;
 
     // Set initial scale and center position when pattern loads
     setStageScale(initialScale);
-    setStagePos({ x: width / 2, y: height / 2 });
-  }, [pesData, machineInfo]);
+    setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
+  }, [pesData, machineInfo, containerSize]);
 
   // Wheel zoom handler
   const handleWheel = useCallback((e: Konva.KonvaEventObject<WheelEvent>) => {
@@ -84,21 +104,54 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, onPatternO
 
   // Zoom control handlers
   const handleZoomIn = useCallback(() => {
-    const newScale = Math.min(stageScale * 1.2, 10);
+    const oldScale = stageScale;
+    const newScale = Math.min(oldScale * 1.2, 10);
+
+    // Zoom towards center of viewport
+    const centerX = containerSize.width / 2;
+    const centerY = containerSize.height / 2;
+
+    const mousePointTo = {
+      x: (centerX - stagePos.x) / oldScale,
+      y: (centerY - stagePos.y) / oldScale,
+    };
+
+    const newPos = {
+      x: centerX - mousePointTo.x * newScale,
+      y: centerY - mousePointTo.y * newScale,
+    };
+
     setStageScale(newScale);
-  }, [stageScale]);
+    setStagePos(newPos);
+  }, [stageScale, stagePos, containerSize]);
 
   const handleZoomOut = useCallback(() => {
-    const newScale = Math.max(stageScale / 1.2, 0.1);
+    const oldScale = stageScale;
+    const newScale = Math.max(oldScale / 1.2, 0.1);
+
+    // Zoom towards center of viewport
+    const centerX = containerSize.width / 2;
+    const centerY = containerSize.height / 2;
+
+    const mousePointTo = {
+      x: (centerX - stagePos.x) / oldScale,
+      y: (centerY - stagePos.y) / oldScale,
+    };
+
+    const newPos = {
+      x: centerX - mousePointTo.x * newScale,
+      y: centerY - mousePointTo.y * newScale,
+    };
+
     setStageScale(newScale);
-  }, [stageScale]);
+    setStagePos(newPos);
+  }, [stageScale, stagePos, containerSize]);
 
   const handleZoomReset = useCallback(() => {
-    if (!containerRef.current) return;
     const initialScale = initialScaleRef.current;
     setStageScale(initialScale);
-    setStagePos({ x: containerRef.current.offsetWidth / 2, y: containerRef.current.offsetHeight / 2 });
-  }, []);
+    setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
+  }, [containerSize]);
 
   // Pattern drag handlers
   const handlePatternDragEnd = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
@@ -169,13 +222,13 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, onPatternO
   }, [renderPatternLayer]);
 
   return (
-    <div className="canvas-panel">
-      <h2>Pattern Preview</h2>
-      <div className="canvas-container" ref={containerRef} style={{ width: '100%', height: '600px' }}>
-        {containerRef.current && (
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <h2 className="text-xl font-semibold mb-4 pb-2 border-b-2 border-gray-300">Pattern Preview</h2>
+      <div className="relative w-full h-[600px] border border-gray-300 rounded bg-gray-50 overflow-hidden" ref={containerRef}>
+        {containerSize.width > 0 && (
           <Stage
-            width={containerRef.current.offsetWidth}
-            height={containerRef.current.offsetHeight}
+            width={containerSize.width}
+            height={containerSize.height}
             x={stagePos.x}
             y={stagePos.y}
             scaleX={stageScale}
@@ -235,7 +288,7 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, onPatternO
 
         {/* Placeholder overlay when no pattern is loaded */}
         {!pesData && (
-          <div className="canvas-placeholder">
+          <div className="flex items-center justify-center h-[600px] text-gray-600 italic">
             Load a PES file to preview the pattern
           </div>
         )}
@@ -244,46 +297,46 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, onPatternO
         {pesData && (
           <>
             {/* Thread Legend Overlay */}
-            <div className="canvas-legend">
-              <h4>Threads</h4>
+            <div className="absolute top-2.5 left-2.5 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg z-10 max-w-[150px]">
+              <h4 className="m-0 mb-2 text-[13px] font-semibold text-gray-900 border-b border-gray-300 pb-1.5">Threads</h4>
               {pesData.threads.map((thread, index) => (
-                <div key={index} className="legend-item">
+                <div key={index} className="flex items-center gap-2 mb-1.5 last:mb-0">
                   <div
-                    className="legend-swatch"
+                    className="w-5 h-5 rounded border border-black flex-shrink-0"
                     style={{ backgroundColor: thread.hex }}
                   />
-                  <span className="legend-label">Thread {index + 1}</span>
+                  <span className="text-xs text-gray-900">Thread {index + 1}</span>
                 </div>
               ))}
             </div>
 
             {/* Pattern Dimensions Overlay */}
-            <div className="canvas-dimensions">
+            <div className="absolute bottom-[165px] right-5 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg z-[11] text-sm font-semibold text-gray-900">
               {((pesData.bounds.maxX - pesData.bounds.minX) / 10).toFixed(1)} x{' '}
               {((pesData.bounds.maxY - pesData.bounds.minY) / 10).toFixed(1)} mm
             </div>
 
             {/* Pattern Offset Indicator */}
-            <div className="canvas-offset-info">
-              <div className="offset-label">Pattern Position:</div>
-              <div className="offset-value">
+            <div className="absolute bottom-20 right-5 bg-white/95 backdrop-blur-sm p-2.5 px-3.5 rounded-lg shadow-lg z-[11] min-w-[180px]">
+              <div className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Pattern Position:</div>
+              <div className="text-[13px] font-semibold text-blue-600 mb-1">
                 X: {(patternOffset.x / 10).toFixed(1)}mm, Y: {(patternOffset.y / 10).toFixed(1)}mm
               </div>
-              <div className="offset-hint">
+              <div className="text-[10px] text-gray-600 italic">
                 Drag pattern to move • Drag background to pan
               </div>
             </div>
 
             {/* Zoom Controls Overlay */}
-            <div className="zoom-controls">
-              <button className="zoom-btn" onClick={handleZoomIn} title="Zoom In">
+            <div className="absolute bottom-5 right-5 flex gap-2 items-center bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg z-10">
+              <button className="w-8 h-8 p-0 text-lg font-bold border border-gray-300 bg-white rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-600/30 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleZoomIn} title="Zoom In">
                 +
               </button>
-              <span className="zoom-level">{Math.round(stageScale * 100)}%</span>
-              <button className="zoom-btn" onClick={handleZoomOut} title="Zoom Out">
+              <span className="min-w-[50px] text-center text-[13px] font-semibold text-gray-900 select-none">{Math.round(stageScale * 100)}%</span>
+              <button className="w-8 h-8 p-0 text-lg font-bold border border-gray-300 bg-white rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-600/30 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleZoomOut} title="Zoom Out">
                 −
               </button>
-              <button className="zoom-btn zoom-reset" onClick={handleZoomReset} title="Reset Zoom">
+              <button className="w-8 h-8 p-0 text-xl font-bold border border-gray-300 bg-white rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-600/30 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed ml-1" onClick={handleZoomReset} title="Reset Zoom">
                 ⟲
               </button>
             </div>

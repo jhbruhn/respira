@@ -62,43 +62,43 @@ export function FileUpload({
   }, [pesData, fileName, onUpload, patternOffset]);
 
   return (
-    <div className="file-upload-panel">
-      <h2>Pattern File</h2>
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <h2 className="text-xl font-semibold mb-4 pb-2 border-b-2 border-gray-300">Pattern File</h2>
 
-      <div className="upload-controls">
+      <div>
         <input
           type="file"
           accept=".pes"
           onChange={handleFileChange}
           id="file-input"
-          className="file-input"
+          className="hidden"
           disabled={!pyodideReady || isLoading}
         />
-        <label htmlFor="file-input" className={`btn-secondary ${!pyodideReady || isLoading ? 'disabled' : ''}`}>
+        <label htmlFor="file-input" className={`inline-block px-6 py-3 bg-gray-600 text-white rounded font-semibold text-sm cursor-pointer transition-all ${!pyodideReady || isLoading ? 'opacity-50 cursor-not-allowed grayscale-[0.3]' : 'hover:bg-gray-700 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0'}`}>
           {isLoading ? 'Loading...' : !pyodideReady ? 'Initializing...' : 'Choose PES File'}
         </label>
 
         {pesData && (
-          <div className="pattern-info">
-            <h3>Pattern Details</h3>
-            <div className="detail-row">
-              <span className="label">Total Stitches:</span>
-              <span className="value">{pesData.stitchCount}</span>
+          <div className="mt-4">
+            <h3 className="text-base font-semibold my-4">Pattern Details</h3>
+            <div className="flex justify-between py-2 border-b border-gray-300">
+              <span className="font-medium text-gray-600">Total Stitches:</span>
+              <span className="font-semibold">{pesData.stitchCount}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Colors:</span>
-              <span className="value">{pesData.colorCount}</span>
+            <div className="flex justify-between py-2 border-b border-gray-300">
+              <span className="font-medium text-gray-600">Colors:</span>
+              <span className="font-semibold">{pesData.colorCount}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Size:</span>
-              <span className="value">
+            <div className="flex justify-between py-2 border-b border-gray-300">
+              <span className="font-medium text-gray-600">Size:</span>
+              <span className="font-semibold">
                 {((pesData.bounds.maxX - pesData.bounds.minX) / 10).toFixed(1)} x{' '}
                 {((pesData.bounds.maxY - pesData.bounds.minY) / 10).toFixed(1)} mm
               </span>
             </div>
-            <div className="detail-row">
-              <span className="label">Bounds:</span>
-              <span className="value">
+            <div className="flex justify-between py-2">
+              <span className="font-medium text-gray-600">Bounds:</span>
+              <span className="font-semibold">
                 ({pesData.bounds.minX}, {pesData.bounds.minY}) to (
                 {pesData.bounds.maxX}, {pesData.bounds.maxY})
               </span>
@@ -110,7 +110,7 @@ export function FileUpload({
           <button
             onClick={handleUpload}
             disabled={!isConnected || uploadProgress > 0}
-            className="btn-primary"
+            className="mt-4 px-6 py-3 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]"
           >
             {uploadProgress > 0
               ? `Uploading... ${uploadProgress.toFixed(0)}%`
@@ -119,15 +119,15 @@ export function FileUpload({
         )}
 
         {pesData && !canUploadPattern(machineStatus) && (
-          <div className="status-message warning">
+          <div className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded border border-yellow-200 my-4 font-medium">
             Cannot upload pattern while machine is {getMachineStateCategory(machineStatus)}
           </div>
         )}
 
         {uploadProgress > 0 && uploadProgress < 100 && (
-          <div className="progress-bar">
+          <div className="h-3 bg-gray-300 rounded-md overflow-hidden my-4 shadow-inner">
             <div
-              className="progress-fill"
+              className="h-full bg-gradient-to-r from-blue-600 to-blue-700 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite]"
               style={{ width: `${uploadProgress}%` }}
             />
           </div>

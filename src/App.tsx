@@ -49,22 +49,22 @@ function App() {
   }, []);
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Brother Embroidery Machine Controller</h1>
+    <div className="min-h-screen flex flex-col">
+      <header className="bg-white px-8 py-6 border-b border-gray-300 shadow-md">
+        <h1 className="text-3xl font-semibold mb-2">Brother Embroidery Machine Controller</h1>
         {machine.error && (
-          <div className="error-message">{machine.error}</div>
+          <div className="bg-red-100 text-red-900 px-4 py-3 rounded border border-red-200 mt-4">{machine.error}</div>
         )}
         {pyodideError && (
-          <div className="error-message">Python Error: {pyodideError}</div>
+          <div className="bg-red-100 text-red-900 px-4 py-3 rounded border border-red-200 mt-4">Python Error: {pyodideError}</div>
         )}
         {!pyodideReady && !pyodideError && (
-          <div className="info-message">Initializing Python environment...</div>
+          <div className="bg-blue-100 text-blue-900 px-4 py-3 rounded border border-blue-200 mt-4">Initializing Python environment...</div>
         )}
       </header>
 
-      <div className="app-content">
-        <div className="left-panel">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6 p-6 max-w-[1600px] w-full mx-auto">
+        <div className="flex flex-col gap-6">
           <MachineConnection
             isConnected={machine.isConnected}
             machineInfo={machine.machineInfo}
@@ -101,7 +101,7 @@ function App() {
           />
         </div>
 
-        <div className="right-panel">
+        <div className="flex flex-col">
           <PatternCanvas
             pesData={pesData}
             sewingProgress={machine.sewingProgress}

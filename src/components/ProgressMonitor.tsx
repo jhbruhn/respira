@@ -85,30 +85,43 @@ export function ProgressMonitor({
     block => currentStitch >= block.startStitch && currentStitch < block.endStitch
   );
 
+  const stateIndicatorColors = {
+    idle: 'bg-blue-50 border-l-blue-600',
+    info: 'bg-blue-50 border-l-blue-600',
+    active: 'bg-yellow-50 border-l-yellow-500',
+    waiting: 'bg-yellow-50 border-l-yellow-500',
+    warning: 'bg-yellow-50 border-l-yellow-500',
+    complete: 'bg-green-50 border-l-green-600',
+    success: 'bg-green-50 border-l-green-600',
+    interrupted: 'bg-red-50 border-l-red-600',
+    error: 'bg-red-50 border-l-red-600',
+    danger: 'bg-red-50 border-l-red-600',
+  };
+
   return (
-    <div className="progress-panel">
-      <h2>Sewing Progress</h2>
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <h2 className="text-xl font-semibold mb-4 pb-2 border-b-2 border-gray-300">Sewing Progress</h2>
 
       {patternInfo && (
-        <div className="pattern-stats">
-          <div className="detail-row">
-            <span className="label">Total Stitches:</span>
-            <span className="value">{patternInfo.totalStitches}</span>
+        <div>
+          <div className="flex justify-between py-2 border-b border-gray-300">
+            <span className="font-medium text-gray-600">Total Stitches:</span>
+            <span className="font-semibold">{patternInfo.totalStitches}</span>
           </div>
-          <div className="detail-row">
-            <span className="label">Estimated Time:</span>
-            <span className="value">
+          <div className="flex justify-between py-2 border-b border-gray-300">
+            <span className="font-medium text-gray-600">Estimated Time:</span>
+            <span className="font-semibold">
               {Math.floor(patternInfo.totalTime / 60)}:
               {(patternInfo.totalTime % 60).toString().padStart(2, '0')}
             </span>
           </div>
-          <div className="detail-row">
-            <span className="label">Speed:</span>
-            <span className="value">{patternInfo.speed} spm</span>
+          <div className="flex justify-between py-2 border-b border-gray-300">
+            <span className="font-medium text-gray-600">Speed:</span>
+            <span className="font-semibold">{patternInfo.speed} spm</span>
           </div>
-          <div className="detail-row">
-            <span className="label">Bounds:</span>
-            <span className="value">
+          <div className="flex justify-between py-2">
+            <span className="font-medium text-gray-600">Bounds:</span>
+            <span className="font-semibold">
               ({patternInfo.boundLeft}, {patternInfo.boundTop}) to (
               {patternInfo.boundRight}, {patternInfo.boundBottom})
             </span>
@@ -117,13 +130,12 @@ export function ProgressMonitor({
       )}
 
       {colorBlocks.length > 0 && (
-        <div className="color-blocks">
-          <h3>Color Blocks</h3>
-          <div className="color-block-list">
+        <div className="mt-6 pt-4 border-t border-gray-300">
+          <h3 className="text-base font-semibold my-4">Color Blocks</h3>
+          <div className="flex flex-col gap-2">
             {colorBlocks.map((block, index) => {
               const isCompleted = currentStitch >= block.endStitch;
               const isCurrent = index === currentBlockIndex;
-              const isPending = currentStitch < block.startStitch;
 
               // Calculate progress within current block
               let blockProgress = 0;
@@ -136,30 +148,30 @@ export function ProgressMonitor({
               return (
                 <div
                   key={index}
-                  className={`color-block-item ${
-                    isCompleted ? 'completed' : isCurrent ? 'current' : 'pending'
+                  className={`p-3 rounded bg-gray-100 border-2 border-transparent transition-all ${
+                    isCompleted ? 'border-green-600 bg-green-50' : isCurrent ? 'border-blue-600 bg-blue-50 shadow-md shadow-blue-600/20' : 'opacity-60'
                   }`}
                 >
-                  <div className="block-header">
+                  <div className="flex items-center gap-3">
                     <div
-                      className="color-swatch"
+                      className="w-6 h-6 rounded border-2 border-gray-300 shadow-sm flex-shrink-0"
                       style={{ backgroundColor: block.threadHex }}
                       title={block.threadHex}
                     />
-                    <span className="block-label">
+                    <span className="font-semibold flex-1">
                       Thread {block.colorIndex + 1}
                     </span>
-                    <span className="block-status">
+                    <span className={`text-xl font-bold ${isCompleted ? 'text-green-600' : isCurrent ? 'text-blue-600' : 'text-gray-600'}`}>
                       {isCompleted ? '✓' : isCurrent ? '→' : '○'}
                     </span>
-                    <span className="block-stitches">
+                    <span className="text-sm text-gray-600">
                       {block.stitchCount} stitches
                     </span>
                   </div>
                   {isCurrent && (
-                    <div className="block-progress-bar">
+                    <div className="mt-2 h-1 bg-white rounded overflow-hidden">
                       <div
-                        className="block-progress-fill"
+                        className="h-full bg-blue-600 transition-all duration-300"
                         style={{ width: `${blockProgress}%` }}
                       />
                     </div>
@@ -172,60 +184,60 @@ export function ProgressMonitor({
       )}
 
       {sewingProgress && (
-        <div className="sewing-stats">
-          <div className="progress-bar">
-            <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
+        <div className="mt-4">
+          <div className="h-3 bg-gray-300 rounded-md overflow-hidden my-4 shadow-inner relative">
+            <div className="h-full bg-gradient-to-r from-blue-600 to-blue-700 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite]" style={{ width: `${progressPercent}%` }} />
           </div>
 
-          <div className="detail-row">
-            <span className="label">Current Stitch:</span>
-            <span className="value">
+          <div className="flex justify-between py-2 border-b border-gray-300">
+            <span className="font-medium text-gray-600">Current Stitch:</span>
+            <span className="font-semibold">
               {sewingProgress.currentStitch} / {patternInfo?.totalStitches || 0}
             </span>
           </div>
-          <div className="detail-row">
-            <span className="label">Elapsed Time:</span>
-            <span className="value">
+          <div className="flex justify-between py-2 border-b border-gray-300">
+            <span className="font-medium text-gray-600">Elapsed Time:</span>
+            <span className="font-semibold">
               {Math.floor(sewingProgress.currentTime / 60)}:
               {(sewingProgress.currentTime % 60).toString().padStart(2, '0')}
             </span>
           </div>
-          <div className="detail-row">
-            <span className="label">Position:</span>
-            <span className="value">
+          <div className="flex justify-between py-2 border-b border-gray-300">
+            <span className="font-medium text-gray-600">Position:</span>
+            <span className="font-semibold">
               ({(sewingProgress.positionX / 10).toFixed(1)}mm,{' '}
               {(sewingProgress.positionY / 10).toFixed(1)}mm)
             </span>
           </div>
-          <div className="detail-row">
-            <span className="label">Progress:</span>
-            <span className="value">{progressPercent.toFixed(1)}%</span>
+          <div className="flex justify-between py-2">
+            <span className="font-medium text-gray-600">Progress:</span>
+            <span className="font-semibold">{progressPercent.toFixed(1)}%</span>
           </div>
         </div>
       )}
 
       {/* State Visual Indicator */}
       {patternInfo && (
-        <div className={`state-indicator state-indicator-${stateVisual.color}`}>
-          <span className="state-icon">{stateVisual.icon}</span>
-          <div className="state-info">
-            <div className="state-label">{stateVisual.label}</div>
-            <div className="state-description">{stateVisual.description}</div>
+        <div className={`flex items-center gap-4 p-4 rounded-lg my-4 border-l-4 ${stateIndicatorColors[stateVisual.color as keyof typeof stateIndicatorColors] || stateIndicatorColors.info}`}>
+          <span className="text-3xl leading-none">{stateVisual.icon}</span>
+          <div className="flex-1">
+            <div className="font-semibold text-base mb-1">{stateVisual.label}</div>
+            <div className="text-sm text-gray-600">{stateVisual.description}</div>
           </div>
         </div>
       )}
 
-      <div className="progress-actions">
+      <div className="flex gap-3 mt-4 flex-wrap">
         {/* Mask trace waiting for confirmation */}
         {isMaskTraceWait && (
-          <div className="status-message warning">
+          <div className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded border border-yellow-200 font-medium w-full">
             Press button on machine to start mask trace
           </div>
         )}
 
         {/* Mask trace in progress */}
         {isMaskTracing && (
-          <div className="status-message info">
+          <div className="bg-cyan-100 text-cyan-800 px-4 py-3 rounded border border-cyan-200 font-medium w-full">
             Mask trace in progress...
           </div>
         )}
@@ -233,16 +245,16 @@ export function ProgressMonitor({
         {/* Mask trace complete - ready to sew */}
         {isMaskTraceComplete && (
           <>
-            <div className="status-message success">
+            <div className="bg-green-100 text-green-800 px-4 py-3 rounded border border-green-200 font-medium w-full">
               Mask trace complete!
             </div>
             {canStartSewing(machineStatus) && (
-              <button onClick={onStartSewing} className="btn-primary">
+              <button onClick={onStartSewing} className="px-6 py-3 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
                 Start Sewing
               </button>
             )}
             {canStartMaskTrace(machineStatus) && (
-              <button onClick={onStartMaskTrace} className="btn-secondary">
+              <button onClick={onStartMaskTrace} className="px-6 py-3 bg-gray-600 text-white rounded font-semibold text-sm hover:bg-gray-700 transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
                 Trace Again
               </button>
             )}
@@ -252,11 +264,11 @@ export function ProgressMonitor({
         {/* Pattern uploaded, ready to trace */}
         {machineStatus === MachineStatus.IDLE && (
           <>
-            <div className="status-message info">
+            <div className="bg-cyan-100 text-cyan-800 px-4 py-3 rounded border border-cyan-200 font-medium w-full">
               Pattern uploaded successfully
             </div>
             {canStartMaskTrace(machineStatus) && (
-              <button onClick={onStartMaskTrace} className="btn-secondary">
+              <button onClick={onStartMaskTrace} className="px-6 py-3 bg-gray-600 text-white rounded font-semibold text-sm hover:bg-gray-700 transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
                 Start Mask Trace
               </button>
             )}
@@ -267,12 +279,12 @@ export function ProgressMonitor({
         {machineStatus === MachineStatus.SEWING_WAIT && (
           <>
             {canStartMaskTrace(machineStatus) && (
-              <button onClick={onStartMaskTrace} className="btn-secondary">
+              <button onClick={onStartMaskTrace} className="px-6 py-3 bg-gray-600 text-white rounded font-semibold text-sm hover:bg-gray-700 transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
                 Start Mask Trace
               </button>
             )}
             {canStartSewing(machineStatus) && (
-              <button onClick={onStartSewing} className="btn-primary">
+              <button onClick={onStartSewing} className="px-6 py-3 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
                 Start Sewing
               </button>
             )}
@@ -281,42 +293,42 @@ export function ProgressMonitor({
 
         {/* Resume sewing for interrupted states */}
         {canResumeSewing(machineStatus) && (
-          <button onClick={onResumeSewing} className="btn-primary">
+          <button onClick={onResumeSewing} className="px-6 py-3 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
             ▶️ Resume Sewing
           </button>
         )}
 
         {/* Color change needed */}
         {isColorChange && (
-          <div className="status-message warning">
+          <div className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded border border-yellow-200 font-medium w-full">
             Waiting for color change - change thread and press button on machine
           </div>
         )}
 
         {/* Sewing in progress */}
         {isSewing && (
-          <div className="status-message info">
+          <div className="bg-cyan-100 text-cyan-800 px-4 py-3 rounded border border-cyan-200 font-medium w-full">
             Sewing in progress...
           </div>
         )}
 
         {/* Sewing complete */}
         {isComplete && (
-          <div className="status-message success">
+          <div className="bg-green-100 text-green-800 px-4 py-3 rounded border border-green-200 font-medium w-full">
             Sewing complete!
           </div>
         )}
 
         {/* Delete pattern button - ONLY show when safe */}
         {patternInfo && canDeletePattern(machineStatus) && (
-          <button onClick={onDeletePattern} className="btn-danger">
+          <button onClick={onDeletePattern} className="px-6 py-3 bg-red-600 text-white rounded font-semibold text-sm hover:bg-red-700 transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
             Delete Pattern
           </button>
         )}
 
         {/* Show warning when delete is unavailable */}
         {patternInfo && !canDeletePattern(machineStatus) && (
-          <div className="status-message info">
+          <div className="bg-cyan-100 text-cyan-800 px-4 py-3 rounded border border-cyan-200 font-medium w-full">
             Pattern cannot be deleted during active operations
           </div>
         )}
