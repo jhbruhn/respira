@@ -76,7 +76,12 @@ const ERROR_MESSAGES: Record<number, string> = {
 /**
  * Get human-readable error message for an error code
  */
-export function getErrorMessage(errorCode: number): string | null {
+export function getErrorMessage(errorCode: number | undefined): string | null {
+  // Handle undefined or null
+  if (errorCode === undefined || errorCode === null) {
+    return null;
+  }
+
   // 0xDD (221) is the default "no error" value
   if (errorCode === SewingMachineError.None) {
     return null; // No error to display
@@ -95,6 +100,6 @@ export function getErrorMessage(errorCode: number): string | null {
 /**
  * Check if error code represents an actual error condition
  */
-export function hasError(errorCode: number): boolean {
-  return errorCode !== SewingMachineError.None;
+export function hasError(errorCode: number | undefined): boolean {
+  return errorCode !== undefined && errorCode !== null && errorCode !== SewingMachineError.None;
 }

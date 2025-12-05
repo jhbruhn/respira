@@ -88,6 +88,7 @@ export function canUploadPattern(status: MachineStatus): boolean {
 export function canStartSewing(status: MachineStatus): boolean {
   // Only in specific ready states
   return status === MachineStatus.SEWING_WAIT ||
+         status === MachineStatus.MASK_TRACE_COMPLETE ||
          status === MachineStatus.PAUSE ||
          status === MachineStatus.STOP ||
          status === MachineStatus.SEWING_INTERRUPTION;
@@ -97,8 +98,9 @@ export function canStartSewing(status: MachineStatus): boolean {
  * Determines if mask trace can be started in the current state.
  */
 export function canStartMaskTrace(status: MachineStatus): boolean {
-  // Only when ready or after previous trace
-  return status === MachineStatus.SEWING_WAIT ||
+  // Can start mask trace when IDLE (after upload), SEWING_WAIT, or after previous trace
+  return status === MachineStatus.IDLE ||
+         status === MachineStatus.SEWING_WAIT ||
          status === MachineStatus.MASK_TRACE_COMPLETE;
 }
 

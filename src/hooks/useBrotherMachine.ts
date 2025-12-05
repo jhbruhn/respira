@@ -202,9 +202,13 @@ export function useBrotherMachine() {
       try {
         setError(null);
         setUploadProgress(0);
-        const uuid = await service.uploadPattern(penData, (progress) => {
-          setUploadProgress(progress);
-        });
+        const uuid = await service.uploadPattern(
+          penData,
+          (progress) => {
+            setUploadProgress(progress);
+          },
+          pesData.bounds,
+        );
         setUploadProgress(100);
 
         // Cache the pattern with its UUID

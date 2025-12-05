@@ -230,18 +230,34 @@ export function ProgressMonitor({
           </div>
         )}
 
-        {/* Mask trace complete - waiting for confirmation */}
+        {/* Mask trace complete - ready to sew */}
         {isMaskTraceComplete && (
           <>
             <div className="status-message success">
               Mask trace complete!
             </div>
-            <div className="status-message warning">
-              Press button on machine to confirm (or trace again)
-            </div>
+            {canStartSewing(machineStatus) && (
+              <button onClick={onStartSewing} className="btn-primary">
+                Start Sewing
+              </button>
+            )}
             {canStartMaskTrace(machineStatus) && (
               <button onClick={onStartMaskTrace} className="btn-secondary">
                 Trace Again
+              </button>
+            )}
+          </>
+        )}
+
+        {/* Pattern uploaded, ready to trace */}
+        {machineStatus === MachineStatus.IDLE && (
+          <>
+            <div className="status-message info">
+              Pattern uploaded successfully
+            </div>
+            {canStartMaskTrace(machineStatus) && (
+              <button onClick={onStartMaskTrace} className="btn-secondary">
+                Start Mask Trace
               </button>
             )}
           </>

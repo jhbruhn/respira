@@ -15,6 +15,7 @@ const Commands = {
   MACHINE_INFO: 0x0000,
   MACHINE_STATE: 0x0001,
   SERVICE_COUNT: 0x0100,
+  REGULAR_INSPECTION: 0x0103,
   PATTERN_UUID_REQUEST: 0x0702,
   MASK_TRACE: 0x0704,
   LAYOUT_SEND: 0x0705,
@@ -25,13 +26,18 @@ const Commands = {
   EMB_UUID_SEND: 0x070a,
   RESUME_FLAG_REQUEST: 0x070b,
   RESUME: 0x070c,
+  HOOP_AVOIDANCE: 0x070f,
   START_SEWING: 0x070e,
   MASK_TRACE_1: 0x0710,
   EMB_ORG_POINT: 0x0800,
+  FIRM_UPDATE_START: 0x0b00,
+  SET_SETTING_REST: 0x0c00,
+  SET_SETTING_SEND: 0x0c01,
   MACHINE_SETTING_INFO: 0x0c02,
   SEND_DATA_INFO: 0x1200,
   SEND_DATA: 0x1201,
   CLEAR_ERROR: 0x1300,
+  ERROR_LOG_REPLY: 0x1301,
 };
 
 export class BrotherPP1Service {
@@ -132,6 +138,38 @@ export class BrotherPP1Service {
     });
   }
 
+  private getCommandName(cmdId: number): string {
+    const names: Record<number, string> = {
+      [Commands.MACHINE_INFO]: "MACHINE_INFO",
+      [Commands.MACHINE_STATE]: "MACHINE_STATE",
+      [Commands.SERVICE_COUNT]: "SERVICE_COUNT",
+      [Commands.REGULAR_INSPECTION]: "REGULAR_INSPECTION",
+      [Commands.PATTERN_UUID_REQUEST]: "PATTERN_UUID_REQUEST",
+      [Commands.MASK_TRACE]: "MASK_TRACE",
+      [Commands.LAYOUT_SEND]: "LAYOUT_SEND",
+      [Commands.EMB_SEWING_INFO_REQUEST]: "EMB_SEWING_INFO_REQUEST",
+      [Commands.PATTERN_SEWING_INFO]: "PATTERN_SEWING_INFO",
+      [Commands.EMB_SEWING_DATA_DELETE]: "EMB_SEWING_DATA_DELETE",
+      [Commands.NEEDLE_MODE_INSTRUCTIONS]: "NEEDLE_MODE_INSTRUCTIONS",
+      [Commands.EMB_UUID_SEND]: "EMB_UUID_SEND",
+      [Commands.RESUME_FLAG_REQUEST]: "RESUME_FLAG_REQUEST",
+      [Commands.RESUME]: "RESUME",
+      [Commands.HOOP_AVOIDANCE]: "HOOP_AVOIDANCE",
+      [Commands.START_SEWING]: "START_SEWING",
+      [Commands.MASK_TRACE_1]: "MASK_TRACE_1",
+      [Commands.EMB_ORG_POINT]: "EMB_ORG_POINT",
+      [Commands.FIRM_UPDATE_START]: "FIRM_UPDATE_START",
+      [Commands.SET_SETTING_REST]: "SET_SETTING_REST",
+      [Commands.SET_SETTING_SEND]: "SET_SETTING_SEND",
+      [Commands.MACHINE_SETTING_INFO]: "MACHINE_SETTING_INFO",
+      [Commands.SEND_DATA_INFO]: "SEND_DATA_INFO",
+      [Commands.SEND_DATA]: "SEND_DATA",
+      [Commands.CLEAR_ERROR]: "CLEAR_ERROR",
+      [Commands.ERROR_LOG_REPLY]: "ERROR_LOG_REPLY",
+    };
+    return names[cmdId] || `UNKNOWN(0x${cmdId.toString(16).padStart(4, "0")})`;
+  }
+
   private async sendCommand(
     cmdId: number,
     data: Uint8Array = new Uint8Array(),
@@ -148,30 +186,41 @@ export class BrotherPP1Service {
       command[1] = cmdId & 0xff; // Low byte
       command.set(data, 2);
 
+      const hexData = Array.from(command)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join(" ");
+
       console.log(
-        "Sending command:",
-        Array.from(command)
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join(" "),
+        `[TX] ${this.getCommandName(cmdId)} (0x${cmdId.toString(16).padStart(4, "0")}):`,
+        hexData,
       );
-      console.log("Sending command");
-      // Write command and immediately read response
-      await this.writeCharacteristic.writeValueWithoutResponse(command);
 
-      console.log("delay");
-      // Small delay to ensure response is ready
+      // Write command
+      await this.writeCharacteristic.writeValueWithResponse(command);
+
+      // Longer delay to allow machine to prepare response
       await new Promise((resolve) => setTimeout(resolve, 50));
-      console.log("reading response");
 
+      // Read response
       const responseData = await this.readCharacteristic.readValue();
       const response = new Uint8Array(responseData.buffer);
 
-      console.log(
-        "Received response:",
-        Array.from(response)
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join(" "),
-      );
+      const hexResponse = Array.from(response)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join(" ");
+
+      // Parse response
+      let parsed = "";
+      if (response.length >= 3) {
+        const respCmdId = (response[0] << 8) | response[1];
+        const status = response[2];
+        parsed = ` | Status: 0x${status.toString(16).padStart(2, "0")}`;
+        if (respCmdId !== cmdId) {
+          parsed += ` | WARNING: Response cmd 0x${respCmdId.toString(16).padStart(4, "0")} != request cmd`;
+        }
+      }
+
+      console.log(`[RX] ${this.getCommandName(cmdId)}:`, hexResponse, parsed);
 
       return response;
     });
@@ -289,7 +338,7 @@ export class BrotherPP1Service {
     }
   }
 
-  async sendDataChunk(offset: number, data: Uint8Array): Promise<boolean> {
+  async sendDataChunk(offset: number, data: Uint8Array): Promise<void> {
     const checksum = data.reduce((sum, byte) => (sum + byte) & 0xff, 0);
 
     const payload = new Uint8Array(4 + data.length + 1);
@@ -303,10 +352,81 @@ export class BrotherPP1Service {
     payload.set(data, 4);
     payload[4 + data.length] = checksum;
 
-    const response = await this.sendCommand(Commands.SEND_DATA, payload);
+    // Official app approach: Send chunk without waiting for response
+    await this.sendCommandNoResponse(Commands.SEND_DATA, payload);
+  }
 
-    // 0x00 = complete, 0x02 = continue
-    return response[2] === 0x00;
+  private async sendCommandNoResponse(
+    cmdId: number,
+    data: Uint8Array = new Uint8Array(),
+  ): Promise<void> {
+    return this.enqueueCommand(async () => {
+      if (!this.writeCharacteristic) {
+        throw new Error("Not connected");
+      }
+
+      // Build command with big-endian command ID
+      const command = new Uint8Array(2 + data.length);
+      command[0] = (cmdId >> 8) & 0xff; // High byte
+      command[1] = cmdId & 0xff; // Low byte
+      command.set(data, 2);
+
+      const hexData = Array.from(command)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join(" ");
+
+      console.log(
+        `[TX-NoResp] ${this.getCommandName(cmdId)} (0x${cmdId.toString(16).padStart(4, "0")}):`,
+        hexData.substring(0, 100) + (hexData.length > 100 ? "..." : ""),
+      );
+
+      // Write without reading response
+      await this.writeCharacteristic.writeValueWithResponse(command);
+
+      // Small delay to allow BLE buffer to clear
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+  }
+
+  private async pollForTransferComplete(): Promise<void> {
+    if (!this.readCharacteristic) {
+      throw new Error("Not connected");
+    }
+
+    // Poll until transfer is complete
+    while (true) {
+      const responseData = await this.readCharacteristic.readValue();
+      const response = new Uint8Array(responseData.buffer);
+
+      console.log(
+        "Poll response:",
+        Array.from(response)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join(" "),
+      );
+
+      // Check response format: [CMD_HIGH, CMD_LOW, STATUS]
+      if (response.length < 3) {
+        throw new Error("Invalid response length");
+      }
+
+      const status = response[2];
+
+      if (status === 0x01) {
+        // Error
+        throw new Error("Transfer failed");
+      } else if (status === 0x00) {
+        // Complete
+        console.log("Transfer complete");
+        break;
+      } else if (status === 0x02) {
+        // Continue - wait 1 second and poll again (as per official app)
+        console.log("Transfer in progress, waiting...");
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      } else {
+        throw new Error(`Unknown transfer status: 0x${status.toString(16)}`);
+      }
+    }
   }
 
   async sendUUID(uuid: Uint8Array): Promise<void> {
@@ -325,14 +445,19 @@ export class BrotherPP1Service {
     rotate: number,
     flip: number,
     frame: number,
+    boundLeft: number,
+    boundTop: number,
+    boundRight: number,
+    boundBottom: number,
   ): Promise<void> {
-    const payload = new Uint8Array(12);
+    const payload = new Uint8Array(26);
 
     const writeInt16LE = (offset: number, value: number) => {
       payload[offset] = value & 0xff;
       payload[offset + 1] = (value >> 8) & 0xff;
     };
 
+    // Position/transformation parameters (12 bytes)
     writeInt16LE(0, moveX);
     writeInt16LE(2, moveY);
     writeInt16LE(4, sizeX);
@@ -341,11 +466,41 @@ export class BrotherPP1Service {
     payload[10] = flip;
     payload[11] = frame;
 
+    // Pattern bounds (8 bytes)
+    writeInt16LE(12, boundLeft);
+    writeInt16LE(14, boundTop);
+    writeInt16LE(16, boundRight);
+    writeInt16LE(18, boundBottom);
+
+    // Repeat moveX and moveY at the end (6 bytes)
+    writeInt16LE(20, moveX);
+    writeInt16LE(22, moveY);
+    payload[24] = flip;
+    payload[25] = frame;
+
+    console.log('[DEBUG] Layout bounds:', {
+      boundLeft,
+      boundTop,
+      boundRight,
+      boundBottom,
+      moveX,
+      moveY,
+      sizeX,
+      sizeY,
+    });
+
     await this.sendCommand(Commands.LAYOUT_SEND, payload);
   }
 
+  async getMachineSettings(): Promise<Uint8Array> {
+    return await this.sendCommand(Commands.MACHINE_SETTING_INFO);
+  }
+
   async startMaskTrace(): Promise<void> {
-    const payload = new Uint8Array([0x01]);
+    // Query machine settings before starting mask trace (as per official app)
+    await this.getMachineSettings();
+
+    const payload = new Uint8Array([0x00]);
     await this.sendCommand(Commands.MASK_TRACE, payload);
   }
 
@@ -362,6 +517,7 @@ export class BrotherPP1Service {
   async uploadPattern(
     data: Uint8Array,
     onProgress?: (progress: number) => void,
+    bounds?: { minX: number; maxX: number; minY: number; maxY: number },
   ): Promise<Uint8Array> {
     // Calculate checksum
     const checksum = data.reduce((sum, byte) => sum + byte, 0) & 0xffff;
@@ -376,33 +532,63 @@ export class BrotherPP1Service {
     const chunkSize = 500;
     let offset = 0;
 
+    // Send all chunks without waiting for responses (official app approach)
     while (offset < data.length) {
       const chunk = data.slice(
         offset,
         Math.min(offset + chunkSize, data.length),
       );
-      const isComplete = await this.sendDataChunk(offset, chunk);
 
+      await this.sendDataChunk(offset, chunk);
       offset += chunk.length;
 
       if (onProgress) {
         onProgress((offset / data.length) * 100);
       }
-
-      if (isComplete) {
-        break;
-      }
-
-      // Small delay between chunks
-      await new Promise((resolve) => setTimeout(resolve, 10));
     }
+
+    // Wait a bit for machine to finish processing chunks
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Use provided bounds or default to 0
+    const boundLeft = bounds?.minX ?? 0;
+    const boundTop = bounds?.minY ?? 0;
+    const boundRight = bounds?.maxX ?? 0;
+    const boundBottom = bounds?.maxY ?? 0;
+
+    // Calculate pattern dimensions
+    const patternWidth = boundRight - boundLeft;
+    const patternHeight = boundBottom - boundTop;
+
+    // Calculate center offset to position pattern at machine center
+    // Machine embroidery area center is at (0, 0)
+    // Pattern center should align with machine center
+    const patternCenterX = (boundLeft + boundRight) / 2;
+    const patternCenterY = (boundTop + boundBottom) / 2;
+
+    // moveX/moveY shift the pattern so its center aligns with origin
+    const moveX = -patternCenterX;
+    const moveY = -patternCenterY;
+
+    // Send layout with actual pattern bounds
+    // sizeX/sizeY are scaling factors (100 = 100% = no scaling)
+    await this.sendLayout(
+      Math.round(moveX), // moveX - center the pattern
+      Math.round(moveY), // moveY - center the pattern
+      100, // sizeX (100% - no scaling)
+      100, // sizeY (100% - no scaling)
+      0, // rotate
+      0, // flip
+      1, // frame
+      boundLeft,
+      boundTop,
+      boundRight,
+      boundBottom,
+    );
 
     // Generate random UUID
     const uuid = crypto.getRandomValues(new Uint8Array(16));
     await this.sendUUID(uuid);
-
-    // Send default layout (no transformation)
-    await this.sendLayout(0, 0, 0, 0, 0, 0, 0);
 
     console.log(
       "Pattern uploaded successfully with UUID:",
