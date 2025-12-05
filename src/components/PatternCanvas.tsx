@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { Stage, Layer, Group } from 'react-konva';
 import Konva from 'konva';
 import type { PesPatternData } from '../utils/pystitchConverter';
 import type { SewingProgress, MachineInfo } from '../types/machine';
@@ -8,7 +9,6 @@ import {
   renderHoop,
   renderStitches,
   renderPatternBounds,
-  renderCurrentPosition,
   calculateInitialScale,
 } from '../utils/konvaRenderers';
 
@@ -24,236 +24,108 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, onPatternO
   const stageRef = useRef<Konva.Stage | null>(null);
   const backgroundLayerRef = useRef<Konva.Layer | null>(null);
   const patternLayerRef = useRef<Konva.Layer | null>(null);
-  const currentPosLayerRef = useRef<Konva.Layer | null>(null);
-  const patternGroupRef = useRef<Konva.Group | null>(null);
 
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+  const [stageScale, setStageScale] = useState(1);
   const [patternOffset, setPatternOffset] = useState({ x: 0, y: 0 });
   const initialScaleRef = useRef<number>(1);
-  const isDraggingRef = useRef(false);
 
-  // Initialize Konva stage and layers
+  // Calculate initial scale when pattern or hoop changes
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!pesData || !containerRef.current) return;
 
-    // Prevent double initialization
-    if (stageRef.current) return;
+    const { bounds } = pesData;
+    const viewWidth = machineInfo ? machineInfo.maxWidth : bounds.maxX - bounds.minX;
+    const viewHeight = machineInfo ? machineInfo.maxHeight : bounds.maxY - bounds.minY;
 
-    const container = containerRef.current;
+    const width = containerRef.current.offsetWidth;
+    const height = containerRef.current.offsetHeight;
 
-    // Create stage
-    const stage = new Konva.Stage({
-      container,
-      width: container.offsetWidth,
-      height: container.offsetHeight,
-      draggable: false, // Stage itself is not draggable
-    });
+    const initialScale = calculateInitialScale(width, height, viewWidth, viewHeight);
+    initialScaleRef.current = initialScale;
 
-    // Configure stage to center on embroidery origin (0,0)
-    // Simply position the stage so that (0,0) appears at the center
-    stage.position({ x: stage.width() / 2, y: stage.height() / 2 });
+    // Set initial scale and center position when pattern loads
+    setStageScale(initialScale);
+    setStagePos({ x: width / 2, y: height / 2 });
+  }, [pesData, machineInfo]);
 
-    // Create layers
-    const backgroundLayer = new Konva.Layer();
-    const patternLayer = new Konva.Layer();
-    const currentPosLayer = new Konva.Layer();
+  // Wheel zoom handler
+  const handleWheel = useCallback((e: Konva.KonvaEventObject<WheelEvent>) => {
+    e.evt.preventDefault();
 
-    stage.add(backgroundLayer, patternLayer, currentPosLayer);
+    const stage = e.target.getStage();
+    if (!stage) return;
 
-    // Store refs
-    stageRef.current = stage;
-    backgroundLayerRef.current = backgroundLayer;
-    patternLayerRef.current = patternLayer;
-    currentPosLayerRef.current = currentPosLayer;
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return;
 
-    // Set initial cursor - grab for panning
-    stage.container().style.cursor = 'grab';
+    const scaleBy = 1.1;
+    const direction = e.evt.deltaY > 0 ? -1 : 1;
+    let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
 
-    // Make stage draggable for panning
-    stage.draggable(true);
+    // Apply constraints
+    newScale = Math.max(0.1, Math.min(10, newScale));
 
-    // Update cursor on drag
-    stage.on('dragstart', () => {
-      stage.container().style.cursor = 'grabbing';
-    });
-
-    stage.on('dragend', () => {
-      stage.container().style.cursor = 'grab';
-    });
-
-    // Mouse wheel zoom handler
-    const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
-      e.evt.preventDefault();
-
-      const oldScale = stage.scaleX();
-      const pointer = stage.getPointerPosition();
-      if (!pointer) return;
-
-      const scaleBy = 1.1;
-      const direction = e.evt.deltaY > 0 ? -1 : 1;
-      let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-
-      // Apply constraints
-      newScale = Math.max(0.1, Math.min(10, newScale));
-
-      // Zoom towards pointer
-      const mousePointTo = {
-        x: (pointer.x - stage.x()) / oldScale,
-        y: (pointer.y - stage.y()) / oldScale,
-      };
-
-      const newPos = {
-        x: pointer.x - mousePointTo.x * newScale,
-        y: pointer.y - mousePointTo.y * newScale,
-      };
-
-      stage.scale({ x: newScale, y: newScale });
-      stage.position(newPos);
-      setZoomLevel(newScale);
-      stage.batchDraw();
+    // Zoom towards pointer
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
     };
 
-    // Attach wheel event
-    stage.on('wheel', handleWheel);
-
-    return () => {
-      // Clear refs before destroying to prevent race conditions
-      stageRef.current = null;
-      backgroundLayerRef.current = null;
-      patternLayerRef.current = null;
-      currentPosLayerRef.current = null;
-      patternGroupRef.current = null;
-
-      // Destroy the stage (this removes the canvas from DOM)
-      stage.destroy();
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
     };
+
+    setStageScale(newScale);
+    setStagePos(newPos);
   }, []);
-
-  // Handle responsive resizing
-  useEffect(() => {
-    if (!containerRef.current || !stageRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        const stage = stageRef.current;
-
-        if (stage) {
-          // Keep the current pan/zoom, just update size
-          const oldWidth = stage.width();
-          const oldHeight = stage.height();
-          const oldPos = stage.position();
-
-          stage.width(width);
-          stage.height(height);
-
-          // Adjust position to maintain center point
-          stage.position({
-            x: oldPos.x + (width - oldWidth) / 2,
-            y: oldPos.y + (height - oldHeight) / 2,
-          });
-
-          stage.batchDraw();
-        }
-      }
-    });
-
-    resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
-  }, []);
-
-  // Helper function to zoom to a specific point
-  const zoomToPoint = useCallback(
-    (point: { x: number; y: number }, newScale: number) => {
-      const stage = stageRef.current;
-      if (!stage) return;
-
-      const oldScale = stage.scaleX();
-
-      const mousePointTo = {
-        x: (point.x - stage.x()) / oldScale,
-        y: (point.y - stage.y()) / oldScale,
-      };
-
-      const newPos = {
-        x: point.x - mousePointTo.x * newScale,
-        y: point.y - mousePointTo.y * newScale,
-      };
-
-      stage.scale({ x: newScale, y: newScale });
-      stage.position(newPos);
-      setZoomLevel(newScale);
-      stage.batchDraw();
-    },
-    []
-  );
 
   // Zoom control handlers
   const handleZoomIn = useCallback(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    const newScale = Math.min(stage.scaleX() * 1.2, 10);
-    const center = {
-      x: stage.width() / 2,
-      y: stage.height() / 2,
-    };
-
-    zoomToPoint(center, newScale);
-  }, [zoomToPoint]);
+    const newScale = Math.min(stageScale * 1.2, 10);
+    setStageScale(newScale);
+  }, [stageScale]);
 
   const handleZoomOut = useCallback(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    const newScale = Math.max(stage.scaleX() / 1.2, 0.1);
-    const center = {
-      x: stage.width() / 2,
-      y: stage.height() / 2,
-    };
-
-    zoomToPoint(center, newScale);
-  }, [zoomToPoint]);
+    const newScale = Math.max(stageScale / 1.2, 0.1);
+    setStageScale(newScale);
+  }, [stageScale]);
 
   const handleZoomReset = useCallback(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-
+    if (!containerRef.current) return;
     const initialScale = initialScaleRef.current;
-
-    stage.scale({ x: initialScale, y: initialScale });
-    stage.position({ x: stage.width() / 2, y: stage.height() / 2 });
-    setZoomLevel(initialScale);
-    stage.batchDraw();
+    setStageScale(initialScale);
+    setStagePos({ x: containerRef.current.offsetWidth / 2, y: containerRef.current.offsetHeight / 2 });
   }, []);
 
-  // Render background layer (grid, origin, hoop)
-  useEffect(() => {
-    const layer = backgroundLayerRef.current;
-    const stage = stageRef.current;
-    if (!layer || !stage || !pesData) return;
+  // Pattern drag handlers
+  const handlePatternDragEnd = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
+    const newOffset = {
+      x: e.target.x(),
+      y: e.target.y(),
+    };
+    setPatternOffset(newOffset);
+
+    if (onPatternOffsetChange) {
+      onPatternOffsetChange(newOffset.x, newOffset.y);
+    }
+  }, [onPatternOffsetChange]);
+
+  const handlePatternDragMove = useCallback(() => {
+    // Just for visual feedback during drag
+  }, []);
+
+  // Render background layer content
+  const renderBackgroundLayer = useCallback((layer: Konva.Layer) => {
+    if (!pesData) return;
 
     layer.destroyChildren();
 
     const { bounds } = pesData;
-
-    // Determine view dimensions - always fit to hoop if available, otherwise fit to pattern
-    const viewWidth = machineInfo ? machineInfo.maxWidth : bounds.maxX - bounds.minX;
-    const viewHeight = machineInfo ? machineInfo.maxHeight : bounds.maxY - bounds.minY;
-
-    // Calculate and store initial scale
-    const initialScale = calculateInitialScale(stage.width(), stage.height(), viewWidth, viewHeight);
-    initialScaleRef.current = initialScale;
-
-    // Only set initial scale if this is the first render (zoom level is still 1)
-    if (zoomLevel === 1) {
-      stage.scale({ x: initialScale, y: initialScale });
-      stage.position({ x: stage.width() / 2, y: stage.height() / 2 });
-      setZoomLevel(initialScale);
-    }
-
-    // Render background elements
     const gridSize = 100; // 10mm grid (100 units in 0.1mm)
+
     renderGrid(layer, gridSize, bounds, machineInfo);
     renderOrigin(layer);
 
@@ -261,131 +133,105 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, onPatternO
       renderHoop(layer, machineInfo);
     }
 
-    // Cache the background layer for performance
-    layer.cache();
     layer.batchDraw();
-  }, [machineInfo, pesData]);
+  }, [pesData, machineInfo]);
 
-  // Render pattern layer (stitches and bounds in a draggable group)
-  // This effect only runs when the pattern changes, NOT when sewing progress changes
-  useEffect(() => {
-    const layer = patternLayerRef.current;
-    if (!layer || !pesData) return;
+  // Render pattern layer content
+  const renderPatternLayer = useCallback((layer: Konva.Layer, group: Konva.Group) => {
+    if (!pesData) return;
 
-    layer.destroyChildren();
+    group.destroyChildren();
 
+    const currentStitch = sewingProgress?.currentStitch || 0;
     const { stitches, bounds } = pesData;
 
-    // Create a draggable group for the pattern
-    const patternGroup = new Konva.Group({
-      draggable: true,
-      x: patternOffset.x,
-      y: patternOffset.y,
-    });
-
-    // Store ref
-    patternGroupRef.current = patternGroup;
-
-    // Render pattern elements into the group (initial render with currentStitch = 0)
-    const currentStitch = sewingProgress?.currentStitch || 0;
-    renderStitches(patternGroup, stitches, pesData, currentStitch);
-    renderPatternBounds(patternGroup, bounds);
-
-    // Handle drag events
-    patternGroup.on('dragstart', () => {
-      isDraggingRef.current = true;
-    });
-
-    patternGroup.on('dragend', () => {
-      isDraggingRef.current = false;
-      const newOffset = {
-        x: patternGroup.x(),
-        y: patternGroup.y(),
-      };
-      setPatternOffset(newOffset);
-
-      // Notify parent component of offset change
-      if (onPatternOffsetChange) {
-        onPatternOffsetChange(newOffset.x, newOffset.y);
-      }
-    });
-
-    // Add visual feedback on hover
-    patternGroup.on('mouseenter', () => {
-      const stage = stageRef.current;
-      if (stage) stage.container().style.cursor = 'move';
-    });
-
-    patternGroup.on('mouseleave', () => {
-      if (!isDraggingRef.current) {
-        const stage = stageRef.current;
-        if (stage) stage.container().style.cursor = 'grab';
-      }
-    });
-
-    layer.add(patternGroup);
-    layer.batchDraw();
-  }, [pesData, onPatternOffsetChange]); // Removed sewingProgress from dependencies
-
-  // Separate effect to update stitches when sewing progress changes
-  // This only updates the stitch rendering, not the entire group
-  useEffect(() => {
-    const patternGroup = patternGroupRef.current;
-    if (!patternGroup || !pesData || isDraggingRef.current) return;
-
-    const currentStitch = sewingProgress?.currentStitch || 0;
-    const { stitches } = pesData;
-
-    // Remove old stitches group and re-render
-    const oldStitchesGroup = patternGroup.findOne('.stitches');
-    if (oldStitchesGroup) {
-      oldStitchesGroup.destroy();
-    }
-
-    // Re-render stitches with updated progress
-    renderStitches(patternGroup, stitches, pesData, currentStitch);
-    patternGroup.getLayer()?.batchDraw();
-  }, [sewingProgress, pesData]);
-
-  // Separate effect to update pattern position when offset changes externally (not during drag)
-  useEffect(() => {
-    const patternGroup = patternGroupRef.current;
-    if (patternGroup && !isDraggingRef.current) {
-      patternGroup.position({ x: patternOffset.x, y: patternOffset.y });
-      patternGroup.getLayer()?.batchDraw();
-    }
-  }, [patternOffset.x, patternOffset.y]);
-
-  // Render current position layer (updates frequently, follows pattern offset)
-  useEffect(() => {
-    const layer = currentPosLayerRef.current;
-    if (!layer || !pesData) return;
-
-    layer.destroyChildren();
-
-    const currentStitch = sewingProgress?.currentStitch || 0;
-    const { stitches } = pesData;
-
-    if (currentStitch > 0 && currentStitch < stitches.length) {
-      // Create group at pattern offset
-      const posGroup = new Konva.Group({
-        x: patternOffset.x,
-        y: patternOffset.y,
-      });
-
-      renderCurrentPosition(posGroup, currentStitch, stitches);
-      layer.add(posGroup);
-    }
+    renderStitches(group, stitches, pesData, currentStitch);
+    renderPatternBounds(group, bounds);
 
     layer.batchDraw();
-  }, [pesData, sewingProgress, patternOffset.x, patternOffset.y]);
+  }, [pesData, sewingProgress]);
+
+  // Update background layer when deps change
+  useEffect(() => {
+    if (backgroundLayerRef.current) {
+      renderBackgroundLayer(backgroundLayerRef.current);
+    }
+  }, [renderBackgroundLayer]);
+
+  // Update pattern layer when deps change
+  useEffect(() => {
+    if (patternLayerRef.current) {
+      const patternGroup = patternLayerRef.current.findOne('.pattern-group') as Konva.Group;
+      if (patternGroup) {
+        renderPatternLayer(patternLayerRef.current, patternGroup);
+      }
+    }
+  }, [renderPatternLayer]);
 
   return (
     <div className="canvas-panel">
       <h2>Pattern Preview</h2>
-      <div className="canvas-container">
-        {/* Konva container - separate from React-managed overlays */}
-        <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'absolute' }} />
+      <div className="canvas-container" ref={containerRef} style={{ width: '100%', height: '600px' }}>
+        {containerRef.current && (
+          <Stage
+            width={containerRef.current.offsetWidth}
+            height={containerRef.current.offsetHeight}
+            x={stagePos.x}
+            y={stagePos.y}
+            scaleX={stageScale}
+            scaleY={stageScale}
+            draggable
+            onWheel={handleWheel}
+          onDragStart={() => {
+            if (stageRef.current) {
+              stageRef.current.container().style.cursor = 'grabbing';
+            }
+          }}
+          onDragEnd={() => {
+            if (stageRef.current) {
+              stageRef.current.container().style.cursor = 'grab';
+            }
+          }}
+          ref={(node) => {
+            stageRef.current = node;
+            if (node) {
+              node.container().style.cursor = 'grab';
+            }
+          }}
+        >
+          {/* Background layer: grid, origin, hoop */}
+          <Layer ref={backgroundLayerRef} />
+
+          {/* Pattern layer: draggable stitches and bounds */}
+          <Layer ref={patternLayerRef}>
+            {pesData && (
+              <Group
+                name="pattern-group"
+                draggable
+                x={patternOffset.x}
+                y={patternOffset.y}
+                onDragEnd={handlePatternDragEnd}
+                onDragMove={handlePatternDragMove}
+                onMouseEnter={(e) => {
+                  const stage = e.target.getStage();
+                  if (stage) stage.container().style.cursor = 'move';
+                }}
+                onMouseLeave={(e) => {
+                  const stage = e.target.getStage();
+                  if (stage) stage.container().style.cursor = 'grab';
+                }}
+              />
+            )}
+          </Layer>
+
+          {/* Current position layer */}
+          <Layer>
+            {pesData && sewingProgress && sewingProgress.currentStitch > 0 && (
+              <Group x={patternOffset.x} y={patternOffset.y} />
+            )}
+          </Layer>
+        </Stage>
+        )}
 
         {/* Placeholder overlay when no pattern is loaded */}
         {!pesData && (
@@ -433,7 +279,7 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, onPatternO
               <button className="zoom-btn" onClick={handleZoomIn} title="Zoom In">
                 +
               </button>
-              <span className="zoom-level">{Math.round(zoomLevel * 100)}%</span>
+              <span className="zoom-level">{Math.round(stageScale * 100)}%</span>
               <button className="zoom-btn" onClick={handleZoomOut} title="Zoom Out">
                 −
               </button>
