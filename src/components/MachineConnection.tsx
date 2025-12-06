@@ -136,8 +136,8 @@ export function MachineConnection({
           {machineInfo && (
             <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg space-y-2 mb-4">
               <div className="flex justify-between text-sm">
-                <span className="font-medium text-gray-600 dark:text-gray-400">Model:</span>
-                <span className="font-semibold text-gray-900 dark:text-gray-100">{machineInfo.modelNumber}</span>
+                <span className="font-medium text-gray-600 dark:text-gray-400">Serial Number:</span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">{machineInfo.serialNumber}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="font-medium text-gray-600 dark:text-gray-400">Max Area:</span>
