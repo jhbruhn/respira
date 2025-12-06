@@ -306,6 +306,7 @@ export function useBrotherMachine() {
       setResumeFileName(null);
       // NOTE: We intentionally DON'T clear setResumedPattern(null)
       // so the pattern remains visible in the canvas for re-editing
+      // However, we DO need to preserve pesData in App.tsx for re-upload
 
       await refreshStatus();
     } catch (err) {

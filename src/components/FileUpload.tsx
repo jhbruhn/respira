@@ -39,7 +39,8 @@ export function FileUpload({
 
   // Use prop pesData if available (from cached pattern), otherwise use local state
   const pesData = pesDataProp || localPesData;
-  const displayFileName = resumeFileName || fileName;
+  // When resumeFileName is cleared but we still have pesData, preserve the filename
+  const displayFileName = resumeFileName || fileName || (pesDataProp ? 'pattern.pes' : '');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFileChange = useCallback(
