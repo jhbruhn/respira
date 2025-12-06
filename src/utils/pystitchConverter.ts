@@ -1,19 +1,22 @@
 import { pyodideLoader } from './pyodideLoader';
+import {
+  STITCH,
+  MOVE,
+  TRIM,
+  END,
+  PEN_FEED_DATA,
+  PEN_CUT_DATA,
+  PEN_COLOR_END,
+  PEN_DATA_END,
+} from './embroideryConstants';
 
-// PEN format flags
-// Y-coordinate low byte flags (can be combined)
-const PEN_FEED_DATA = 0x01; // Bit 0: Jump stitch (move without stitching)
-const PEN_CUT_DATA = 0x02;  // Bit 1: Trim/cut thread command
-
-// X-coordinate low byte flags (bits 0-2, mutually exclusive)
-const PEN_COLOR_END = 0x03; // Last stitch before color change
-const PEN_DATA_END = 0x05;  // Last stitch of entire pattern
-
-// Embroidery command constants (from pyembroidery)
-const MOVE = 0x10;
-const COLOR_CHANGE = 0x40;
-const STOP = 0x80;
-const END = 0x100;
+// JavaScript constants module to expose to Python
+const jsEmbConstants = {
+  STITCH,
+  MOVE,
+  TRIM,
+  END,
+};
 
 export interface PesPatternData {
   stitches: number[][];
@@ -39,6 +42,9 @@ export async function convertPesToPen(file: File): Promise<PesPatternData> {
   // Ensure Pyodide is initialized
   const pyodide = await pyodideLoader.initialize();
 
+  // Register our JavaScript constants module for Python to import
+  pyodide.registerJsModule('js_emb_constants', jsEmbConstants);
+
   // Read the PES file
   const buffer = await file.arrayBuffer();
   const uint8Array = new Uint8Array(buffer);
@@ -51,9 +57,36 @@ export async function convertPesToPen(file: File): Promise<PesPatternData> {
   const result = await pyodide.runPythonAsync(`
 import pystitch
 from pystitch.EmbConstant import STITCH, JUMP, TRIM, STOP, END, COLOR_CHANGE
+from js_emb_constants import STITCH as JS_STITCH, MOVE as JS_MOVE, TRIM as JS_TRIM, END as JS_END
 
 # Read the PES file
 pattern = pystitch.read('${filename}')
+
+def map_cmd(pystitch_cmd):
+    """Map PyStitch command to our JavaScript constant values
+
+    This ensures we have known, consistent values regardless of PyStitch's internal values.
+    Our JS constants use pyembroidery-style bitmask values:
+    STITCH = 0x00, MOVE/JUMP = 0x10, TRIM = 0x20, END = 0x100
+    """
+    if pystitch_cmd == STITCH:
+        return JS_STITCH
+    elif pystitch_cmd == JUMP:
+        return JS_MOVE  # PyStitch JUMP maps to our MOVE constant
+    elif pystitch_cmd == TRIM:
+        return JS_TRIM
+    elif pystitch_cmd == END:
+        return JS_END
+    else:
+        # For any other commands, preserve as bitmask
+        result = JS_STITCH
+        if pystitch_cmd & JUMP:
+            result |= JS_MOVE
+        if pystitch_cmd & TRIM:
+            result |= JS_TRIM
+        if pystitch_cmd & END:
+            result |= JS_END
+        return result
 
 # Use the raw stitches list which preserves command flags
 # Each stitch in pattern.stitches is [x, y, cmd]
@@ -79,9 +112,10 @@ for i, stitch in enumerate(pattern.stitches):
     if cmd == END:
         continue
 
-    # Add actual stitch with color index and command
-    # Keep JUMP/TRIM flags as they indicate jump stitches
-    stitches_with_colors.append([x, y, cmd, current_color])
+    # Add actual stitch with color index and mapped command
+    # Map PyStitch cmd values to our known JavaScript constant values
+    mapped_cmd = map_cmd(cmd)
+    stitches_with_colors.append([x, y, mapped_cmd, current_color])
 
 # Convert to JSON-serializable format
 {
@@ -106,13 +140,13 @@ for i, stitch in enumerate(pattern.stitches):
   // Clean up virtual file
   try {
     pyodide.FS.unlink(filename);
-  } catch (e) {
+  } catch {
     // Ignore errors
   }
 
   // Extract stitches and validate
-  const stitches: number[][] = Array.from(data.stitches).map((stitch: any) =>
-    Array.from(stitch) as number[]
+  const stitches: number[][] = Array.from(data.stitches as ArrayLike<ArrayLike<number>>).map((stitch) =>
+    Array.from(stitch)
   );
 
   if (!stitches || stitches.length === 0) {
@@ -120,7 +154,7 @@ for i, stitch in enumerate(pattern.stitches):
   }
 
   // Extract thread data
-  const threads = data.threads.map((thread: any) => ({
+  const threads = (data.threads as Array<{ color?: number; hex?: string }>).map((thread) => ({
     color: thread.color || 0,
     hex: thread.hex || '#000000',
   }));
@@ -134,7 +168,6 @@ for i, stitch in enumerate(pattern.stitches):
   // PyStitch returns ABSOLUTE coordinates
   // PEN format uses absolute coordinates, shifted left by 3 bits (as per official app line 780)
   const penStitches: number[] = [];
-  let currentColor = stitches[0]?.[3] ?? 0; // Track current color using stitch color index
 
   for (let i = 0; i < stitches.length; i++) {
     const stitch = stitches[i];
@@ -143,8 +176,8 @@ for i, stitch in enumerate(pattern.stitches):
     const cmd = stitch[2];
     const stitchColor = stitch[3]; // Color index from PyStitch
 
-    // Track bounds for non-jump stitches (cmd=0 is STITCH)
-    if (cmd === 0) {
+    // Track bounds for non-jump stitches
+    if (cmd === STITCH) {
       minX = Math.min(minX, absX);
       maxX = Math.max(maxX, absX);
       minY = Math.min(minY, absY);
@@ -158,11 +191,11 @@ for i, stitch in enumerate(pattern.stitches):
     let yEncoded = (absY << 3) & 0xFFFF;
 
     // Add command flags to Y-coordinate based on stitch type
-    // PyStitch constants: STITCH=0, JUMP=1, TRIM=2
-    if (cmd === 1) {
-      // JUMP: Set bit 0 (FEED_DATA) - move without stitching
+    if (cmd & MOVE) {
+      // MOVE/JUMP: Set bit 0 (FEED_DATA) - move without stitching
       yEncoded |= PEN_FEED_DATA;
-    } else if (cmd === 2) {
+    }
+    if (cmd & TRIM) {
       // TRIM: Set bit 1 (CUT_DATA) - cut thread command
       yEncoded |= PEN_CUT_DATA;
     }
@@ -179,7 +212,6 @@ for i, stitch in enumerate(pattern.stitches):
     if (!isLastStitch && nextStitchColor !== undefined && nextStitchColor !== stitchColor) {
       // This is the last stitch before a color change (but not the last stitch overall)
       xEncoded = (xEncoded & 0xFFF8) | PEN_COLOR_END;
-      currentColor = nextStitchColor;
     } else if (isLastStitch) {
       // This is the very last stitch of the pattern
       xEncoded = (xEncoded & 0xFFF8) | PEN_DATA_END;

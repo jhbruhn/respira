@@ -2,8 +2,7 @@ import Konva from 'konva';
 import type { PesPatternData } from './pystitchConverter';
 import { getThreadColor } from './pystitchConverter';
 import type { MachineInfo } from '../types/machine';
-
-const MOVE = 0x10;
+import { MOVE } from './embroideryConstants';
 
 /**
  * Renders a grid with specified spacing
@@ -270,9 +269,7 @@ export function renderCurrentPosition(
  */
 export function renderLegend(
   layer: Konva.Layer,
-  pesData: PesPatternData,
-  _stageWidth: number,
-  _stageHeight: number
+  pesData: PesPatternData
 ): void {
   const legendGroup = new Konva.Group({ name: 'legend' });
 

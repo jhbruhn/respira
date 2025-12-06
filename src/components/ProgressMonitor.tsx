@@ -6,7 +6,6 @@ import {
   CheckBadgeIcon,
   ClockIcon,
   PauseCircleIcon,
-  XCircleIcon,
   ExclamationCircleIcon
 } from '@heroicons/react/24/solid';
 import type { PatternInfo, SewingProgress } from '../types/machine';
@@ -44,12 +43,7 @@ export function ProgressMonitor({
   isDeleting = false,
 }: ProgressMonitorProps) {
   // State indicators
-  const isSewing = machineStatus === MachineStatus.SEWING;
-  const isComplete = machineStatus === MachineStatus.SEWING_COMPLETE;
-  const isColorChange = machineStatus === MachineStatus.COLOR_CHANGE_WAIT;
-  const isMaskTracing = machineStatus === MachineStatus.MASK_TRACING;
   const isMaskTraceComplete = machineStatus === MachineStatus.MASK_TRACE_COMPLETE;
-  const isMaskTraceWait = machineStatus === MachineStatus.MASK_TRACE_LOCK_WAIT;
 
   const stateVisual = getStateVisualInfo(machineStatus);
 

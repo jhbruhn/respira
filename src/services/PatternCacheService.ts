@@ -42,7 +42,7 @@ export class PatternCacheService {
       // Convert penData Uint8Array to array for JSON serialization
       const pesDataWithArrayPenData = {
         ...pesData,
-        penData: Array.from(pesData.penData) as any,
+        penData: Array.from(pesData.penData) as unknown as Uint8Array,
       };
 
       const cached: CachedPattern = {

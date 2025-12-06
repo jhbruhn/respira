@@ -26,14 +26,16 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, initialPat
   const [patternOffset, setPatternOffset] = useState(initialPatternOffset || { x: 0, y: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const initialScaleRef = useRef<number>(1);
+  const prevPesDataRef = useRef<PesPatternData | null>(null);
 
   // Update pattern offset when initialPatternOffset changes
-  useEffect(() => {
-    if (initialPatternOffset) {
-      setPatternOffset(initialPatternOffset);
-      console.log('[PatternCanvas] Restored pattern offset:', initialPatternOffset);
-    }
-  }, [initialPatternOffset]);
+  if (initialPatternOffset && (
+    patternOffset.x !== initialPatternOffset.x ||
+    patternOffset.y !== initialPatternOffset.y
+  )) {
+    setPatternOffset(initialPatternOffset);
+    console.log('[PatternCanvas] Restored pattern offset:', initialPatternOffset);
+  }
 
   // Track container size
   useEffect(() => {
@@ -57,20 +59,29 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, initialPat
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Calculate initial scale when pattern or hoop changes
+  // Calculate and store initial scale when pattern or hoop changes
   useEffect(() => {
-    if (!pesData || containerSize.width === 0) return;
+    if (!pesData || containerSize.width === 0) {
+      prevPesDataRef.current = null;
+      return;
+    }
 
-    const { bounds } = pesData;
-    const viewWidth = machineInfo ? machineInfo.maxWidth : bounds.maxX - bounds.minX;
-    const viewHeight = machineInfo ? machineInfo.maxHeight : bounds.maxY - bounds.minY;
+    // Only recalculate if pattern changed
+    if (prevPesDataRef.current !== pesData) {
+      prevPesDataRef.current = pesData;
 
-    const initialScale = calculateInitialScale(containerSize.width, containerSize.height, viewWidth, viewHeight);
-    initialScaleRef.current = initialScale;
+      const { bounds } = pesData;
+      const viewWidth = machineInfo ? machineInfo.maxWidth : bounds.maxX - bounds.minX;
+      const viewHeight = machineInfo ? machineInfo.maxHeight : bounds.maxY - bounds.minY;
 
-    // Set initial scale and center position when pattern loads
-    setStageScale(initialScale);
-    setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
+      const initialScale = calculateInitialScale(containerSize.width, containerSize.height, viewWidth, viewHeight);
+      initialScaleRef.current = initialScale;
+
+      // Reset view when pattern changes
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStageScale(initialScale);
+      setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
+    }
   }, [pesData, machineInfo, containerSize]);
 
   // Wheel zoom handler

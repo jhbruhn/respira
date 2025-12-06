@@ -3,8 +3,7 @@ import { Group, Line, Rect, Text, Circle } from 'react-konva';
 import type { PesPatternData } from '../utils/pystitchConverter';
 import { getThreadColor } from '../utils/pystitchConverter';
 import type { MachineInfo } from '../types/machine';
-
-const MOVE = 0x10;
+import { MOVE } from '../utils/embroideryConstants';
 
 interface GridProps {
   gridSize: number;
@@ -182,7 +181,7 @@ export const Stitches = memo(({ stitches, pesData, currentStitchIndex, showProgr
     }
 
     return groups;
-  }, [stitches, pesData, currentStitchIndex, showProgress]);
+  }, [stitches, pesData, currentStitchIndex]);
 
   return (
     <Group name="stitches">

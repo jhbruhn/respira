@@ -8,7 +8,6 @@ import { WorkflowStepper } from './components/WorkflowStepper';
 import { NextStepGuide } from './components/NextStepGuide';
 import type { PesPatternData } from './utils/pystitchConverter';
 import { pyodideLoader } from './utils/pyodideLoader';
-import { MachineStatus } from './types/machine';
 import { hasError } from './utils/errorCodeHelpers';
 import './App.css';
 
@@ -36,20 +35,21 @@ function App() {
   }, []);
 
   // Auto-load cached pattern when available
-  useEffect(() => {
-    if (machine.resumedPattern && !pesData) {
-      console.log('[App] Loading resumed pattern:', machine.resumeFileName, 'Offset:', machine.resumedPattern.patternOffset);
-      setPesData(machine.resumedPattern.pesData);
-      // Restore the cached pattern offset
-      if (machine.resumedPattern.patternOffset) {
-        setPatternOffset(machine.resumedPattern.patternOffset);
-      }
-      // Preserve the filename from cache
-      if (machine.resumeFileName) {
-        setCurrentFileName(machine.resumeFileName);
-      }
+  const resumedPattern = machine.resumedPattern;
+  const resumeFileName = machine.resumeFileName;
+
+  if (resumedPattern && !pesData) {
+    console.log('[App] Loading resumed pattern:', resumeFileName, 'Offset:', resumedPattern.patternOffset);
+    setPesData(resumedPattern.pesData);
+    // Restore the cached pattern offset
+    if (resumedPattern.patternOffset) {
+      setPatternOffset(resumedPattern.patternOffset);
     }
-  }, [machine.resumedPattern, pesData, machine.resumeFileName]);
+    // Preserve the filename from cache
+    if (resumeFileName) {
+      setCurrentFileName(resumeFileName);
+    }
+  }
 
   const handlePatternLoaded = useCallback((data: PesPatternData, fileName: string) => {
     setPesData(data);
@@ -77,20 +77,20 @@ function App() {
   }, [machine]);
 
   // Track pattern uploaded state based on machine status
-  useEffect(() => {
-    if (!machine.isConnected) {
-      setPatternUploaded(false);
-      return;
-    }
+  const isConnected = machine.isConnected;
+  const patternInfo = machine.patternInfo;
 
-    // Pattern is uploaded if machine has pattern info
-    if (machine.patternInfo !== null) {
-      setPatternUploaded(true);
-    } else {
-      // No pattern info means no pattern on machine
+  if (!isConnected) {
+    if (patternUploaded) {
       setPatternUploaded(false);
     }
-  }, [machine.machineStatus, machine.patternInfo, machine.isConnected]);
+  } else {
+    // Pattern is uploaded if machine has pattern info
+    const shouldBeUploaded = patternInfo !== null;
+    if (patternUploaded !== shouldBeUploaded) {
+      setPatternUploaded(shouldBeUploaded);
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
