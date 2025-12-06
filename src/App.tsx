@@ -19,6 +19,7 @@ function App() {
   const [pyodideError, setPyodideError] = useState<string | null>(null);
   const [patternOffset, setPatternOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [patternUploaded, setPatternUploaded] = useState(false);
+  const [currentFileName, setCurrentFileName] = useState<string>(''); // Track current pattern filename
 
   // Initialize Pyodide on mount
   useEffect(() => {
@@ -43,11 +44,16 @@ function App() {
       if (machine.resumedPattern.patternOffset) {
         setPatternOffset(machine.resumedPattern.patternOffset);
       }
+      // Preserve the filename from cache
+      if (machine.resumeFileName) {
+        setCurrentFileName(machine.resumeFileName);
+      }
     }
   }, [machine.resumedPattern, pesData, machine.resumeFileName]);
 
-  const handlePatternLoaded = useCallback((data: PesPatternData) => {
+  const handlePatternLoaded = useCallback((data: PesPatternData, fileName: string) => {
     setPesData(data);
+    setCurrentFileName(fileName);
     // Reset pattern offset when new pattern is loaded
     setPatternOffset({ x: 0, y: 0 });
     setPatternUploaded(false);
@@ -185,6 +191,7 @@ function App() {
                 resumeAvailable={machine.resumeAvailable}
                 resumeFileName={machine.resumeFileName}
                 pesData={pesData}
+                currentFileName={currentFileName}
                 isUploading={machine.isUploading}
               />
             )}

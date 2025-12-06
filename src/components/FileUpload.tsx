@@ -9,7 +9,7 @@ interface FileUploadProps {
   isConnected: boolean;
   machineStatus: MachineStatus;
   uploadProgress: number;
-  onPatternLoaded: (pesData: PesPatternData) => void;
+  onPatternLoaded: (pesData: PesPatternData, fileName: string) => void;
   onUpload: (penData: Uint8Array, pesData: PesPatternData, fileName: string, patternOffset?: { x: number; y: number }) => void;
   pyodideReady: boolean;
   patternOffset: { x: number; y: number };
@@ -17,6 +17,7 @@ interface FileUploadProps {
   resumeAvailable: boolean;
   resumeFileName: string | null;
   pesData: PesPatternData | null;
+  currentFileName: string;
   isUploading?: boolean;
 }
 
@@ -32,6 +33,7 @@ export function FileUpload({
   resumeAvailable,
   resumeFileName,
   pesData: pesDataProp,
+  currentFileName,
   isUploading = false,
 }: FileUploadProps) {
   const [localPesData, setLocalPesData] = useState<PesPatternData | null>(null);
@@ -39,8 +41,8 @@ export function FileUpload({
 
   // Use prop pesData if available (from cached pattern), otherwise use local state
   const pesData = pesDataProp || localPesData;
-  // When resumeFileName is cleared but we still have pesData, preserve the filename
-  const displayFileName = resumeFileName || fileName || (pesDataProp ? 'pattern.pes' : '');
+  // Use currentFileName from App state, or local fileName, or resumeFileName for display
+  const displayFileName = currentFileName || fileName || resumeFileName || '';
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFileChange = useCallback(
@@ -58,7 +60,7 @@ export function FileUpload({
         const data = await convertPesToPen(file);
         setLocalPesData(data);
         setFileName(file.name);
-        onPatternLoaded(data);
+        onPatternLoaded(data, file.name);
       } catch (err) {
         alert(
           `Failed to load PES file: ${
