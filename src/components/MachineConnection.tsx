@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { InformationCircleIcon } from '@heroicons/react/24/solid';
+import {
+  InformationCircleIcon,
+  CheckCircleIcon,
+  BoltIcon,
+  PauseCircleIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/solid';
 import type { MachineInfo } from '../types/machine';
 import { MachineStatus } from '../types/machine';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -44,6 +50,16 @@ export function MachineConnection({
   };
 
   const stateVisual = getStateVisualInfo(machineStatus);
+
+  // Map icon names to Heroicons
+  const stateIcons = {
+    ready: CheckCircleIcon,
+    active: BoltIcon,
+    waiting: PauseCircleIcon,
+    complete: CheckCircleIcon,
+    interrupted: PauseCircleIcon,
+    error: ExclamationTriangleIcon,
+  };
 
   const statusBadgeColors = {
     idle: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-300 border-cyan-200 dark:border-cyan-700',
@@ -126,7 +142,10 @@ export function MachineConnection({
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Status:</span>
               <span className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-semibold text-sm ${statusBadgeColors[stateVisual.color as keyof typeof statusBadgeColors] || statusBadgeColors.info}`}>
-                <span className="text-base leading-none">{stateVisual.icon}</span>
+                {(() => {
+                  const Icon = stateIcons[stateVisual.iconName];
+                  return <Icon className="w-4 h-4" />;
+                })()}
                 <span>{machineStatusName}</span>
               </span>
             </div>
