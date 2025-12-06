@@ -252,6 +252,17 @@ export class BrotherPP1Service {
       .join(":")
       .toUpperCase();
 
+    // Fetch service count data (cumulative statistics)
+    let serviceCount: number | undefined;
+    let totalCount: number | undefined;
+    try {
+      const serviceData = await this.getServiceCount();
+      serviceCount = serviceData.serviceCount;
+      totalCount = serviceData.totalCount;
+    } catch (err) {
+      console.warn('[BrotherPP1] Failed to fetch service count:', err);
+    }
+
     return {
       serialNumber,
       modelNumber: modelCode,
@@ -260,6 +271,22 @@ export class BrotherPP1Service {
       maxWidth,
       maxHeight,
       macAddress,
+      serviceCount,
+      totalCount,
+    };
+  }
+
+  async getServiceCount(): Promise<{ serviceCount: number; totalCount: number }> {
+    const response = await this.sendCommand(Commands.SERVICE_COUNT);
+    const data = response.slice(2);
+
+    // Read uint32 values in little-endian format
+    const readUInt32LE = (offset: number) =>
+      data[offset] | (data[offset + 1] << 8) | (data[offset + 2] << 16) | (data[offset + 3] << 24);
+
+    return {
+      serviceCount: readUInt32LE(0), // Bytes 0-3
+      totalCount: readUInt32LE(4),   // Bytes 4-7
     };
   }
 

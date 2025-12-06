@@ -56,6 +56,8 @@ export interface MachineInfo {
   maxWidth: number; // in 0.1mm units
   maxHeight: number; // in 0.1mm units
   macAddress: string;
+  serviceCount?: number; // Cumulative service counter
+  totalCount?: number; // Total stitches sewn by machine
 }
 
 export interface PatternInfo {

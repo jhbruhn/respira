@@ -145,6 +145,14 @@ export function MachineConnection({
                   {(machineInfo.maxWidth / 10).toFixed(1)} × {(machineInfo.maxHeight / 10).toFixed(1)} mm
                 </span>
               </div>
+              {machineInfo.totalCount !== undefined && (
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium text-gray-600 dark:text-gray-400">Total Stitches:</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
+                    {machineInfo.totalCount.toLocaleString()}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
