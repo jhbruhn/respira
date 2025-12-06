@@ -67,10 +67,7 @@ export function MachineConnection({
         <h2 className="text-xl font-semibold">Machine Connection</h2>
         <div className="flex items-center gap-3">
           {isConnected && isPolling && (
-            <span className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-              Auto-refreshing
-            </span>
+            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" title="Auto-refreshing" aria-label="Auto-refreshing machine status"></span>
           )}
           {isConnected && (
             <button
