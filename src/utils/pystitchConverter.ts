@@ -98,8 +98,6 @@ for i, stitch in enumerate(pattern.stitches):
   // Convert Python result to JavaScript
   const data = result.toJs({ dict_converter: Object.fromEntries });
 
-  console.log('[DEBUG] PyStitch stitch_count:', data.stitch_count);
-  console.log('[DEBUG] PyStitch color_changes:', data.color_changes);
 
   // Clean up virtual file
   try {
@@ -112,32 +110,6 @@ for i, stitch in enumerate(pattern.stitches):
   const stitches: number[][] = Array.from(data.stitches).map((stitch: any) =>
     Array.from(stitch) as number[]
   );
-
-  console.log('[DEBUG] JavaScript stitches.length:', stitches.length);
-  console.log('[DEBUG] First 5 stitches:', stitches.slice(0, 5));
-  console.log('[DEBUG] Middle 5 stitches:', stitches.slice(Math.floor(stitches.length / 2), Math.floor(stitches.length / 2) + 5));
-  console.log('[DEBUG] Last 5 stitches:', stitches.slice(-5));
-
-  // Count stitch types (PyStitch constants: STITCH=0, JUMP=1, TRIM=2)
-  let jumpCount = 0, normalCount = 0;
-  for (let i = 0; i < stitches.length; i++) {
-    const cmd = stitches[i][2];
-    if (cmd === 1 || cmd === 2) jumpCount++; // JUMP or TRIM
-    else normalCount++; // STITCH (0)
-  }
-  console.log('[DEBUG] Stitch types: normal=' + normalCount + ', jump/trim=' + jumpCount);
-
-  // Calculate min/max of raw stitch values to understand the data
-  let rawMinX = Infinity, rawMaxX = -Infinity, rawMinY = Infinity, rawMaxY = -Infinity;
-  for (let i = 0; i < stitches.length; i++) {
-    const x = stitches[i][0];
-    const y = stitches[i][1];
-    rawMinX = Math.min(rawMinX, x);
-    rawMaxX = Math.max(rawMaxX, x);
-    rawMinY = Math.min(rawMinY, y);
-    rawMaxY = Math.max(rawMaxY, y);
-  }
-  console.log('[DEBUG] Raw stitch value ranges:', { rawMinX, rawMaxX, rawMinY, rawMaxY });
 
   if (!stitches || stitches.length === 0) {
     throw new Error('Invalid PES file or no stitches found');
@@ -187,15 +159,22 @@ for i, stitch in enumerate(pattern.stitches):
       yEncoded |= PEN_FEED_DATA;
     }
 
+    // Check if this is the last stitch
+    const isLastStitch = i === stitches.length - 1 || (cmd & END) !== 0;
+
     // Check for color change by comparing stitch color index
     // Mark the LAST stitch of the previous color with PEN_COLOR_END
+    // BUT: if this is the last stitch of the entire pattern, use DATA_END instead
     const nextStitch = stitches[i + 1];
     const nextStitchColor = nextStitch?.[3];
 
-    if (nextStitchColor !== undefined && nextStitchColor !== stitchColor) {
-      // This is the last stitch before a color change
+    if (!isLastStitch && nextStitchColor !== undefined && nextStitchColor !== stitchColor) {
+      // This is the last stitch before a color change (but not the last stitch overall)
       xEncoded = (xEncoded & 0xFFF8) | PEN_COLOR_END;
       currentColor = nextStitchColor;
+    } else if (isLastStitch) {
+      // This is the very last stitch of the pattern
+      xEncoded = (xEncoded & 0xFFF8) | PEN_DATA_END;
     }
 
     // Add stitch as 4 bytes: [X_low, X_high, Y_low, Y_high]
@@ -208,51 +187,11 @@ for i, stitch in enumerate(pattern.stitches):
 
     // Check for end command
     if ((cmd & END) !== 0) {
-      // Mark as data end
-      const lastIdx = penStitches.length - 4;
-      penStitches[lastIdx] = (penStitches[lastIdx] & 0xF8) | PEN_DATA_END;
       break;
     }
   }
 
-  // Mark the last stitch with DATA_END if not already marked
-  if (penStitches.length > 0) {
-    const lastIdx = penStitches.length - 4;
-    if ((penStitches[lastIdx] & 0x07) !== PEN_DATA_END) {
-      penStitches[lastIdx] = (penStitches[lastIdx] & 0xF8) | PEN_DATA_END;
-    }
-  }
-
   const penData = new Uint8Array(penStitches);
-
-  console.log('[DEBUG] PEN data size:', penData.length, 'bytes');
-  console.log('[DEBUG] Encoded stitch count:', penData.length / 4);
-  console.log('[DEBUG] Expected vs Actual:', data.stitch_count, 'vs', penData.length / 4);
-  console.log('[DEBUG] First 20 bytes (5 stitches):',
-    Array.from(penData.slice(0, 20))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join(' '));
-  console.log('[DEBUG] Last 20 bytes (5 stitches):',
-    Array.from(penData.slice(-20))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join(' '));
-  console.log('[DEBUG] Calculated bounds from stitches:', {
-    minX,
-    maxX,
-    minY,
-    maxY,
-  });
-
-  // Check for color change markers and end marker
-  let colorChangeCount = 0;
-  let hasEndMarker = false;
-  for (let i = 0; i < penData.length; i += 4) {
-    const xLow = penData[i];
-    const yLow = penData[i + 2];
-    if ((xLow & 0x07) === PEN_COLOR_END) colorChangeCount++;
-    if ((xLow & 0x07) === PEN_DATA_END) hasEndMarker = true;
-  }
-  console.log('[DEBUG] Color changes found:', colorChangeCount, '| Has END marker:', hasEndMarker);
 
   return {
     stitches,

@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { InformationCircleIcon } from '@heroicons/react/24/solid';
 import type { MachineInfo } from '../types/machine';
 import { MachineStatus } from '../types/machine';
 import { ConfirmDialog } from './ConfirmDialog';
 import { shouldConfirmDisconnect, getStateVisualInfo } from '../utils/machineStateHelpers';
-import { hasError, getErrorMessage } from '../utils/errorCodeHelpers';
+import { hasError, getErrorDetails } from '../utils/errorCodeHelpers';
 
 interface MachineConnectionProps {
   isConnected: boolean;
@@ -12,8 +13,6 @@ interface MachineConnectionProps {
   machineStatusName: string;
   machineError: number;
   isPolling: boolean;
-  resumeAvailable: boolean;
-  resumeFileName: string | null;
   onConnect: () => void;
   onDisconnect: () => void;
   onRefresh: () => void;
@@ -26,11 +25,8 @@ export function MachineConnection({
   machineStatusName,
   machineError,
   isPolling,
-  resumeAvailable,
-  resumeFileName,
   onConnect,
   onDisconnect,
-  onRefresh,
 }: MachineConnectionProps) {
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
@@ -62,70 +58,87 @@ export function MachineConnection({
     danger: 'bg-red-100 text-red-800 border-red-200',
   };
 
+  // Only show error info when connected AND there's an actual error
+  const errorInfo = (isConnected && hasError(machineError)) ? getErrorDetails(machineError) : null;
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-4 pb-2 border-b-2 border-gray-300">Machine Connection</h2>
+      <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-300">
+        <h2 className="text-xl font-semibold">Machine Connection</h2>
+        {isConnected && isPolling && (
+          <span className="flex items-center gap-2 text-xs text-gray-500">
+            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+            Auto-refreshing
+          </span>
+        )}
+      </div>
 
       {!isConnected ? (
         <div className="flex gap-3 mt-4 flex-wrap">
-          <button onClick={onConnect} className="px-6 py-3 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
+          <button onClick={onConnect} className="px-6 py-3 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3] cursor-pointer">
             Connect to Machine
           </button>
         </div>
       ) : (
         <div>
-          <div className="flex items-center gap-4 mb-4 p-3 bg-gray-100 rounded">
-            <span className={`flex items-center gap-2 px-4 py-2 rounded font-semibold text-sm border ${statusBadgeColors[stateVisual.color as keyof typeof statusBadgeColors] || statusBadgeColors.info}`}>
-              <span className="text-lg leading-none">{stateVisual.icon}</span>
-              <span className="uppercase tracking-wide">{machineStatusName}</span>
-            </span>
-            {isPolling && (
-              <span className="text-blue-600 text-xs animate-pulse" title="Polling machine status">●</span>
-            )}
-            {hasError(machineError) && (
-              <span className="bg-red-100 text-red-900 px-4 py-2 rounded font-semibold text-sm">{getErrorMessage(machineError)}</span>
-            )}
+          {/* Error/Info Display */}
+          {errorInfo && (
+            errorInfo.isInformational ? (
+              // Informational messages (like initialization steps)
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <InformationCircleIcon className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-blue-900 text-sm">{errorInfo.title}</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Regular errors shown as errors
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <span className="text-red-600 text-lg flex-shrink-0">⚠️</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-red-900 text-sm mb-1">{errorInfo.title}</div>
+                    <div className="text-xs text-red-700 font-mono">
+                      Error Code: 0x{machineError.toString(16).toUpperCase().padStart(2, '0')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          )}
+
+          {/* Machine Status */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-600">Status:</span>
+              <span className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-semibold text-sm ${statusBadgeColors[stateVisual.color as keyof typeof statusBadgeColors] || statusBadgeColors.info}`}>
+                <span className="text-base leading-none">{stateVisual.icon}</span>
+                <span>{machineStatusName}</span>
+              </span>
+            </div>
           </div>
 
+          {/* Machine Info */}
           {machineInfo && (
-            <div>
-              <div className="flex justify-between py-2 border-b border-gray-300">
+            <div className="bg-gray-50 p-4 rounded-lg space-y-2 mb-4">
+              <div className="flex justify-between text-sm">
                 <span className="font-medium text-gray-600">Model:</span>
-                <span className="font-semibold">{machineInfo.modelNumber}</span>
+                <span className="font-semibold text-gray-900">{machineInfo.modelNumber}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-300">
-                <span className="font-medium text-gray-600">Serial:</span>
-                <span className="font-semibold">{machineInfo.serialNumber}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-300">
-                <span className="font-medium text-gray-600">Software:</span>
-                <span className="font-semibold">{machineInfo.softwareVersion}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-300">
+              <div className="flex justify-between text-sm">
                 <span className="font-medium text-gray-600">Max Area:</span>
-                <span className="font-semibold">
-                  {(machineInfo.maxWidth / 10).toFixed(1)} x{' '}
-                  {(machineInfo.maxHeight / 10).toFixed(1)} mm
+                <span className="font-semibold text-gray-900">
+                  {(machineInfo.maxWidth / 10).toFixed(1)} × {(machineInfo.maxHeight / 10).toFixed(1)} mm
                 </span>
               </div>
-              <div className="flex justify-between py-2">
-                <span className="font-medium text-gray-600">MAC:</span>
-                <span className="font-semibold">{machineInfo.macAddress}</span>
-              </div>
             </div>
           )}
 
-          {resumeAvailable && resumeFileName && (
-            <div className="bg-green-100 text-green-800 px-4 py-3 rounded border border-green-200 my-4 font-medium">
-              Loaded cached pattern: "{resumeFileName}"
-            </div>
-          )}
-
-          <div className="flex gap-3 mt-4 flex-wrap">
-            <button onClick={onRefresh} className="px-6 py-3 bg-gray-600 text-white rounded font-semibold text-sm hover:bg-gray-700 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
-              Refresh Status
-            </button>
-            <button onClick={handleDisconnectClick} className="px-6 py-3 bg-red-600 text-white rounded font-semibold text-sm hover:bg-red-700 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
+          {/* Disconnect Button */}
+          <div className="flex gap-3 mt-4">
+            <button onClick={handleDisconnectClick} className="w-full px-6 py-3 bg-red-600 text-white rounded font-semibold text-sm hover:bg-red-700 transition-all hover:shadow-md cursor-pointer">
               Disconnect
             </button>
           </div>

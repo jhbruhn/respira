@@ -388,47 +388,6 @@ export class BrotherPP1Service {
     });
   }
 
-  private async pollForTransferComplete(): Promise<void> {
-    if (!this.readCharacteristic) {
-      throw new Error("Not connected");
-    }
-
-    // Poll until transfer is complete
-    while (true) {
-      const responseData = await this.readCharacteristic.readValue();
-      const response = new Uint8Array(responseData.buffer);
-
-      console.log(
-        "Poll response:",
-        Array.from(response)
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join(" "),
-      );
-
-      // Check response format: [CMD_HIGH, CMD_LOW, STATUS]
-      if (response.length < 3) {
-        throw new Error("Invalid response length");
-      }
-
-      const status = response[2];
-
-      if (status === 0x01) {
-        // Error
-        throw new Error("Transfer failed");
-      } else if (status === 0x00) {
-        // Complete
-        console.log("Transfer complete");
-        break;
-      } else if (status === 0x02) {
-        // Continue - wait 1 second and poll again (as per official app)
-        console.log("Transfer in progress, waiting...");
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } else {
-        throw new Error(`Unknown transfer status: 0x${status.toString(16)}`);
-      }
-    }
-  }
-
   async sendUUID(uuid: Uint8Array): Promise<void> {
     const response = await this.sendCommand(Commands.EMB_UUID_SEND, uuid);
 
@@ -556,10 +515,6 @@ export class BrotherPP1Service {
     const boundTop = bounds?.minY ?? 0;
     const boundRight = bounds?.maxX ?? 0;
     const boundBottom = bounds?.maxY ?? 0;
-
-    // Calculate pattern dimensions
-    const patternWidth = boundRight - boundLeft;
-    const patternHeight = boundBottom - boundTop;
 
     // Calculate move offset based on user-defined pattern offset or auto-center
     let moveX: number;

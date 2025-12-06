@@ -66,19 +66,21 @@ export function getMachineStateCategory(status: MachineStatus): MachineStateCate
  */
 export function canDeletePattern(status: MachineStatus): boolean {
   const category = getMachineStateCategory(status);
-  // Can only delete in IDLE or COMPLETE states, never during ACTIVE operations
+  // Can delete in IDLE, WAITING, or COMPLETE states, never during ACTIVE operations
   return category === MachineStateCategory.IDLE ||
+         category === MachineStateCategory.WAITING ||
          category === MachineStateCategory.COMPLETE;
 }
 
 /**
  * Determines if a pattern can be safely uploaded in the current state.
- * Only allow uploads when machine is idle.
+ * Only allow uploads when machine is idle or in a complete state.
  */
 export function canUploadPattern(status: MachineStatus): boolean {
   const category = getMachineStateCategory(status);
-  // Can only upload in IDLE state
-  return category === MachineStateCategory.IDLE;
+  // Can upload in IDLE or COMPLETE states (includes MASK_TRACE_COMPLETE)
+  return category === MachineStateCategory.IDLE ||
+         category === MachineStateCategory.COMPLETE;
 }
 
 /**
@@ -130,7 +132,7 @@ export function shouldConfirmDisconnect(status: MachineStatus): boolean {
  */
 export interface StateVisualInfo {
   color: string;
-  icon: string;
+  iconName: 'ready' | 'active' | 'waiting' | 'complete' | 'interrupted' | 'error';
   label: string;
   description: string;
 }
@@ -146,37 +148,37 @@ export function getStateVisualInfo(status: MachineStatus): StateVisualInfo {
   const visualMap: Record<MachineStateCategoryType, StateVisualInfo> = {
     [MachineStateCategory.IDLE]: {
       color: 'info',
-      icon: '⭕',
+      iconName: 'ready',
       label: 'Ready',
       description: 'Machine is idle and ready for operations'
     },
     [MachineStateCategory.ACTIVE]: {
       color: 'warning',
-      icon: '▶️',
+      iconName: 'active',
       label: 'Active',
       description: 'Operation in progress - do not interrupt'
     },
     [MachineStateCategory.WAITING]: {
       color: 'warning',
-      icon: '⏸️',
+      iconName: 'waiting',
       label: 'Waiting',
       description: 'Waiting for user or machine action'
     },
     [MachineStateCategory.COMPLETE]: {
       color: 'success',
-      icon: '✅',
+      iconName: 'complete',
       label: 'Complete',
       description: 'Operation completed successfully'
     },
     [MachineStateCategory.INTERRUPTED]: {
       color: 'danger',
-      icon: '⏹️',
+      iconName: 'interrupted',
       label: 'Interrupted',
       description: 'Operation paused or stopped'
     },
     [MachineStateCategory.ERROR]: {
       color: 'danger',
-      icon: '❌',
+      iconName: 'error',
       label: 'Error',
       description: 'Machine in error or unknown state'
     }

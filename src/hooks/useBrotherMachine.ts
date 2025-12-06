@@ -11,6 +11,7 @@ import {
   uuidToString,
 } from "../services/PatternCacheService";
 import type { PesPatternData } from "../utils/pystitchConverter";
+import { SewingMachineError } from "../utils/errorCodeHelpers";
 
 export function useBrotherMachine() {
   const [service] = useState(() => new BrotherPP1Service());
@@ -19,7 +20,7 @@ export function useBrotherMachine() {
   const [machineStatus, setMachineStatus] = useState<MachineStatus>(
     MachineStatus.None,
   );
-  const [machineError, setMachineError] = useState<number>(0);
+  const [machineError, setMachineError] = useState<number>(SewingMachineError.None);
   const [patternInfo, setPatternInfo] = useState<PatternInfo | null>(null);
   const [sewingProgress, setSewingProgress] = useState<SewingProgress | null>(
     null,
@@ -279,6 +280,7 @@ export function useBrotherMachine() {
       await service.deletePattern();
       setPatternInfo(null);
       setSewingProgress(null);
+      setUploadProgress(0); // Reset upload progress to allow new uploads
       await refreshStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete pattern");

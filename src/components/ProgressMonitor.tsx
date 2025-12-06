@@ -1,4 +1,14 @@
-import { CheckCircleIcon, ArrowRightIcon, CircleStackIcon, PlayIcon } from '@heroicons/react/24/solid';
+import {
+  CheckCircleIcon,
+  ArrowRightIcon,
+  CircleStackIcon,
+  PlayIcon,
+  CheckBadgeIcon,
+  ClockIcon,
+  PauseCircleIcon,
+  XCircleIcon,
+  ExclamationCircleIcon
+} from '@heroicons/react/24/solid';
 import type { PatternInfo, SewingProgress } from '../types/machine';
 import { MachineStatus } from '../types/machine';
 import type { PesPatternData } from '../utils/pystitchConverter';
@@ -100,40 +110,37 @@ export function ProgressMonitor({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-4 pb-2 border-b-2 border-gray-300">Sewing Progress</h2>
+    <div className="bg-white p-4 rounded-lg shadow-md">
+      <h2 className="text-lg font-semibold mb-3 pb-2 border-b border-gray-300">Sewing Progress</h2>
 
-      {patternInfo && (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Left Column - Pattern Info & Color Blocks */}
         <div>
-          <div className="flex justify-between py-2 border-b border-gray-300">
-            <span className="font-medium text-gray-600">Total Stitches:</span>
-            <span className="font-semibold">{patternInfo.totalStitches}</span>
-          </div>
-          <div className="flex justify-between py-2 border-b border-gray-300">
-            <span className="font-medium text-gray-600">Estimated Time:</span>
-            <span className="font-semibold">
-              {Math.floor(patternInfo.totalTime / 60)}:
-              {(patternInfo.totalTime % 60).toString().padStart(2, '0')}
-            </span>
-          </div>
-          <div className="flex justify-between py-2 border-b border-gray-300">
-            <span className="font-medium text-gray-600">Speed:</span>
-            <span className="font-semibold">{patternInfo.speed} spm</span>
-          </div>
-          <div className="flex justify-between py-2">
-            <span className="font-medium text-gray-600">Bounds:</span>
-            <span className="font-semibold">
-              ({patternInfo.boundLeft}, {patternInfo.boundTop}) to (
-              {patternInfo.boundRight}, {patternInfo.boundBottom})
-            </span>
-          </div>
-        </div>
-      )}
+          {patternInfo && (
+            <div className="bg-gray-50 p-3 rounded-lg mb-3">
+              <div className="grid grid-cols-3 gap-3 text-sm">
+                <div>
+                  <span className="text-gray-600 block text-xs">Total Stitches</span>
+                  <span className="font-semibold text-gray-900">{patternInfo.totalStitches.toLocaleString()}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600 block text-xs">Est. Time</span>
+                  <span className="font-semibold text-gray-900">
+                    {Math.floor(patternInfo.totalTime / 60)}:{String(patternInfo.totalTime % 60).padStart(2, '0')}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600 block text-xs">Speed</span>
+                  <span className="font-semibold text-gray-900">{patternInfo.speed} spm</span>
+                </div>
+              </div>
+            </div>
+          )}
 
-      {colorBlocks.length > 0 && (
-        <div className="mt-6 pt-4 border-t border-gray-300">
-          <h3 className="text-base font-semibold my-4">Color Blocks</h3>
-          <div className="flex flex-col gap-2">
+          {colorBlocks.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold mb-2 text-gray-700">Color Blocks</h3>
+              <div className="flex flex-col gap-2">
             {colorBlocks.map((block, index) => {
               const isCompleted = currentStitch >= block.endStitch;
               const isCurrent = index === currentBlockIndex;
@@ -149,32 +156,32 @@ export function ProgressMonitor({
               return (
                 <div
                   key={index}
-                  className={`p-3 rounded bg-gray-100 border-2 border-transparent transition-all ${
+                  className={`p-2 rounded bg-gray-100 border-2 border-transparent transition-all ${
                     isCompleted ? 'border-green-600 bg-green-50' : isCurrent ? 'border-blue-600 bg-blue-50 shadow-md shadow-blue-600/20' : 'opacity-60'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <div
-                      className="w-6 h-6 rounded border-2 border-gray-300 shadow-sm flex-shrink-0"
+                      className="w-5 h-5 rounded border-2 border-gray-300 shadow-sm flex-shrink-0"
                       style={{ backgroundColor: block.threadHex }}
                       title={block.threadHex}
                     />
-                    <span className="font-semibold flex-1">
+                    <span className="font-semibold flex-1 text-sm">
                       Thread {block.colorIndex + 1}
                     </span>
                     {isCompleted ? (
-                      <CheckCircleIcon className="w-6 h-6 text-green-600" />
+                      <CheckCircleIcon className="w-5 h-5 text-green-600" />
                     ) : isCurrent ? (
-                      <ArrowRightIcon className="w-6 h-6 text-blue-600" />
+                      <ArrowRightIcon className="w-5 h-5 text-blue-600" />
                     ) : (
-                      <CircleStackIcon className="w-6 h-6 text-gray-400" />
+                      <CircleStackIcon className="w-5 h-5 text-gray-400" />
                     )}
-                    <span className="text-sm text-gray-600">
-                      {block.stitchCount} stitches
+                    <span className="text-xs text-gray-600">
+                      {block.stitchCount.toLocaleString()}
                     </span>
                   </div>
                   {isCurrent && (
-                    <div className="mt-2 h-1 bg-white rounded overflow-hidden">
+                    <div className="mt-1.5 h-1 bg-white rounded overflow-hidden">
                       <div
                         className="h-full bg-blue-600 transition-all duration-300"
                         style={{ width: `${blockProgress}%` }}
@@ -184,160 +191,96 @@ export function ProgressMonitor({
                 </div>
               );
             })}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
 
-      {sewingProgress && (
-        <div className="mt-4">
-          <div className="h-3 bg-gray-300 rounded-md overflow-hidden my-4 shadow-inner relative">
+        {/* Right Column - Progress & Controls */}
+        <div>
+          {sewingProgress && (
+        <div className="mb-3">
+          <div className="flex justify-between items-center mb-1.5">
+            <span className="text-xs font-medium text-gray-600">Progress</span>
+            <span className="text-xl font-bold text-blue-600">{progressPercent.toFixed(1)}%</span>
+          </div>
+          <div className="h-3 bg-gray-300 rounded-md overflow-hidden shadow-inner relative mb-2">
             <div className="h-full bg-gradient-to-r from-blue-600 to-blue-700 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite]" style={{ width: `${progressPercent}%` }} />
           </div>
 
-          <div className="flex justify-between py-2 border-b border-gray-300">
-            <span className="font-medium text-gray-600">Current Stitch:</span>
-            <span className="font-semibold">
-              {sewingProgress.currentStitch} / {patternInfo?.totalStitches || 0}
-            </span>
+          <div className="bg-gray-50 p-2 rounded-lg grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span className="text-gray-600 block text-xs">Current Stitch</span>
+              <span className="font-semibold text-gray-900">
+                {sewingProgress.currentStitch.toLocaleString()} / {patternInfo?.totalStitches.toLocaleString() || 0}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600 block text-xs">Time Elapsed</span>
+              <span className="font-semibold text-gray-900">
+                {Math.floor(sewingProgress.currentTime / 60)}:{String(sewingProgress.currentTime % 60).padStart(2, '0')}
+              </span>
+            </div>
           </div>
-          <div className="flex justify-between py-2 border-b border-gray-300">
-            <span className="font-medium text-gray-600">Elapsed Time:</span>
-            <span className="font-semibold">
-              {Math.floor(sewingProgress.currentTime / 60)}:
-              {(sewingProgress.currentTime % 60).toString().padStart(2, '0')}
-            </span>
           </div>
-          <div className="flex justify-between py-2 border-b border-gray-300">
-            <span className="font-medium text-gray-600">Position:</span>
-            <span className="font-semibold">
-              ({(sewingProgress.positionX / 10).toFixed(1)}mm,{' '}
-              {(sewingProgress.positionY / 10).toFixed(1)}mm)
-            </span>
-          </div>
-          <div className="flex justify-between py-2">
-            <span className="font-medium text-gray-600">Progress:</span>
-            <span className="font-semibold">{progressPercent.toFixed(1)}%</span>
+          )}
+
+          {/* State Visual Indicator */}
+          {patternInfo && (() => {
+            const iconMap = {
+              ready: <ClockIcon className="w-6 h-6" />,
+              active: <PlayIcon className="w-6 h-6" />,
+              waiting: <PauseCircleIcon className="w-6 h-6" />,
+              complete: <CheckBadgeIcon className="w-6 h-6" />,
+              interrupted: <PauseCircleIcon className="w-6 h-6" />,
+              error: <ExclamationCircleIcon className="w-6 h-6" />
+            };
+
+            return (
+              <div className={`flex items-center gap-3 p-3 rounded-lg mb-3 border-l-4 ${stateIndicatorColors[stateVisual.color as keyof typeof stateIndicatorColors] || stateIndicatorColors.info}`}>
+                <div className="flex-shrink-0">
+                  {iconMap[stateVisual.iconName]}
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-sm">{stateVisual.label}</div>
+                  <div className="text-xs text-gray-600">{stateVisual.description}</div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Action buttons */}
+          <div className="flex gap-2 flex-wrap">
+              {/* Resume has highest priority when available */}
+              {canResumeSewing(machineStatus) && (
+                <button onClick={onResumeSewing} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition-all hover:shadow-md cursor-pointer">
+                  <PlayIcon className="w-4 h-4" />
+                  Resume Sewing
+                </button>
+              )}
+
+              {/* Start Sewing - primary action */}
+              {canStartSewing(machineStatus) && !canResumeSewing(machineStatus) && (
+                <button onClick={onStartSewing} className="px-4 py-2 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition-all hover:shadow-md cursor-pointer">
+                  Start Sewing
+                </button>
+              )}
+
+              {/* Start Mask Trace - secondary action */}
+              {canStartMaskTrace(machineStatus) && (
+                <button onClick={onStartMaskTrace} className="px-4 py-2 bg-gray-600 text-white rounded font-semibold text-sm hover:bg-gray-700 transition-all hover:shadow-md cursor-pointer">
+                  {isMaskTraceComplete ? 'Trace Again' : 'Start Mask Trace'}
+                </button>
+              )}
+
+              {/* Delete - destructive action, always last */}
+              {patternInfo && canDeletePattern(machineStatus) && (
+                <button onClick={onDeletePattern} className="px-4 py-2 bg-red-600 text-white rounded font-semibold text-sm hover:bg-red-700 transition-all hover:shadow-md ml-auto cursor-pointer">
+                  Delete Pattern
+                </button>
+              )}
           </div>
         </div>
-      )}
-
-      {/* State Visual Indicator */}
-      {patternInfo && (
-        <div className={`flex items-center gap-4 p-4 rounded-lg my-4 border-l-4 ${stateIndicatorColors[stateVisual.color as keyof typeof stateIndicatorColors] || stateIndicatorColors.info}`}>
-          <span className="text-3xl leading-none">{stateVisual.icon}</span>
-          <div className="flex-1">
-            <div className="font-semibold text-base mb-1">{stateVisual.label}</div>
-            <div className="text-sm text-gray-600">{stateVisual.description}</div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex gap-3 mt-4 flex-wrap">
-        {/* Mask trace waiting for confirmation */}
-        {isMaskTraceWait && (
-          <div className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded border border-yellow-200 font-medium w-full">
-            Press button on machine to start mask trace
-          </div>
-        )}
-
-        {/* Mask trace in progress */}
-        {isMaskTracing && (
-          <div className="bg-cyan-100 text-cyan-800 px-4 py-3 rounded border border-cyan-200 font-medium w-full">
-            Mask trace in progress...
-          </div>
-        )}
-
-        {/* Mask trace complete - ready to sew */}
-        {isMaskTraceComplete && (
-          <>
-            <div className="bg-green-100 text-green-800 px-4 py-3 rounded border border-green-200 font-medium w-full">
-              Mask trace complete!
-            </div>
-            {canStartSewing(machineStatus) && (
-              <button onClick={onStartSewing} className="px-6 py-3 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition-all hover:shadow-md  disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
-                Start Sewing
-              </button>
-            )}
-            {canStartMaskTrace(machineStatus) && (
-              <button onClick={onStartMaskTrace} className="px-6 py-3 bg-gray-600 text-white rounded font-semibold text-sm hover:bg-gray-700 transition-all hover:shadow-md  disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
-                Trace Again
-              </button>
-            )}
-          </>
-        )}
-
-        {/* Pattern uploaded, ready to trace */}
-        {machineStatus === MachineStatus.IDLE && (
-          <>
-            <div className="bg-cyan-100 text-cyan-800 px-4 py-3 rounded border border-cyan-200 font-medium w-full">
-              Pattern uploaded successfully
-            </div>
-            {canStartMaskTrace(machineStatus) && (
-              <button onClick={onStartMaskTrace} className="px-6 py-3 bg-gray-600 text-white rounded font-semibold text-sm hover:bg-gray-700 transition-all hover:shadow-md  disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
-                Start Mask Trace
-              </button>
-            )}
-          </>
-        )}
-
-        {/* Ready to start (pattern uploaded) */}
-        {machineStatus === MachineStatus.SEWING_WAIT && (
-          <>
-            {canStartMaskTrace(machineStatus) && (
-              <button onClick={onStartMaskTrace} className="px-6 py-3 bg-gray-600 text-white rounded font-semibold text-sm hover:bg-gray-700 transition-all hover:shadow-md  disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
-                Start Mask Trace
-              </button>
-            )}
-            {canStartSewing(machineStatus) && (
-              <button onClick={onStartSewing} className="px-6 py-3 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition-all hover:shadow-md  disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
-                Start Sewing
-              </button>
-            )}
-          </>
-        )}
-
-        {/* Resume sewing for interrupted states */}
-        {canResumeSewing(machineStatus) && (
-          <button onClick={onResumeSewing} className="px-6 py-3 bg-blue-600 text-white rounded font-semibold text-sm hover:bg-blue-700 transition-all hover:shadow-md  disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3] flex items-center gap-2">
-            <PlayIcon className="w-4 h-4" />
-            Resume Sewing
-          </button>
-        )}
-
-        {/* Color change needed */}
-        {isColorChange && (
-          <div className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded border border-yellow-200 font-medium w-full">
-            Waiting for color change - change thread and press button on machine
-          </div>
-        )}
-
-        {/* Sewing in progress */}
-        {isSewing && (
-          <div className="bg-cyan-100 text-cyan-800 px-4 py-3 rounded border border-cyan-200 font-medium w-full">
-            Sewing in progress...
-          </div>
-        )}
-
-        {/* Sewing complete */}
-        {isComplete && (
-          <div className="bg-green-100 text-green-800 px-4 py-3 rounded border border-green-200 font-medium w-full">
-            Sewing complete!
-          </div>
-        )}
-
-        {/* Delete pattern button - ONLY show when safe */}
-        {patternInfo && canDeletePattern(machineStatus) && (
-          <button onClick={onDeletePattern} className="px-6 py-3 bg-red-600 text-white rounded font-semibold text-sm hover:bg-red-700 transition-all hover:shadow-md  disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.3]">
-            Delete Pattern
-          </button>
-        )}
-
-        {/* Show warning when delete is unavailable */}
-        {patternInfo && !canDeletePattern(machineStatus) && (
-          <div className="bg-cyan-100 text-cyan-800 px-4 py-3 rounded border border-cyan-200 font-medium w-full">
-            Pattern cannot be deleted during active operations
-          </div>
-        )}
       </div>
     </div>
   );
