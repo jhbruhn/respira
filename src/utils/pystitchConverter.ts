@@ -1,9 +1,13 @@
 import { pyodideLoader } from './pyodideLoader';
 
 // PEN format flags
-const PEN_FEED_DATA = 0x01; // Y-coordinate low byte, bit 0 (jump)
-const PEN_COLOR_END = 0x03; // X-coordinate low byte, bits 0-2
-const PEN_DATA_END = 0x05;  // X-coordinate low byte, bits 0-2
+// Y-coordinate low byte flags (can be combined)
+const PEN_FEED_DATA = 0x01; // Bit 0: Jump stitch (move without stitching)
+const PEN_CUT_DATA = 0x02;  // Bit 1: Trim/cut thread command
+
+// X-coordinate low byte flags (bits 0-2, mutually exclusive)
+const PEN_COLOR_END = 0x03; // Last stitch before color change
+const PEN_DATA_END = 0x05;  // Last stitch of entire pattern
 
 // Embroidery command constants (from pyembroidery)
 const MOVE = 0x10;
@@ -153,10 +157,14 @@ for i, stitch in enumerate(pattern.stitches):
     let xEncoded = (absX << 3) & 0xFFFF;
     let yEncoded = (absY << 3) & 0xFFFF;
 
-    // Add jump flag if this is a JUMP (1) or TRIM (2) command
+    // Add command flags to Y-coordinate based on stitch type
     // PyStitch constants: STITCH=0, JUMP=1, TRIM=2
-    if (cmd === 1 || cmd === 2) {
+    if (cmd === 1) {
+      // JUMP: Set bit 0 (FEED_DATA) - move without stitching
       yEncoded |= PEN_FEED_DATA;
+    } else if (cmd === 2) {
+      // TRIM: Set bit 1 (CUT_DATA) - cut thread command
+      yEncoded |= PEN_CUT_DATA;
     }
 
     // Check if this is the last stitch
