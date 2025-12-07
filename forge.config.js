@@ -1,14 +1,14 @@
 module.exports = {
   packagerConfig: {
     asar: true,
-    executableName: 'skitch-controller',
+    executableName: 'respira',
   },
   rebuildConfig: {},
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        name: 'respira_web',
+        name: 'Respira',
       },
     },
     {

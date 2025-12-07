@@ -117,7 +117,7 @@ function App() {
             <div className="w-2.5 h-2.5 bg-gray-400 rounded-full -ml-2.5" style={{ visibility: !machine.isConnected ? 'visible' : 'hidden' }}></div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold text-white leading-tight">SKiTCH Controller</h1>
+                <h1 className="text-lg font-bold text-white leading-tight">Respira</h1>
                 {machine.isConnected && machine.machineInfo?.serialNumber && (
                   <span
                     className="text-sm text-blue-200 cursor-help"

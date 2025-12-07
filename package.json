@@ -1,9 +1,9 @@
 {
-  "name": "skitch-controller",
-  "productName": "SKiTCH Controller",
+  "name": "respira",
+  "productName": "Respira",
   "version": "0.0.0",
-  "description": "Desktop controller for Brother embroidery machines",
-  "author": "Your Name",
+  "description": "Desktop controller for the Brother PP-1 SKiTCH embroidery machine",
+  "author": "jhbruhn <respira@jhbruhn.de>",
   "private": true,
   "license": "Apache-2.0",
   "main": ".vite/build/main.js",
