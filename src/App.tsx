@@ -118,7 +118,24 @@ function App() {
               <div className="flex items-center gap-2">
                 <h1 className="text-lg font-bold text-white leading-tight">SKiTCH Controller</h1>
                 {machine.isConnected && machine.machineInfo?.serialNumber && (
-                  <span className="text-sm text-blue-200">• {machine.machineInfo.serialNumber}</span>
+                  <span
+                    className="text-sm text-blue-200 cursor-help"
+                    title={`Serial: ${machine.machineInfo.serialNumber}${
+                      machine.machineInfo.macAddress
+                        ? `\nMAC: ${machine.machineInfo.macAddress}`
+                        : ''
+                    }${
+                      machine.machineInfo.totalCount !== undefined
+                        ? `\nTotal stitches: ${machine.machineInfo.totalCount.toLocaleString()}`
+                        : ''
+                    }${
+                      machine.machineInfo.serviceCount !== undefined
+                        ? `\nStitches since service: ${machine.machineInfo.serviceCount.toLocaleString()}`
+                        : ''
+                    }`}
+                  >
+                    • {machine.machineInfo.serialNumber}
+                  </span>
                 )}
                 {machine.isPolling && (
                   <ArrowPathIcon className="w-3.5 h-3.5 text-blue-200 animate-spin" title="Auto-refreshing status" />
