@@ -39,6 +39,7 @@ export function ProgressMonitor({
   onStartMaskTrace,
   onStartSewing,
   onResumeSewing,
+  isDeleting = false,
 }: ProgressMonitorProps) {
   // State indicators
   const isMaskTraceComplete = machineStatus === MachineStatus.MASK_TRACE_COMPLETE;
