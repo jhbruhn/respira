@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  draft-release:
+    name: Draft Release
+    runs-on: ubuntu-latest
+    outputs:
+      release-id: ${{ steps.drafter.outputs.id }}
+      tag-name: ${{ steps.drafter.outputs.tag_name }}
+      version: ${{ steps.drafter.outputs.resolved_version }}
+    steps:
+      - name: Draft release
+        id: drafter
+        uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-release:
+    name: Build Release - ${{ matrix.os }}
+    needs: draft-release
+    if: needs.draft-release.outputs.tag-name != ''
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Update package.json version
+        run: |
+          npm version ${{ needs.draft-release.outputs.version }} --no-git-tag-version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Package and make
+        run: npm run make
+
+      - name: Upload Windows release assets
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/${{ needs.draft-release.outputs.release-id }}/assets
+          asset_path: out/make/squirrel.windows/x64/*.exe
+          asset_name: SKiTCH-Controller-${{ needs.draft-release.outputs.version }}-Setup.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload all Windows assets
+        if: matrix.os == 'windows-latest'
+        run: |
+          for file in out/make/squirrel.windows/x64/*; do
+            gh release upload ${{ needs.draft-release.outputs.tag-name }} "$file" --clobber
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS assets
+        if: matrix.os == 'macos-latest'
+        run: |
+          for file in out/make/zip/darwin/**/*.zip; do
+            gh release upload ${{ needs.draft-release.outputs.tag-name }} "$file" --clobber
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Linux assets
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          for file in out/make/deb/x64/*.deb out/make/rpm/x64/*.rpm; do
+            gh release upload ${{ needs.draft-release.outputs.tag-name }} "$file" --clobber
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
