@@ -1,0 +1,35 @@
+<svg width="256" height="256" viewBox="0 0 256 256" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title>Embroidery Machine Controller Icon</title>
+  
+  <circle cx="128" cy="128" r="128" fill="#2563eb"/>
+  
+  <circle cx="128" cy="128" r="120" fill="none" stroke="white" stroke-width="8"/>
+
+  <path d="M110 178 L118 190 L138 190 L146 178 L142 166 L114 166 Z" fill="black" transform="rotate(45, 128, 178)"/>
+  <path d="M110 178 L118 190 L138 190 L146 178 L142 166 L114 166 Z" fill="black" transform="rotate(0, 128, 178)"/>
+  <path d="M110 178 L118 190 L138 190 L146 178 L142 166 L114 166 Z" fill="black" transform="rotate(90, 128, 178)"/>
+  <path d="M110 178 L118 190 L138 190 L146 178 L142 166 L114 166 Z" fill="black" transform="rotate(135, 128, 178)"/>
+  <circle cx="128" cy="178" r="18" fill="black"/>
+
+  <rect x="100" y="160" width="56" height="36" rx="4" ry="4" fill="white" stroke="black" stroke-width="2"/>
+  <line x1="105" y1="170" x2="151" y2="170" stroke="black" stroke-width="1.5"/>
+  <line x1="105" y1="176" x2="151" y2="176" stroke="black" stroke-width="1.5"/>
+  <line x1="105" y1="182" x2="151" y2="182" stroke="black" stroke-width="1.5"/>
+  <line x1="105" y1="188" x2="151" y2="188" stroke="black" stroke-width="1.5"/>
+
+  <rect x="125" y="60" width="6" height="120" rx="3" ry="3" fill="white"/>
+  <circle cx="128" cy="65" r="4" fill="white"/> 
+  <circle cx="128" cy="175" r="3" fill="white"/>
+
+  <path d="M128 60 
+           C 180 80, 180 120, 128 140
+           M128 100
+           C 160 110, 160 130, 128 140
+           M128 100
+           C 80 80, 80 120, 128 140"
+        fill="none" 
+        stroke="white" 
+        stroke-width="8" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+</svg>

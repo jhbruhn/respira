@@ -71,6 +71,9 @@ jobs:
           for file in out/make/zip/darwin/**/*.zip; do
             gh release upload ${{ needs.draft-release.outputs.tag-name }} "$file" --clobber
           done
+          for file in out/make/dmg/darwin/**/*.dmg; do
+            gh release upload ${{ needs.draft-release.outputs.tag-name }} "$file" --clobber
+          done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

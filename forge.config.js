@@ -2,6 +2,7 @@ module.exports = {
   packagerConfig: {
     asar: true,
     executableName: 'respira',
+    icon: './public/icons/icon'
   },
   rebuildConfig: {},
   makers: [
@@ -9,19 +10,30 @@ module.exports = {
       name: '@electron-forge/maker-squirrel',
       config: {
         name: 'Respira',
+        setupIcon: './public/icons/icon.ico'
       },
     },
     {
       name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
+      platforms: ['darwin']
+    },
+    {
+      name: '@electron-forge/maker-dmg',
+      config: {
+        icon: './public/icons/icon.icns'
+      }
     },
     {
       name: '@electron-forge/maker-deb',
-      config: {},
+      config: {
+        icon: './public/icons/256x256.png'
+      },
     },
     {
       name: '@electron-forge/maker-rpm',
-      config: {},
+      config: {
+        icon: './public/icons/256x256.png'
+      },
     },
   ],
   plugins: [
