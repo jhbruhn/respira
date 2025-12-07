@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useBrotherMachine } from './hooks/useBrotherMachine';
-import { MachineConnection } from './components/MachineConnection';
 import { FileUpload } from './components/FileUpload';
 import { PatternCanvas } from './components/PatternCanvas';
 import { ProgressMonitor } from './components/ProgressMonitor';
@@ -10,7 +9,8 @@ import { PatternSummaryCard } from './components/PatternSummaryCard';
 import type { PesPatternData } from './utils/pystitchConverter';
 import { pyodideLoader } from './utils/pyodideLoader';
 import { hasError } from './utils/errorCodeHelpers';
-import { canDeletePattern } from './utils/machineStateHelpers';
+import { canDeletePattern, getStateVisualInfo } from './utils/machineStateHelpers';
+import { CheckCircleIcon, BoltIcon, PauseCircleIcon, ExclamationTriangleIcon, ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import './App.css';
 
 function App() {
@@ -94,23 +94,67 @@ function App() {
     }
   }
 
+  // Get state visual info for header status badge
+  const stateVisual = getStateVisualInfo(machine.machineStatus);
+  const stateIcons = {
+    ready: CheckCircleIcon,
+    active: BoltIcon,
+    waiting: PauseCircleIcon,
+    complete: CheckCircleIcon,
+    interrupted: PauseCircleIcon,
+    error: ExclamationTriangleIcon,
+  };
+  const StatusIcon = stateIcons[stateVisual.iconName];
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 px-8 py-3 shadow-lg border-b-2 border-blue-900/20 dark:border-blue-800/30">
-        <div className="max-w-[1600px] mx-auto flex items-center gap-8">
-          <h1 className="text-xl font-bold text-white whitespace-nowrap">SKiTCH Controller</h1>
-
-          {/* Workflow Stepper - Integrated in header when connected */}
-          {machine.isConnected && (
-            <div className="flex-1">
-              <WorkflowStepper
-                machineStatus={machine.machineStatus}
-                isConnected={machine.isConnected}
-                hasPattern={pesData !== null}
-                patternUploaded={patternUploaded}
-              />
+        <div className="max-w-[1600px] mx-auto grid grid-cols-[300px_1fr] gap-8 items-center">
+          {/* Machine Connection Status - Fixed width column */}
+          <div className="flex items-center gap-3 w-[300px]">
+            <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50" style={{ visibility: machine.isConnected ? 'visible' : 'hidden' }}></div>
+            <div className="w-2.5 h-2.5 bg-gray-400 rounded-full -ml-2.5" style={{ visibility: !machine.isConnected ? 'visible' : 'hidden' }}></div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm font-bold text-white leading-tight">SKiTCH Controller</h1>
+                {machine.isPolling && (
+                  <ArrowPathIcon className="w-3 h-3 text-blue-200 animate-spin" title="Auto-refreshing status" />
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-0.5 min-w-0">
+                <p className="text-xs text-blue-200 truncate">
+                  {machine.isConnected ? (machine.machineInfo?.serialNumber || 'Connected') : 'Not Connected'}
+                </p>
+                {machine.isConnected && (
+                  <>
+                    <button
+                      onClick={machine.disconnect}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-white/10 hover:bg-white/20 text-blue-100 hover:text-white border border-white/20 hover:border-white/30 cursor-pointer transition-all flex-shrink-0"
+                      title="Disconnect from machine"
+                      aria-label="Disconnect from machine"
+                    >
+                      <XMarkIcon className="w-2.5 h-2.5" />
+                      Disconnect
+                    </button>
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-white/20 text-white border border-white/30 flex-shrink-0">
+                      <StatusIcon className="w-2.5 h-2.5" />
+                      {machine.machineStatusName}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* Workflow Stepper - Flexible width column */}
+          <div>
+            <WorkflowStepper
+              machineStatus={machine.machineStatus}
+              isConnected={machine.isConnected}
+              hasPattern={pesData !== null}
+              patternUploaded={patternUploaded}
+            />
+          </div>
         </div>
       </header>
 
@@ -155,18 +199,28 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
           {/* Left Column - Controls */}
           <div className="flex flex-col gap-6">
-            {/* Machine Connection - Always visible */}
-            <MachineConnection
-              isConnected={machine.isConnected}
-              machineInfo={machine.machineInfo}
-              machineStatus={machine.machineStatus}
-              machineStatusName={machine.machineStatusName}
-              machineError={machine.machineError}
-              isPolling={machine.isPolling}
-              onConnect={machine.connect}
-              onDisconnect={machine.disconnect}
-              onRefresh={machine.refreshStatus}
-            />
+            {/* Connect Button - Show when disconnected */}
+            {!machine.isConnected && (
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-gray-400 dark:border-gray-600">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-6 h-6 text-gray-600 dark:text-gray-400 flex-shrink-0 mt-0.5">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Get Started</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Connect to your embroidery machine</p>
+                  </div>
+                </div>
+                <button
+                  onClick={machine.connect}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer"
+                >
+                  Connect to Machine
+                </button>
+              </div>
+            )}
 
             {/* Pattern File - Show during upload stage (before pattern is uploaded) */}
             {machine.isConnected && !patternUploaded && (

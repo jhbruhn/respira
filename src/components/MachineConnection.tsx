@@ -85,8 +85,8 @@ export function MachineConnection({
           <div className="flex items-start gap-3 mb-3">
             <WifiIcon className="w-6 h-6 text-gray-600 dark:text-gray-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Machine Connection</h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Not connected</p>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Machine</h3>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Ready to connect</p>
             </div>
           </div>
 
@@ -102,17 +102,10 @@ export function MachineConnection({
           <div className="flex items-start gap-3 mb-3">
             <WifiIcon className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Machine Connected</h3>
-                {isPolling && (
-                  <span className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-pulse" title="Auto-refreshing" aria-label="Auto-refreshing machine status"></span>
-                )}
-              </div>
-              {machineInfo && (
-                <p className="text-xs text-gray-600 dark:text-gray-400 truncate" title={machineInfo.serialNumber}>
-                  {machineInfo.serialNumber}
-                </p>
-              )}
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Machine Info</h3>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {machineInfo?.modelNumber || 'Brother Embroidery Machine'}
+              </p>
             </div>
           </div>
 
