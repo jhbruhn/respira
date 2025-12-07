@@ -55,18 +55,7 @@ jobs:
       - name: Package and make
         run: npm run make
 
-      - name: Upload Windows release assets
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: https://uploads.github.com/repos/${{ github.repository }}/releases/${{ needs.draft-release.outputs.release-id }}/assets
-          asset_path: out/make/squirrel.windows/x64/*.exe
-          asset_name: SKiTCH-Controller-${{ needs.draft-release.outputs.version }}-Setup.exe
-          asset_content_type: application/octet-stream
-
-      - name: Upload all Windows assets
+      - name: Upload Windows assets
         if: matrix.os == 'windows-latest'
         run: |
           for file in out/make/squirrel.windows/x64/*; do
