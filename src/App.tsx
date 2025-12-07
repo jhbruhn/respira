@@ -116,31 +116,33 @@ function App() {
             <div className="w-2.5 h-2.5 bg-gray-400 rounded-full -ml-2.5" style={{ visibility: !machine.isConnected ? 'visible' : 'hidden' }}></div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-sm font-bold text-white leading-tight">SKiTCH Controller</h1>
+                <h1 className="text-lg font-bold text-white leading-tight">SKiTCH Controller</h1>
+                {machine.isConnected && machine.machineInfo?.serialNumber && (
+                  <span className="text-sm text-blue-200">• {machine.machineInfo.serialNumber}</span>
+                )}
                 {machine.isPolling && (
-                  <ArrowPathIcon className="w-3 h-3 text-blue-200 animate-spin" title="Auto-refreshing status" />
+                  <ArrowPathIcon className="w-3.5 h-3.5 text-blue-200 animate-spin" title="Auto-refreshing status" />
                 )}
               </div>
-              <div className="flex items-center gap-2 mt-0.5 min-w-0">
-                <p className="text-xs text-blue-200 truncate">
-                  {machine.isConnected ? (machine.machineInfo?.serialNumber || 'Connected') : 'Not Connected'}
-                </p>
-                {machine.isConnected && (
+              <div className="flex items-center gap-2 mt-1">
+                {machine.isConnected ? (
                   <>
                     <button
                       onClick={machine.disconnect}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-white/10 hover:bg-white/20 text-blue-100 hover:text-white border border-white/20 hover:border-white/30 cursor-pointer transition-all flex-shrink-0"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-white/10 hover:bg-white/20 text-blue-100 hover:text-white border border-white/20 hover:border-white/30 cursor-pointer transition-all flex-shrink-0"
                       title="Disconnect from machine"
                       aria-label="Disconnect from machine"
                     >
-                      <XMarkIcon className="w-2.5 h-2.5" />
+                      <XMarkIcon className="w-3 h-3" />
                       Disconnect
                     </button>
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-white/20 text-white border border-white/30 flex-shrink-0">
-                      <StatusIcon className="w-2.5 h-2.5" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-white/20 text-white border border-white/30 flex-shrink-0">
+                      <StatusIcon className="w-3 h-3" />
                       {machine.machineStatusName}
                     </span>
                   </>
+                ) : (
+                  <p className="text-sm text-blue-200">Not Connected</p>
                 )}
               </div>
             </div>
