@@ -7,14 +7,16 @@ import type {
 } from "../types/machine";
 import { MachineStatus, MachineStatusNames } from "../types/machine";
 import {
-  PatternCacheService,
   uuidToString,
 } from "../services/PatternCacheService";
+import type { IStorageService } from "../platform/interfaces/IStorageService";
+import { createStorageService } from "../platform";
 import type { PesPatternData } from "../utils/pystitchConverter";
 import { SewingMachineError } from "../utils/errorCodeHelpers";
 
 export function useBrotherMachine() {
   const [service] = useState(() => new BrotherPP1Service());
+  const [storageService] = useState<IStorageService>(() => createStorageService());
   const [isConnected, setIsConnected] = useState(false);
   const [machineInfo, setMachineInfo] = useState<MachineInfo | null>(null);
   const [machineStatus, setMachineStatus] = useState<MachineStatus>(
@@ -81,7 +83,7 @@ export function useBrotherMachine() {
 
       // Check if we have this pattern cached
       const uuidStr = uuidToString(machineUuid);
-      const cached = PatternCacheService.getPatternByUUID(uuidStr);
+      const cached = await storageService.getPatternByUUID(uuidStr);
 
       if (cached) {
         console.log("[Resume] Pattern found in cache:", cached.fileName, "Offset:", cached.patternOffset);
@@ -113,7 +115,7 @@ export function useBrotherMachine() {
       setResumeFileName(null);
       return null;
     }
-  }, [service]);
+  }, [service, storageService]);
 
   const connect = useCallback(async () => {
     try {
@@ -216,7 +218,7 @@ export function useBrotherMachine() {
         if (!machineUuid) return null;
 
         const uuidStr = uuidToString(machineUuid);
-        const cached = PatternCacheService.getPatternByUUID(uuidStr);
+        const cached = await storageService.getPatternByUUID(uuidStr);
 
         if (cached) {
           console.log("[Resume] Loading cached pattern:", cached.fileName, "Offset:", cached.patternOffset);
@@ -232,7 +234,7 @@ export function useBrotherMachine() {
         );
         return null;
       }
-    }, [service, resumeAvailable, refreshPatternInfo]);
+    }, [service, storageService, resumeAvailable, refreshPatternInfo]);
 
   const uploadPattern = useCallback(
     async (penData: Uint8Array, pesData: PesPatternData, fileName: string, patternOffset?: { x: number; y: number }) => {
@@ -257,7 +259,7 @@ export function useBrotherMachine() {
 
         // Cache the pattern with its UUID and offset
         const uuidStr = uuidToString(uuid);
-        PatternCacheService.savePattern(uuidStr, pesData, fileName, patternOffset);
+        storageService.savePattern(uuidStr, pesData, fileName, patternOffset);
         console.log("[Cache] Saved pattern:", fileName, "with UUID:", uuidStr, "Offset:", patternOffset);
 
         // Clear resume state since we just uploaded
@@ -275,7 +277,7 @@ export function useBrotherMachine() {
         setIsUploading(false); // Clear loading state
       }
     },
-    [service, isConnected, refreshStatus, refreshPatternInfo],
+    [service, storageService, isConnected, refreshStatus, refreshPatternInfo],
   );
 
   const startMaskTrace = useCallback(async () => {
@@ -328,7 +330,7 @@ export function useBrotherMachine() {
         const machineUuid = await service.getPatternUUID();
         if (machineUuid) {
           const uuidStr = uuidToString(machineUuid);
-          PatternCacheService.deletePattern(uuidStr);
+          await storageService.deletePattern(uuidStr);
           console.log("[Cache] Deleted pattern with UUID:", uuidStr);
         }
       } catch (err) {
@@ -353,7 +355,7 @@ export function useBrotherMachine() {
     } finally {
       setIsDeleting(false); // Clear loading state
     }
-  }, [service, isConnected, refreshStatus]);
+  }, [service, storageService, isConnected, refreshStatus]);
 
   // Periodic status monitoring when connected
   useEffect(() => {

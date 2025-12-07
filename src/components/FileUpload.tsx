@@ -4,6 +4,8 @@ import { MachineStatus } from '../types/machine';
 import { canUploadPattern, getMachineStateCategory } from '../utils/machineStateHelpers';
 import { PatternInfoSkeleton } from './SkeletonLoader';
 import { ArrowUpTrayIcon, CheckCircleIcon, DocumentTextIcon, FolderOpenIcon } from '@heroicons/react/24/solid';
+import { createFileService } from '../platform';
+import type { IFileService } from '../platform/interfaces/IFileService';
 
 interface FileUploadProps {
   isConnected: boolean;
@@ -38,6 +40,7 @@ export function FileUpload({
 }: FileUploadProps) {
   const [localPesData, setLocalPesData] = useState<PesPatternData | null>(null);
   const [fileName, setFileName] = useState<string>('');
+  const [fileService] = useState<IFileService>(() => createFileService());
 
   // Use prop pesData if available (from cached pattern), otherwise use local state
   const pesData = pesDataProp || localPesData;
@@ -46,10 +49,7 @@ export function FileUpload({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
+    async (event?: React.ChangeEvent<HTMLInputElement>) => {
       if (!pyodideReady) {
         alert('Python environment is still loading. Please wait...');
         return;
@@ -57,6 +57,21 @@ export function FileUpload({
 
       setIsLoading(true);
       try {
+        let file: File | null = null;
+
+        // In Electron, use native file dialogs
+        if (fileService.hasNativeDialogs()) {
+          file = await fileService.openFileDialog({ accept: '.pes' });
+        } else {
+          // In browser, use the input element
+          file = event?.target.files?.[0] || null;
+        }
+
+        if (!file) {
+          setIsLoading(false);
+          return;
+        }
+
         const data = await convertPesToPen(file);
         setLocalPesData(data);
         setFileName(file.name);
@@ -71,7 +86,7 @@ export function FileUpload({
         setIsLoading(false);
       }
     },
-    [onPatternLoaded, pyodideReady]
+    [fileService, onPatternLoaded, pyodideReady]
   );
 
   const handleUpload = useCallback(() => {
@@ -164,7 +179,8 @@ export function FileUpload({
           disabled={!pyodideReady || isLoading || patternUploaded || isUploading}
         />
         <label
-          htmlFor="file-input"
+          htmlFor={fileService.hasNativeDialogs() ? undefined : "file-input"}
+          onClick={fileService.hasNativeDialogs() ? () => handleFileChange() : undefined}
           className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded font-semibold text-xs transition-all ${
             !pyodideReady || isLoading || patternUploaded || isUploading
               ? 'opacity-50 cursor-not-allowed bg-gray-400 dark:bg-gray-600 text-white'

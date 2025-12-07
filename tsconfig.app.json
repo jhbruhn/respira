@@ -5,7 +5,7 @@
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["vite/client", "web-bluetooth"],
+    "types": ["vite/client", "web-bluetooth", "node"],
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -24,5 +24,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src", "electron"]
 }

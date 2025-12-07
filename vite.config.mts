@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
+import tailwindcss from '@tailwindcss/vite'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import type { Plugin } from 'vite'
@@ -12,7 +12,7 @@ const PYODIDE_EXCLUDE = [
   '!**/node_modules',
 ]
 
-function viteStaticCopyPyodide() {
+export function viteStaticCopyPyodide() {
   const pyodideDir = dirname(fileURLToPath(import.meta.resolve('pyodide')))
   return viteStaticCopy({
     targets: [
@@ -66,7 +66,7 @@ async function getPyPIWheelUrl(packageName: string, version: string): Promise<{ 
   }
 }
 
-function downloadPyPIWheels(packages: PyPIPackage[]): Plugin {
+export function downloadPyPIWheels(packages: PyPIPackage[]): Plugin {
   const wheels: WheelData[] = []
 
   return {

@@ -6,6 +6,7 @@ import { ProgressMonitor } from './components/ProgressMonitor';
 import { WorkflowStepper } from './components/WorkflowStepper';
 import { NextStepGuide } from './components/NextStepGuide';
 import { PatternSummaryCard } from './components/PatternSummaryCard';
+import { BluetoothDevicePicker } from './components/BluetoothDevicePicker';
 import type { PesPatternData } from './utils/pystitchConverter';
 import { pyodideLoader } from './utils/pyodideLoader';
 import { hasError } from './utils/errorCodeHelpers';
@@ -365,6 +366,9 @@ function App() {
             />
           </div>
         </div>
+
+        {/* Bluetooth Device Picker (Electron only) */}
+        <BluetoothDevicePicker />
       </div>
     </div>
   );
