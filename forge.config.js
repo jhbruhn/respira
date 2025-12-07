@@ -1,6 +1,7 @@
 module.exports = {
   packagerConfig: {
     asar: true,
+    executableName: 'skitch-controller',
   },
   rebuildConfig: {},
   makers: [
