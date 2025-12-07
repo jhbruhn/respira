@@ -178,12 +178,12 @@ export function FileUpload({
           onChange={handleFileChange}
           id="file-input"
           className="hidden"
-          disabled={!pyodideReady || isLoading || patternUploaded}
+          disabled={!pyodideReady || isLoading || patternUploaded || isUploading}
         />
         <label
           htmlFor="file-input"
           className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded font-semibold text-xs transition-all ${
-            !pyodideReady || isLoading || patternUploaded
+            !pyodideReady || isLoading || patternUploaded || isUploading
               ? 'opacity-50 cursor-not-allowed bg-gray-400 dark:bg-gray-600 text-white'
               : 'cursor-pointer bg-gray-600 dark:bg-gray-700 text-white hover:bg-gray-700 dark:hover:bg-gray-600'
           }`}

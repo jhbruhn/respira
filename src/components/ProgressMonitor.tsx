@@ -274,7 +274,8 @@ export function ProgressMonitor({
         {canResumeSewing(machineStatus) && (
           <button
             onClick={onResumeSewing}
-            className="flex items-center gap-2 px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer"
+            disabled={isDeleting}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Resume sewing the current pattern"
           >
             <PlayIcon className="w-3.5 h-3.5" />
@@ -286,7 +287,8 @@ export function ProgressMonitor({
         {canStartSewing(machineStatus) && !canResumeSewing(machineStatus) && (
           <button
             onClick={onStartSewing}
-            className="px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer"
+            disabled={isDeleting}
+            className="px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Start sewing the pattern"
           >
             Start Sewing
@@ -297,7 +299,8 @@ export function ProgressMonitor({
         {canStartMaskTrace(machineStatus) && (
           <button
             onClick={onStartMaskTrace}
-            className="px-3 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded font-semibold text-xs hover:bg-gray-700 dark:hover:bg-gray-600 active:bg-gray-800 dark:active:bg-gray-500 transition-colors cursor-pointer"
+            disabled={isDeleting}
+            className="px-3 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded font-semibold text-xs hover:bg-gray-700 dark:hover:bg-gray-600 active:bg-gray-800 dark:active:bg-gray-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={isMaskTraceComplete ? 'Start mask trace again' : 'Start mask trace'}
           >
             {isMaskTraceComplete ? 'Trace Again' : 'Start Mask Trace'}
