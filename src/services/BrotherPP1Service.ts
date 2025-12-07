@@ -5,6 +5,14 @@ import type {
 } from "../types/machine";
 import { MachineStatus } from "../types/machine";
 
+// Custom error for pairing issues
+export class BluetoothPairingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'BluetoothPairingError';
+  }
+}
+
 // BLE Service and Characteristic UUIDs
 const SERVICE_UUID = "a76eb9e0-f3ac-4990-84cf-3a94d2426b2b";
 const WRITE_CHAR_UUID = "a76eb9e2-f3ac-4990-84cf-3a94d2426b2b";
@@ -48,7 +56,9 @@ export class BrotherPP1Service {
   private commandQueue: Array<() => Promise<void>> = [];
   private isProcessingQueue = false;
   private isCommunicating = false;
+  private isInitialConnection = false;
   private communicationCallbacks: Set<(isCommunicating: boolean) => void> = new Set();
+  private disconnectCallbacks: Set<() => void> = new Set();
 
   /**
    * Subscribe to communication state changes
@@ -64,6 +74,18 @@ export class BrotherPP1Service {
     };
   }
 
+  /**
+   * Subscribe to disconnect events
+   * @param callback Function called when device disconnects
+   * @returns Unsubscribe function
+   */
+  onDisconnect(callback: () => void): () => void {
+    this.disconnectCallbacks.add(callback);
+    return () => {
+      this.disconnectCallbacks.delete(callback);
+    };
+  }
+
   private setCommunicating(value: boolean) {
     if (this.isCommunicating !== value) {
       this.isCommunicating = value;
@@ -71,31 +93,54 @@ export class BrotherPP1Service {
     }
   }
 
+  private handleDisconnect() {
+    console.log('[BrotherPP1Service] Device disconnected');
+    this.server = null;
+    this.writeCharacteristic = null;
+    this.readCharacteristic = null;
+    this.commandQueue = [];
+    this.isProcessingQueue = false;
+    this.setCommunicating(false);
+    this.disconnectCallbacks.forEach(callback => callback());
+  }
+
   async connect(): Promise<void> {
-    this.device = await navigator.bluetooth.requestDevice({
-      filters: [{ services: [SERVICE_UUID] }],
-    });
-
-    if (!this.device.gatt) {
-      throw new Error("GATT not available");
-    }
-    console.log("Connecting");
-    this.server = await this.device.gatt.connect();
-    console.log("Connected");
-    const service = await this.server.getPrimaryService(SERVICE_UUID);
-    console.log("Got primary service");
-
-    this.writeCharacteristic = await service.getCharacteristic(WRITE_CHAR_UUID);
-    this.readCharacteristic = await service.getCharacteristic(READ_CHAR_UUID);
-
-    console.log("Connected to Brother PP1 machine");
-
-    console.log("Send dummy command");
+    this.isInitialConnection = true;
     try {
-      await this.getMachineInfo();
-      console.log("Dummy command success");
-    } catch (e) {
-      console.log(e);
+      this.device = await navigator.bluetooth.requestDevice({
+        filters: [{ services: [SERVICE_UUID] }],
+      });
+
+      if (!this.device.gatt) {
+        throw new Error("GATT not available");
+      }
+
+      // Listen for disconnection events
+      this.device.addEventListener('gattserverdisconnected', () => {
+        this.handleDisconnect();
+      });
+
+      console.log("Connecting");
+      this.server = await this.device.gatt.connect();
+      console.log("Connected");
+      const service = await this.server.getPrimaryService(SERVICE_UUID);
+      console.log("Got primary service");
+
+      this.writeCharacteristic = await service.getCharacteristic(WRITE_CHAR_UUID);
+      this.readCharacteristic = await service.getCharacteristic(READ_CHAR_UUID);
+
+      console.log("Connected to Brother PP1 machine");
+
+      console.log("Send dummy command");
+      try {
+        await this.getMachineInfo();
+        console.log("Dummy command success");
+      } catch (e) {
+        console.log(e);
+        throw e;
+      }
+    } finally {
+      this.isInitialConnection = false;
     }
   }
 
@@ -220,34 +265,50 @@ export class BrotherPP1Service {
         hexData,
       );
 
-      // Write command
-      await this.writeCharacteristic.writeValueWithResponse(command);
+      try {
+        // Write command
+        await this.writeCharacteristic.writeValueWithResponse(command);
 
-      // Longer delay to allow machine to prepare response
-      await new Promise((resolve) => setTimeout(resolve, 50));
+        // Longer delay to allow machine to prepare response
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Read response
-      const responseData = await this.readCharacteristic.readValue();
-      const response = new Uint8Array(responseData.buffer);
+        // Read response
+        const responseData = await this.readCharacteristic.readValue();
+        const response = new Uint8Array(responseData.buffer);
 
-      const hexResponse = Array.from(response)
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join(" ");
+        const hexResponse = Array.from(response)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join(" ");
 
-      // Parse response
-      let parsed = "";
-      if (response.length >= 3) {
-        const respCmdId = (response[0] << 8) | response[1];
-        const status = response[2];
-        parsed = ` | Status: 0x${status.toString(16).padStart(2, "0")}`;
-        if (respCmdId !== cmdId) {
-          parsed += ` | WARNING: Response cmd 0x${respCmdId.toString(16).padStart(4, "0")} != request cmd`;
+        // Parse response
+        let parsed = "";
+        if (response.length >= 3) {
+          const respCmdId = (response[0] << 8) | response[1];
+          const status = response[2];
+          parsed = ` | Status: 0x${status.toString(16).padStart(2, "0")}`;
+          if (respCmdId !== cmdId) {
+            parsed += ` | WARNING: Response cmd 0x${respCmdId.toString(16).padStart(4, "0")} != request cmd`;
+          }
         }
+
+        console.log(`[RX] ${this.getCommandName(cmdId)}:`, hexResponse, parsed);
+
+        return response;
+      } catch (error) {
+        // Detect pairing issues - only during initial connection
+        if (this.isInitialConnection && error instanceof Error) {
+          const errorMsg = error.message.toLowerCase();
+          if (
+            errorMsg.includes('gatt server is disconnected') ||
+            (errorMsg.includes('writevaluewithresponse') && errorMsg.includes('gatt server is disconnected'))
+          ) {
+            throw new BluetoothPairingError(
+              'Device not paired. To pair: long-press the Bluetooth button on the machine, then pair it using your operating system\'s Bluetooth settings. After pairing, try connecting again.'
+            );
+          }
+        }
+        throw error;
       }
-
-      console.log(`[RX] ${this.getCommandName(cmdId)}:`, hexResponse, parsed);
-
-      return response;
     });
   }
 

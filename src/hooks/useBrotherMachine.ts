@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { BrotherPP1Service } from "../services/BrotherPP1Service";
+import { BrotherPP1Service, BluetoothPairingError } from "../services/BrotherPP1Service";
 import type {
   MachineInfo,
   PatternInfo,
@@ -27,6 +27,7 @@ export function useBrotherMachine() {
   );
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const [isPairingError, setIsPairingError] = useState(false);
   const [isCommunicating, setIsCommunicating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -39,6 +40,22 @@ export function useBrotherMachine() {
   // Subscribe to service communication state
   useEffect(() => {
     const unsubscribe = service.onCommunicationChange(setIsCommunicating);
+    return unsubscribe;
+  }, [service]);
+
+  // Subscribe to disconnect events
+  useEffect(() => {
+    const unsubscribe = service.onDisconnect(() => {
+      console.log('[useBrotherMachine] Device disconnected');
+      setIsConnected(false);
+      setMachineInfo(null);
+      setMachineStatus(MachineStatus.None);
+      setMachineError(SewingMachineError.None);
+      setPatternInfo(null);
+      setSewingProgress(null);
+      setError('Device disconnected');
+      setIsPairingError(false);
+    });
     return unsubscribe;
   }, [service]);
 
@@ -101,6 +118,7 @@ export function useBrotherMachine() {
   const connect = useCallback(async () => {
     try {
       setError(null);
+      setIsPairingError(false);
       await service.connect();
       setIsConnected(true);
 
@@ -116,6 +134,8 @@ export function useBrotherMachine() {
       await checkResume();
     } catch (err) {
       console.log(err);
+      const isPairing = err instanceof BluetoothPairingError;
+      setIsPairingError(isPairing);
       setError(err instanceof Error ? err.message : "Failed to connect");
       setIsConnected(false);
     }
@@ -399,6 +419,7 @@ export function useBrotherMachine() {
     sewingProgress,
     uploadProgress,
     error,
+    isPairingError,
     isPolling: isCommunicating,
     isUploading,
     isDeleting,
