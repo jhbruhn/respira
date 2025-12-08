@@ -68,10 +68,7 @@ jobs:
       - name: Upload macOS assets
         if: matrix.os == 'macos-latest'
         run: |
-          for file in out/make/zip/darwin/**/*.zip; do
-            gh release upload ${{ needs.draft-release.outputs.tag-name }} "$file" --clobber
-          done
-          for file in out/make/*.dmg; do
+          for file in out/make/zip/darwin/**/*.zip out/make/*.dmg; do
             gh release upload ${{ needs.draft-release.outputs.tag-name }} "$file" --clobber
           done
         env:
@@ -80,7 +77,7 @@ jobs:
       - name: Upload Linux assets
         if: matrix.os == 'ubuntu-latest'
         run: |
-          for file in out/make/deb/x64/*.deb out/make/rpm/x64/*.rpm; do
+          for file in out/make/deb/x64/*.deb out/make/AppImage/x64/*.AppImage; do
             gh release upload ${{ needs.draft-release.outputs.tag-name }} "$file" --clobber
           done
         env:

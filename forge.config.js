@@ -35,6 +35,15 @@ module.exports = {
         icon: './public/icons/256x256.png'
       },
     },
+    {
+      name: "@reforged/maker-appimage",
+      config: {
+        options: {
+          categories: ["Robotics"],
+          icon: "./public/icon.svg"
+        }
+      }
+    }
   ],
   plugins: [
     {
