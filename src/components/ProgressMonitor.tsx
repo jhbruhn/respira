@@ -8,17 +8,17 @@ import {
   PauseCircleIcon,
   ExclamationCircleIcon,
   ChartBarIcon,
-  ArrowPathIcon
-} from '@heroicons/react/24/solid';
-import type { PatternInfo, SewingProgress } from '../types/machine';
-import { MachineStatus } from '../types/machine';
-import type { PesPatternData } from '../utils/pystitchConverter';
+  ArrowPathIcon,
+} from "@heroicons/react/24/solid";
+import type { PatternInfo, SewingProgress } from "../types/machine";
+import { MachineStatus } from "../types/machine";
+import type { PesPatternData } from "../utils/pystitchConverter";
 import {
   canStartSewing,
   canStartMaskTrace,
   canResumeSewing,
-  getStateVisualInfo
-} from '../utils/machineStateHelpers';
+  getStateVisualInfo,
+} from "../utils/machineStateHelpers";
 
 interface ProgressMonitorProps {
   machineStatus: MachineStatus;
@@ -43,7 +43,8 @@ export function ProgressMonitor({
   isDeleting = false,
 }: ProgressMonitorProps) {
   // State indicators
-  const isMaskTraceComplete = machineStatus === MachineStatus.MASK_TRACE_COMPLETE;
+  const isMaskTraceComplete =
+    machineStatus === MachineStatus.MASK_TRACE_COMPLETE;
 
   const stateVisual = getStateVisualInfo(machineStatus);
 
@@ -52,57 +53,72 @@ export function ProgressMonitor({
     : 0;
 
   // Calculate color block information from pesData
-  const colorBlocks = pesData ? (() => {
-    const blocks: Array<{
-      colorIndex: number;
-      threadHex: string;
-      startStitch: number;
-      endStitch: number;
-      stitchCount: number;
-    }> = [];
+  const colorBlocks = pesData
+    ? (() => {
+        const blocks: Array<{
+          colorIndex: number;
+          threadHex: string;
+          startStitch: number;
+          endStitch: number;
+          stitchCount: number;
+          threadCatalogNumber: string | null;
+          threadBrand: string | null;
+          threadDescription: string | null;
+          threadChart: string | null;
+        }> = [];
 
-    let currentColorIndex = pesData.stitches[0]?.[3] ?? 0;
-    let blockStartStitch = 0;
+        let currentColorIndex = pesData.stitches[0]?.[3] ?? 0;
+        let blockStartStitch = 0;
 
-    for (let i = 0; i < pesData.stitches.length; i++) {
-      const stitchColorIndex = pesData.stitches[i][3];
+        for (let i = 0; i < pesData.stitches.length; i++) {
+          const stitchColorIndex = pesData.stitches[i][3];
 
-      // When color changes, save the previous block
-      if (stitchColorIndex !== currentColorIndex || i === pesData.stitches.length - 1) {
-        const endStitch = i === pesData.stitches.length - 1 ? i + 1 : i;
-        blocks.push({
-          colorIndex: currentColorIndex,
-          threadHex: pesData.threads[currentColorIndex]?.hex || '#000000',
-          startStitch: blockStartStitch,
-          endStitch: endStitch,
-          stitchCount: endStitch - blockStartStitch,
-        });
+          // When color changes, save the previous block
+          if (
+            stitchColorIndex !== currentColorIndex ||
+            i === pesData.stitches.length - 1
+          ) {
+            const endStitch = i === pesData.stitches.length - 1 ? i + 1 : i;
+            const thread = pesData.threads[currentColorIndex];
+            blocks.push({
+              colorIndex: currentColorIndex,
+              threadHex: thread?.hex || "#000000",
+              threadCatalogNumber: thread?.catalogNumber ?? null,
+              threadBrand: thread?.brand ?? null,
+              threadDescription: thread?.description ?? null,
+              threadChart: thread?.chart ?? null,
+              startStitch: blockStartStitch,
+              endStitch: endStitch,
+              stitchCount: endStitch - blockStartStitch,
+            });
 
-        currentColorIndex = stitchColorIndex;
-        blockStartStitch = i;
-      }
-    }
+            currentColorIndex = stitchColorIndex;
+            blockStartStitch = i;
+          }
+        }
 
-    return blocks;
-  })() : [];
+        return blocks;
+      })()
+    : [];
 
   // Determine current color block based on current stitch
   const currentStitch = sewingProgress?.currentStitch || 0;
   const currentBlockIndex = colorBlocks.findIndex(
-    block => currentStitch >= block.startStitch && currentStitch < block.endStitch
+    (block) =>
+      currentStitch >= block.startStitch && currentStitch < block.endStitch,
   );
 
   const stateIndicatorColors = {
-    idle: 'bg-blue-50 dark:bg-blue-900/20 border-blue-600',
-    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-600',
-    active: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500',
-    waiting: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500',
-    warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500',
-    complete: 'bg-green-50 dark:bg-green-900/20 border-green-600',
-    success: 'bg-green-50 dark:bg-green-900/20 border-green-600',
-    interrupted: 'bg-red-50 dark:bg-red-900/20 border-red-600',
-    error: 'bg-red-50 dark:bg-red-900/20 border-red-600',
-    danger: 'bg-red-50 dark:bg-red-900/20 border-red-600',
+    idle: "bg-blue-50 dark:bg-blue-900/20 border-blue-600",
+    info: "bg-blue-50 dark:bg-blue-900/20 border-blue-600",
+    active: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500",
+    waiting: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500",
+    warning: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500",
+    complete: "bg-green-50 dark:bg-green-900/20 border-green-600",
+    success: "bg-green-50 dark:bg-green-900/20 border-green-600",
+    interrupted: "bg-red-50 dark:bg-red-900/20 border-red-600",
+    error: "bg-red-50 dark:bg-red-900/20 border-red-600",
+    danger: "bg-red-50 dark:bg-red-900/20 border-red-600",
   };
 
   return (
@@ -110,7 +126,9 @@ export function ProgressMonitor({
       <div className="flex items-start gap-3 mb-3">
         <ChartBarIcon className="w-6 h-6 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Sewing Progress</h3>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+            Sewing Progress
+          </h3>
           {sewingProgress && (
             <p className="text-xs text-gray-600 dark:text-gray-400">
               {progressPercent.toFixed(1)}% complete
@@ -123,18 +141,29 @@ export function ProgressMonitor({
       {patternInfo && (
         <div className="grid grid-cols-3 gap-2 text-xs mb-3">
           <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-            <span className="text-gray-600 dark:text-gray-400 block">Total Stitches</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{patternInfo.totalStitches.toLocaleString()}</span>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-            <span className="text-gray-600 dark:text-gray-400 block">Est. Time</span>
+            <span className="text-gray-600 dark:text-gray-400 block">
+              Total Stitches
+            </span>
             <span className="font-semibold text-gray-900 dark:text-gray-100">
-              {Math.floor(patternInfo.totalTime / 60)}:{String(patternInfo.totalTime % 60).padStart(2, '0')}
+              {patternInfo.totalStitches.toLocaleString()}
             </span>
           </div>
           <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-            <span className="text-gray-600 dark:text-gray-400 block">Speed</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{patternInfo.speed} spm</span>
+            <span className="text-gray-600 dark:text-gray-400 block">
+              Est. Time
+            </span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">
+              {Math.floor(patternInfo.totalTime / 60)}:
+              {String(patternInfo.totalTime % 60).padStart(2, "0")}
+            </span>
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+            <span className="text-gray-600 dark:text-gray-400 block">
+              Speed
+            </span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">
+              {patternInfo.speed} spm
+            </span>
           </div>
         </div>
       )}
@@ -143,20 +172,29 @@ export function ProgressMonitor({
       {sewingProgress && (
         <div className="mb-3">
           <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded-md overflow-hidden shadow-inner relative mb-2">
-            <div className="h-full bg-gradient-to-r from-purple-600 to-purple-700 dark:from-purple-600 dark:to-purple-800 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite]" style={{ width: `${progressPercent}%` }} />
+            <div
+              className="h-full bg-gradient-to-r from-purple-600 to-purple-700 dark:from-purple-600 dark:to-purple-800 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite]"
+              style={{ width: `${progressPercent}%` }}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs mb-3">
             <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-              <span className="text-gray-600 dark:text-gray-400 block">Current Stitch</span>
+              <span className="text-gray-600 dark:text-gray-400 block">
+                Current Stitch
+              </span>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {sewingProgress.currentStitch.toLocaleString()} / {patternInfo?.totalStitches.toLocaleString() || 0}
+                {sewingProgress.currentStitch.toLocaleString()} /{" "}
+                {patternInfo?.totalStitches.toLocaleString() || 0}
               </span>
             </div>
             <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-              <span className="text-gray-600 dark:text-gray-400 block">Time Elapsed</span>
+              <span className="text-gray-600 dark:text-gray-400 block">
+                Time Elapsed
+              </span>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {Math.floor(sewingProgress.currentTime / 60)}:{String(sewingProgress.currentTime % 60).padStart(2, '0')}
+                {Math.floor(sewingProgress.currentTime / 60)}:
+                {String(sewingProgress.currentTime % 60).padStart(2, "0")}
               </span>
             </div>
           </div>
@@ -164,33 +202,54 @@ export function ProgressMonitor({
       )}
 
       {/* State Visual Indicator */}
-      {patternInfo && (() => {
-        const iconMap = {
-          ready: <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
-          active: <PlayIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />,
-          waiting: <PauseCircleIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />,
-          complete: <CheckBadgeIcon className="w-5 h-5 text-green-600 dark:text-green-400" />,
-          interrupted: <PauseCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />,
-          error: <ExclamationCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
-        };
+      {patternInfo &&
+        (() => {
+          const iconMap = {
+            ready: (
+              <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            ),
+            active: (
+              <PlayIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+            ),
+            waiting: (
+              <PauseCircleIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+            ),
+            complete: (
+              <CheckBadgeIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+            ),
+            interrupted: (
+              <PauseCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
+            ),
+            error: (
+              <ExclamationCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
+            ),
+          };
 
-        return (
-          <div className={`flex items-center gap-3 p-2.5 rounded-lg mb-3 border-l-4 ${stateIndicatorColors[stateVisual.color as keyof typeof stateIndicatorColors] || stateIndicatorColors.info}`}>
-            <div className="flex-shrink-0">
-              {iconMap[stateVisual.iconName]}
+          return (
+            <div
+              className={`flex items-center gap-3 p-2.5 rounded-lg mb-3 border-l-4 ${stateIndicatorColors[stateVisual.color as keyof typeof stateIndicatorColors] || stateIndicatorColors.info}`}
+            >
+              <div className="flex-shrink-0">
+                {iconMap[stateVisual.iconName]}
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-xs dark:text-gray-100">
+                  {stateVisual.label}
+                </div>
+                <div className="text-[10px] text-gray-600 dark:text-gray-400">
+                  {stateVisual.description}
+                </div>
+              </div>
             </div>
-            <div className="flex-1">
-              <div className="font-semibold text-xs dark:text-gray-100">{stateVisual.label}</div>
-              <div className="text-[10px] text-gray-600 dark:text-gray-400">{stateVisual.description}</div>
-            </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {/* Color Blocks */}
       {colorBlocks.length > 0 && (
         <div className="mb-3">
-          <h4 className="text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300">Color Blocks</h4>
+          <h4 className="text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300">
+            Color Blocks
+          </h4>
           <div className="flex flex-col gap-2">
             {colorBlocks.map((block, index) => {
               const isCompleted = currentStitch >= block.endStitch;
@@ -199,7 +258,9 @@ export function ProgressMonitor({
               // Calculate progress within current block
               let blockProgress = 0;
               if (isCurrent) {
-                blockProgress = ((currentStitch - block.startStitch) / block.stitchCount) * 100;
+                blockProgress =
+                  ((currentStitch - block.startStitch) / block.stitchCount) *
+                  100;
               } else if (isCompleted) {
                 blockProgress = 100;
               }
@@ -209,13 +270,13 @@ export function ProgressMonitor({
                   key={index}
                   className={`p-2.5 rounded-lg border-2 transition-all duration-300 ${
                     isCompleted
-                      ? 'border-green-600 bg-green-50 dark:bg-green-900/20'
+                      ? "border-green-600 bg-green-50 dark:bg-green-900/20"
                       : isCurrent
-                      ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20 shadow-lg shadow-purple-600/20 animate-pulseGlow'
-                      : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 opacity-70'
+                        ? "border-purple-600 bg-purple-50 dark:bg-purple-900/20 shadow-lg shadow-purple-600/20 animate-pulseGlow"
+                        : "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 opacity-70"
                   }`}
                   role="listitem"
-                  aria-label={`Thread ${block.colorIndex + 1}, ${block.stitchCount} stitches, ${isCompleted ? 'completed' : isCurrent ? 'in progress' : 'pending'}`}
+                  aria-label={`Thread ${block.colorIndex + 1}, ${block.stitchCount} stitches, ${isCompleted ? "completed" : isCurrent ? "in progress" : "pending"}`}
                 >
                   <div className="flex items-center gap-2.5">
                     {/* Color swatch */}
@@ -223,7 +284,7 @@ export function ProgressMonitor({
                       className="w-7 h-7 rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-md flex-shrink-0"
                       style={{
                         backgroundColor: block.threadHex,
-                        ...(isCurrent && { borderColor: '#9333ea' })
+                        ...(isCurrent && { borderColor: "#9333ea" }),
                       }}
                       title={`Thread color: ${block.threadHex}`}
                       aria-label={`Thread color ${block.threadHex}`}
@@ -233,6 +294,28 @@ export function ProgressMonitor({
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-xs text-gray-900 dark:text-gray-100">
                         Thread {block.colorIndex + 1}
+                        {(block.threadBrand || block.threadChart || block.threadDescription || block.threadCatalogNumber) && (
+                          <span className="font-normal text-gray-600 dark:text-gray-400">
+                            {" "}
+                            (
+                            {(() => {
+                              // Primary metadata: brand and catalog number
+                              const primaryMetadata = [
+                                block.threadBrand,
+                                block.threadCatalogNumber ? `#${block.threadCatalogNumber}` : null
+                              ].filter(Boolean).join(" ");
+
+                              // Secondary metadata: chart and description
+                              const secondaryMetadata = [
+                                block.threadChart,
+                                block.threadDescription
+                              ].filter(Boolean).join(" ");
+
+                              return [primaryMetadata, secondaryMetadata].filter(Boolean).join(" • ");
+                            })()}
+                            )
+                          </span>
+                        )}
                       </div>
                       <div className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5">
                         {block.stitchCount.toLocaleString()} stitches
@@ -241,11 +324,20 @@ export function ProgressMonitor({
 
                     {/* Status icon */}
                     {isCompleted ? (
-                      <CheckCircleIcon className="w-5 h-5 text-green-600 flex-shrink-0" aria-label="Completed" />
+                      <CheckCircleIcon
+                        className="w-5 h-5 text-green-600 flex-shrink-0"
+                        aria-label="Completed"
+                      />
                     ) : isCurrent ? (
-                      <ArrowRightIcon className="w-5 h-5 text-purple-600 flex-shrink-0 animate-pulse" aria-label="In progress" />
+                      <ArrowRightIcon
+                        className="w-5 h-5 text-purple-600 flex-shrink-0 animate-pulse"
+                        aria-label="In progress"
+                      />
                     ) : (
-                      <CircleStackIcon className="w-5 h-5 text-gray-400 flex-shrink-0" aria-label="Pending" />
+                      <CircleStackIcon
+                        className="w-5 h-5 text-gray-400 flex-shrink-0"
+                        aria-label="Pending"
+                      />
                     )}
                   </div>
 
@@ -304,10 +396,14 @@ export function ProgressMonitor({
             onClick={onStartMaskTrace}
             disabled={isDeleting}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded font-semibold text-xs hover:bg-gray-700 dark:hover:bg-gray-600 active:bg-gray-800 dark:active:bg-gray-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label={isMaskTraceComplete ? 'Start mask trace again' : 'Start mask trace'}
+            aria-label={
+              isMaskTraceComplete
+                ? "Start mask trace again"
+                : "Start mask trace"
+            }
           >
             <ArrowPathIcon className="w-3.5 h-3.5" />
-            {isMaskTraceComplete ? 'Trace Again' : 'Start Mask Trace'}
+            {isMaskTraceComplete ? "Trace Again" : "Start Mask Trace"}
           </button>
         )}
       </div>

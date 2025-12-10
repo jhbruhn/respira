@@ -28,7 +28,7 @@ export function PatternSummaryCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+      <div className="grid grid-cols-3 gap-2 text-xs mb-3">
         <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
           <span className="text-gray-600 dark:text-gray-400 block">Size</span>
           <span className="font-semibold text-gray-900 dark:text-gray-100">
@@ -42,22 +42,50 @@ export function PatternSummaryCard({
             {pesData.stitchCount.toLocaleString()}
           </span>
         </div>
+        <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+          <span className="text-gray-600 dark:text-gray-400 block">Colors</span>
+          <span className="font-semibold text-gray-900 dark:text-gray-100">
+            {pesData.uniqueColors.length}
+          </span>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 mb-2">
         <span className="text-xs text-gray-600 dark:text-gray-400">Colors:</span>
         <div className="flex gap-1">
-          {pesData.threads.slice(0, 8).map((thread, idx) => (
-            <div
-              key={idx}
-              className="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600"
-              style={{ backgroundColor: thread.hex }}
-              title={`Thread ${idx + 1}: ${thread.hex}`}
-            />
-          ))}
-          {pesData.colorCount > 8 && (
+          {pesData.uniqueColors.slice(0, 8).map((color, idx) => {
+            // Primary metadata: brand and catalog number
+            const primaryMetadata = [
+              color.brand,
+              color.catalogNumber ? `#${color.catalogNumber}` : null
+            ].filter(Boolean).join(" ");
+
+            // Secondary metadata: chart and description
+            const secondaryMetadata = [
+              color.chart,
+              color.description
+            ].filter(Boolean).join(" ");
+
+            const metadata = [primaryMetadata, secondaryMetadata].filter(Boolean).join(" • ");
+
+            // Show which thread blocks use this color
+            const threadNumbers = color.threadIndices.map(i => i + 1).join(", ");
+            const tooltipText = metadata
+              ? `Color ${idx + 1}: ${color.hex}\n${metadata}\nUsed in thread blocks: ${threadNumbers}`
+              : `Color ${idx + 1}: ${color.hex}\nUsed in thread blocks: ${threadNumbers}`;
+
+            return (
+              <div
+                key={idx}
+                className="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600"
+                style={{ backgroundColor: color.hex }}
+                title={tooltipText}
+              />
+            );
+          })}
+          {pesData.uniqueColors.length > 8 && (
             <div className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 border border-gray-400 dark:border-gray-500 flex items-center justify-center text-[7px] font-bold text-gray-600 dark:text-gray-300">
-              +{pesData.colorCount - 8}
+              +{pesData.uniqueColors.length - 8}
             </div>
           )}
         </div>

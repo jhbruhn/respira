@@ -296,17 +296,42 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, initialPat
         {pesData && (
           <>
             {/* Thread Legend Overlay */}
-            <div className="absolute top-2.5 left-2.5 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-2.5 rounded-lg shadow-lg z-10 max-w-[150px]">
-              <h4 className="m-0 mb-2 text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-300 dark:border-gray-600 pb-1.5">Threads</h4>
-              {pesData.threads.map((thread, index) => (
-                <div key={index} className="flex items-center gap-2 mb-1.5 last:mb-0">
-                  <div
-                    className="w-4 h-4 rounded border border-black dark:border-gray-300 flex-shrink-0"
-                    style={{ backgroundColor: thread.hex }}
-                  />
-                  <span className="text-[11px] text-gray-900 dark:text-gray-100">Thread {index + 1}</span>
-                </div>
-              ))}
+            <div className="absolute top-2.5 left-2.5 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-2.5 rounded-lg shadow-lg z-10 max-w-[200px]">
+              <h4 className="m-0 mb-2 text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-300 dark:border-gray-600 pb-1.5">Colors</h4>
+              {pesData.uniqueColors.map((color, idx) => {
+                // Primary metadata: brand and catalog number
+                const primaryMetadata = [
+                  color.brand,
+                  color.catalogNumber ? `#${color.catalogNumber}` : null
+                ].filter(Boolean).join(" ");
+
+                // Secondary metadata: chart and description
+                const secondaryMetadata = [
+                  color.chart,
+                  color.description
+                ].filter(Boolean).join(" ");
+
+                return (
+                  <div key={idx} className="flex items-start gap-2 mb-1.5 last:mb-0">
+                    <div
+                      className="w-4 h-4 rounded border border-black dark:border-gray-300 flex-shrink-0 mt-0.5"
+                      style={{ backgroundColor: color.hex }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[11px] font-semibold text-gray-900 dark:text-gray-100">
+                        Color {idx + 1}
+                      </div>
+                      {(primaryMetadata || secondaryMetadata) && (
+                        <div className="text-[9px] text-gray-600 dark:text-gray-400 leading-tight mt-0.5 break-words">
+                          {primaryMetadata}
+                          {primaryMetadata && secondaryMetadata && <span className="mx-1">•</span>}
+                          {secondaryMetadata}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Pattern Offset Indicator */}
