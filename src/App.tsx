@@ -267,6 +267,7 @@ function App() {
                 pesData={pesData}
                 currentFileName={currentFileName}
                 isUploading={machine.isUploading}
+                machineInfo={machine.machineInfo}
               />
             )}
 

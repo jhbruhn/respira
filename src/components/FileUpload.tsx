@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { convertPesToPen, type PesPatternData } from '../utils/pystitchConverter';
-import { MachineStatus } from '../types/machine';
+import { MachineStatus, type MachineInfo } from '../types/machine';
 import { canUploadPattern, getMachineStateCategory } from '../utils/machineStateHelpers';
 import { PatternInfoSkeleton } from './SkeletonLoader';
 import { ArrowUpTrayIcon, CheckCircleIcon, DocumentTextIcon, FolderOpenIcon } from '@heroicons/react/24/solid';
@@ -21,6 +21,7 @@ interface FileUploadProps {
   pesData: PesPatternData | null;
   currentFileName: string;
   isUploading?: boolean;
+  machineInfo: MachineInfo | null;
 }
 
 export function FileUpload({
@@ -37,6 +38,7 @@ export function FileUpload({
   pesData: pesDataProp,
   currentFileName,
   isUploading = false,
+  machineInfo,
 }: FileUploadProps) {
   const [localPesData, setLocalPesData] = useState<PesPatternData | null>(null);
   const [fileName, setFileName] = useState<string>('');
@@ -94,6 +96,51 @@ export function FileUpload({
       onUpload(pesData.penData, pesData, displayFileName, patternOffset);
     }
   }, [pesData, displayFileName, onUpload, patternOffset]);
+
+  // Check if pattern (with offset) fits within hoop bounds
+  const checkPatternFitsInHoop = useCallback(() => {
+    if (!pesData || !machineInfo) {
+      return { fits: true, error: null };
+    }
+
+    const { bounds } = pesData;
+    const { maxWidth, maxHeight } = machineInfo;
+
+    // Calculate pattern bounds with offset applied
+    const patternMinX = bounds.minX + patternOffset.x;
+    const patternMaxX = bounds.maxX + patternOffset.x;
+    const patternMinY = bounds.minY + patternOffset.y;
+    const patternMaxY = bounds.maxY + patternOffset.y;
+
+    // Hoop bounds (centered at origin)
+    const hoopMinX = -maxWidth / 2;
+    const hoopMaxX = maxWidth / 2;
+    const hoopMinY = -maxHeight / 2;
+    const hoopMaxY = maxHeight / 2;
+
+    // Check if pattern exceeds hoop bounds
+    const exceedsLeft = patternMinX < hoopMinX;
+    const exceedsRight = patternMaxX > hoopMaxX;
+    const exceedsTop = patternMinY < hoopMinY;
+    const exceedsBottom = patternMaxY > hoopMaxY;
+
+    if (exceedsLeft || exceedsRight || exceedsTop || exceedsBottom) {
+      const directions = [];
+      if (exceedsLeft) directions.push(`left by ${((hoopMinX - patternMinX) / 10).toFixed(1)}mm`);
+      if (exceedsRight) directions.push(`right by ${((patternMaxX - hoopMaxX) / 10).toFixed(1)}mm`);
+      if (exceedsTop) directions.push(`top by ${((hoopMinY - patternMinY) / 10).toFixed(1)}mm`);
+      if (exceedsBottom) directions.push(`bottom by ${((patternMaxY - hoopMaxY) / 10).toFixed(1)}mm`);
+
+      return {
+        fits: false,
+        error: `Pattern exceeds hoop bounds: ${directions.join(', ')}. Adjust pattern position in preview.`
+      };
+    }
+
+    return { fits: true, error: null };
+  }, [pesData, machineInfo, patternOffset]);
+
+  const boundsCheck = checkPatternFitsInHoop();
 
   const borderColor = pesData ? 'border-orange-600 dark:border-orange-500' : 'border-gray-400 dark:border-gray-600';
   const iconColor = pesData ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400';
@@ -189,13 +236,7 @@ export function FileUpload({
         </div>
       )}
 
-      {pesData && !canUploadPattern(machineStatus) && (
-        <div className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 px-3 py-2 rounded border border-yellow-200 dark:border-yellow-800 mb-3 text-xs">
-          Cannot upload while {getMachineStateCategory(machineStatus)}
-        </div>
-      )}
-
-      <div className="flex gap-2">
+      <div className="flex gap-2 mb-3">
         <input
           type="file"
           accept=".pes"
@@ -207,7 +248,7 @@ export function FileUpload({
         <label
           htmlFor={fileService.hasNativeDialogs() ? undefined : "file-input"}
           onClick={fileService.hasNativeDialogs() ? () => handleFileChange() : undefined}
-          className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded font-semibold text-xs transition-all ${
+          className={`flex-[2] flex items-center justify-center gap-2 px-3 py-2 rounded font-semibold text-xs transition-all ${
             !pyodideReady || isLoading || patternUploaded || isUploading
               ? 'opacity-50 cursor-not-allowed bg-gray-400 dark:bg-gray-600 text-white'
               : 'cursor-pointer bg-gray-600 dark:bg-gray-700 text-white hover:bg-gray-700 dark:hover:bg-gray-600'
@@ -245,9 +286,9 @@ export function FileUpload({
         {pesData && canUploadPattern(machineStatus) && !patternUploaded && uploadProgress < 100 && (
           <button
             onClick={handleUpload}
-            disabled={!isConnected || isUploading}
-            className="px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label={isUploading ? `Uploading pattern: ${uploadProgress.toFixed(0)}% complete` : 'Upload pattern to machine'}
+            disabled={!isConnected || isUploading || !boundsCheck.fits}
+            className="flex-1 px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label={isUploading ? `Uploading pattern: ${uploadProgress.toFixed(0)}% complete` : boundsCheck.error || 'Upload pattern to machine'}
           >
             {isUploading ? (
               <>
@@ -264,6 +305,24 @@ export function FileUpload({
               </>
             )}
           </button>
+        )}
+      </div>
+
+      {/* Error/warning messages with smooth transition - placed after buttons */}
+      <div className="transition-all duration-200 ease-in-out overflow-hidden" style={{
+        maxHeight: (pesData && (boundsCheck.error || !canUploadPattern(machineStatus))) ? '200px' : '0px',
+        marginTop: (pesData && (boundsCheck.error || !canUploadPattern(machineStatus))) ? '12px' : '0px'
+      }}>
+        {pesData && !canUploadPattern(machineStatus) && (
+          <div className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 px-3 py-2 rounded border border-yellow-200 dark:border-yellow-800 text-xs">
+            Cannot upload while {getMachineStateCategory(machineStatus)}
+          </div>
+        )}
+
+        {pesData && boundsCheck.error && (
+          <div className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 px-3 py-2 rounded border border-red-200 dark:border-red-800 text-xs">
+            <strong>Pattern too large:</strong> {boundsCheck.error}
+          </div>
         )}
       </div>
 
