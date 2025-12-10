@@ -227,7 +227,7 @@ export function FileUpload({
                 );
               })}
               {pesData.uniqueColors.length > 8 && (
-                <div className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 border border-gray-400 dark:border-gray-500 flex items-center justify-center text-[7px] font-bold text-gray-600 dark:text-gray-300">
+                <div className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 border border-gray-400 dark:border-gray-500 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300 leading-none">
                   +{pesData.uniqueColors.length - 8}
                 </div>
               )}
@@ -248,7 +248,7 @@ export function FileUpload({
         <label
           htmlFor={fileService.hasNativeDialogs() ? undefined : "file-input"}
           onClick={fileService.hasNativeDialogs() ? () => handleFileChange() : undefined}
-          className={`flex-[2] flex items-center justify-center gap-2 px-3 py-2 rounded font-semibold text-xs transition-all ${
+          className={`flex-[2] flex items-center justify-center gap-2 px-3 py-2.5 sm:py-2 rounded font-semibold text-sm transition-all ${
             !pyodideReady || isLoading || patternUploaded || isUploading
               ? 'opacity-50 cursor-not-allowed bg-gray-400 dark:bg-gray-600 text-white'
               : 'cursor-pointer bg-gray-600 dark:bg-gray-700 text-white hover:bg-gray-700 dark:hover:bg-gray-600'
@@ -287,7 +287,7 @@ export function FileUpload({
           <button
             onClick={handleUpload}
             disabled={!isConnected || isUploading || !boundsCheck.fits}
-            className="flex-1 px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-3 py-2.5 sm:py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-sm hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={isUploading ? `Uploading pattern: ${uploadProgress.toFixed(0)}% complete` : boundsCheck.error || 'Upload pattern to machine'}
           >
             {isUploading ? (
@@ -314,13 +314,13 @@ export function FileUpload({
         marginTop: (pesData && (boundsCheck.error || !canUploadPattern(machineStatus))) ? '12px' : '0px'
       }}>
         {pesData && !canUploadPattern(machineStatus) && (
-          <div className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 px-3 py-2 rounded border border-yellow-200 dark:border-yellow-800 text-xs">
+          <div className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 px-3 py-2 rounded border border-yellow-200 dark:border-yellow-800 text-sm">
             Cannot upload while {getMachineStateCategory(machineStatus)}
           </div>
         )}
 
         {pesData && boundsCheck.error && (
-          <div className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 px-3 py-2 rounded border border-red-200 dark:border-red-800 text-xs">
+          <div className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 px-3 py-2 rounded border border-red-200 dark:border-red-800 text-sm">
             <strong>Pattern too large:</strong> {boundsCheck.error}
           </div>
         )}

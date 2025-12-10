@@ -109,18 +109,18 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 px-8 py-3 shadow-lg border-b-2 border-blue-900/20 dark:border-blue-800/30">
-        <div className="max-w-[1600px] mx-auto grid grid-cols-[300px_1fr] gap-8 items-center">
-          {/* Machine Connection Status - Fixed width column */}
-          <div className="flex items-center gap-3 w-[300px]">
+      <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 px-4 sm:px-6 lg:px-8 py-3 shadow-lg border-b-2 border-blue-900/20 dark:border-blue-800/30">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 lg:gap-8 items-center">
+          {/* Machine Connection Status - Responsive width column */}
+          <div className="flex items-center gap-3 w-full lg:w-[280px]">
             <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50" style={{ visibility: machine.isConnected ? 'visible' : 'hidden' }}></div>
             <div className="w-2.5 h-2.5 bg-gray-400 rounded-full -ml-2.5" style={{ visibility: !machine.isConnected ? 'visible' : 'hidden' }}></div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold text-white leading-tight">Respira</h1>
+                <h1 className="text-lg lg:text-xl font-bold text-white leading-tight">Respira</h1>
                 {machine.isConnected && machine.machineInfo?.serialNumber && (
                   <span
-                    className="text-sm text-blue-200 cursor-help"
+                    className="text-xs text-blue-200 cursor-help"
                     title={`Serial: ${machine.machineInfo.serialNumber}${
                       machine.machineInfo.macAddress
                         ? `\nMAC: ${machine.machineInfo.macAddress}`
@@ -147,20 +147,20 @@ function App() {
                   <>
                     <button
                       onClick={machine.disconnect}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-white/10 hover:bg-red-600 text-blue-100 hover:text-white border border-white/20 hover:border-red-600 cursor-pointer transition-all flex-shrink-0"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-white/10 hover:bg-red-600 text-blue-100 hover:text-white border border-white/20 hover:border-red-600 cursor-pointer transition-all flex-shrink-0"
                       title="Disconnect from machine"
                       aria-label="Disconnect from machine"
                     >
                       <XMarkIcon className="w-3 h-3" />
                       Disconnect
                     </button>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-white/20 text-white border border-white/30 flex-shrink-0">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-semibold bg-white/20 text-white border border-white/30 flex-shrink-0">
                       <StatusIcon className="w-3 h-3" />
                       {machine.machineStatusName}
                     </span>
                   </>
                 ) : (
-                  <p className="text-sm text-blue-200">Not Connected</p>
+                  <p className="text-xs text-blue-200">Not Connected</p>
                 )}
               </div>
             </div>
@@ -178,7 +178,7 @@ function App() {
         </div>
       </header>
 
-      <div className="flex-1 p-6 max-w-[1600px] w-full mx-auto">
+      <div className="flex-1 p-4 sm:p-5 lg:p-6 max-w-[1600px] w-full mx-auto">
         {/* Global errors */}
         {machine.error && (
           <div className={`px-6 py-4 rounded-lg border-l-4 mb-6 shadow-md hover:shadow-lg transition-shadow animate-fadeIn ${
@@ -225,9 +225,9 @@ function App() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-4 md:gap-5 lg:gap-6">
           {/* Left Column - Controls */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 md:gap-5 lg:gap-6">
             {/* Connect Button - Show when disconnected */}
             {!machine.isConnected && (
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-gray-400 dark:border-gray-600">
@@ -244,7 +244,7 @@ function App() {
                 </div>
                 <button
                   onClick={machine.connect}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 sm:py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-sm hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer"
                 >
                   Connect to Machine
                 </button>
@@ -299,7 +299,7 @@ function App() {
           </div>
 
           {/* Right Column - Pattern Preview */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 md:gap-5 lg:gap-6">
             {pesData ? (
               <PatternCanvas
                 pesData={pesData}
@@ -312,8 +312,8 @@ function App() {
               />
             ) : (
               <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md animate-fadeIn">
-                <h2 className="text-xl font-semibold mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600 dark:text-white">Pattern Preview</h2>
-                <div className="flex items-center justify-center h-[600px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 relative overflow-hidden">
+                <h2 className="text-base lg:text-lg font-semibold mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600 dark:text-white">Pattern Preview</h2>
+                <div className="flex items-center justify-center h-[400px] sm:h-[500px] lg:h-[600px] max-h-[70vh] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 relative overflow-hidden">
                   {/* Decorative background pattern */}
                   <div className="absolute inset-0 opacity-5 dark:opacity-10">
                     <div className="absolute top-10 left-10 w-32 h-32 border-4 border-gray-400 dark:border-gray-500 rounded-full"></div>
@@ -332,7 +332,7 @@ function App() {
                         </svg>
                       </div>
                     </div>
-                    <h3 className="text-gray-700 dark:text-gray-200 text-xl font-semibold mb-2">No Pattern Loaded</h3>
+                    <h3 className="text-gray-700 dark:text-gray-200 text-base lg:text-lg font-semibold mb-2">No Pattern Loaded</h3>
                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 max-w-sm mx-auto">
                       Connect to your machine and choose a PES embroidery file to see your design preview
                     </p>

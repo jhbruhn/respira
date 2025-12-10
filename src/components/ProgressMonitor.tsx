@@ -236,7 +236,7 @@ export function ProgressMonitor({
                 <div className="font-semibold text-xs dark:text-gray-100">
                   {stateVisual.label}
                 </div>
-                <div className="text-[10px] text-gray-600 dark:text-gray-400">
+                <div className="text-xs text-gray-600 dark:text-gray-400">
                   {stateVisual.description}
                 </div>
               </div>
@@ -317,7 +317,7 @@ export function ProgressMonitor({
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5">
+                      <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                         {block.stitchCount.toLocaleString()} stitches
                       </div>
                     </div>
@@ -369,7 +369,7 @@ export function ProgressMonitor({
           <button
             onClick={onResumeSewing}
             disabled={isDeleting}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Resume sewing the current pattern"
           >
             <PlayIcon className="w-3.5 h-3.5" />
@@ -382,7 +382,7 @@ export function ProgressMonitor({
           <button
             onClick={onStartSewing}
             disabled={isDeleting}
-            className="flex-[2] flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-[2] flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Start sewing the pattern"
           >
             <PlayIcon className="w-3.5 h-3.5" />
@@ -395,7 +395,7 @@ export function ProgressMonitor({
           <button
             onClick={onStartMaskTrace}
             disabled={isDeleting}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded font-semibold text-xs hover:bg-gray-700 dark:hover:bg-gray-600 active:bg-gray-800 dark:active:bg-gray-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-gray-600 dark:bg-gray-700 text-white rounded font-semibold text-xs hover:bg-gray-700 dark:hover:bg-gray-600 active:bg-gray-800 dark:active:bg-gray-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={
               isMaskTraceComplete
                 ? "Start mask trace again"

@@ -59,16 +59,16 @@ export function WorkflowStepper({ machineStatus, isConnected, hasPattern, patter
   const currentStep = getCurrentStep(machineStatus, isConnected, hasPattern, patternUploaded);
 
   return (
-    <div className="relative max-w-5xl mx-auto mt-4" role="navigation" aria-label="Workflow progress">
+    <div className="relative max-w-5xl mx-auto mt-2 lg:mt-4" role="navigation" aria-label="Workflow progress">
       {/* Progress bar background */}
-      <div className="absolute top-5 left-0 right-0 h-1 bg-blue-400/20 dark:bg-blue-600/20 rounded-full" style={{ left: '24px', right: '24px' }} />
+      <div className="absolute top-4 lg:top-5 left-0 right-0 h-0.5 lg:h-1 bg-blue-400/20 dark:bg-blue-600/20 rounded-full" style={{ left: '16px', right: '16px' }} />
 
       {/* Progress bar fill */}
       <div
-        className="absolute top-5 left-0 h-1 bg-gradient-to-r from-green-500 to-blue-500 dark:from-green-600 dark:to-blue-600 transition-all duration-500 rounded-full"
+        className="absolute top-4 lg:top-5 left-0 h-0.5 lg:h-1 bg-gradient-to-r from-green-500 to-blue-500 dark:from-green-600 dark:to-blue-600 transition-all duration-500 rounded-full"
         style={{
-          left: '24px',
-          width: `calc(${((currentStep - 1) / (steps.length - 1)) * 100}% - 24px)`
+          left: '16px',
+          width: `calc(${((currentStep - 1) / (steps.length - 1)) * 100}% - 16px)`
         }}
         role="progressbar"
         aria-valuenow={currentStep}
@@ -95,22 +95,22 @@ export function WorkflowStepper({ machineStatus, isConnected, hasPattern, patter
               {/* Step circle */}
               <div
                 className={`
-                  w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 border-2 shadow-md
+                  w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 border-2 shadow-md
                   ${isComplete ? 'bg-green-500 dark:bg-green-600 border-green-400 dark:border-green-500 text-white shadow-green-500/30 dark:shadow-green-600/30' : ''}
-                  ${isCurrent ? 'bg-blue-600 dark:bg-blue-700 border-blue-500 dark:border-blue-600 text-white scale-110 shadow-blue-600/40 dark:shadow-blue-700/40 ring-2 ring-blue-300 dark:ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : ''}
+                  ${isCurrent ? 'bg-blue-600 dark:bg-blue-700 border-blue-500 dark:border-blue-600 text-white scale-105 lg:scale-110 shadow-blue-600/40 dark:shadow-blue-700/40 ring-2 ring-blue-300 dark:ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : ''}
                   ${isUpcoming ? 'bg-blue-700 dark:bg-blue-800 border-blue-500/30 dark:border-blue-600/30 text-blue-200/70 dark:text-blue-300/70' : ''}
                 `}
                 aria-label={`${step.label}: ${isComplete ? 'completed' : isCurrent ? 'current' : 'upcoming'}`}
               >
                 {isComplete ? (
-                  <CheckCircleIcon className="w-6 h-6" aria-hidden="true" />
+                  <CheckCircleIcon className="w-5 h-5 lg:w-6 lg:h-6" aria-hidden="true" />
                 ) : (
                   step.id
                 )}
               </div>
 
               {/* Step label */}
-              <div className="mt-2 text-center">
+              <div className="mt-1 lg:mt-2 text-center">
                 <div className={`text-xs font-semibold leading-tight ${
                   isCurrent ? 'text-white' : isComplete ? 'text-green-200 dark:text-green-300' : 'text-blue-300/70 dark:text-blue-400/70'
                 }`}>

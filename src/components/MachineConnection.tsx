@@ -124,7 +124,7 @@ export function MachineConnection({
                   <span className="text-red-600 dark:text-red-400 flex-shrink-0">⚠️</span>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-red-900 dark:text-red-200 text-xs mb-1">{errorInfo.title}</div>
-                    <div className="text-[10px] text-red-700 dark:text-red-300 font-mono">
+                    <div className="text-xs text-red-700 dark:text-red-300 font-mono">
                       Error Code: 0x{machineError.toString(16).toUpperCase().padStart(2, '0')}
                     </div>
                   </div>

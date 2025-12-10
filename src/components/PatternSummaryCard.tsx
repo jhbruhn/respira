@@ -84,7 +84,7 @@ export function PatternSummaryCard({
             );
           })}
           {pesData.uniqueColors.length > 8 && (
-            <div className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 border border-gray-400 dark:border-gray-500 flex items-center justify-center text-[7px] font-bold text-gray-600 dark:text-gray-300">
+            <div className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 border border-gray-400 dark:border-gray-500 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300 leading-none">
               +{pesData.uniqueColors.length - 8}
             </div>
           )}
@@ -95,7 +95,7 @@ export function PatternSummaryCard({
         <button
           onClick={onDeletePattern}
           disabled={isDeleting}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded border border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 sm:py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded border border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           {isDeleting ? (
             <>

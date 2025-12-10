@@ -66,7 +66,7 @@ export function BluetoothDevicePicker() {
         aria-describedby="bluetooth-picker-message"
       >
         <div className="p-6 border-b border-gray-300 dark:border-gray-600">
-          <h3 id="bluetooth-picker-title" className="m-0 text-xl font-semibold dark:text-white">
+          <h3 id="bluetooth-picker-title" className="m-0 text-base lg:text-lg font-semibold dark:text-white">
             Select Bluetooth Device
           </h3>
         </div>

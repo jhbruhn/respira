@@ -203,7 +203,7 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, initialPat
           )}
         </div>
       </div>
-      <div className="relative w-full h-[600px] border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-900 overflow-hidden" ref={containerRef}>
+      <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[600px] max-h-[70vh] border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-900 overflow-hidden" ref={containerRef}>
         {containerSize.width > 0 && (
           <Stage
             width={containerSize.width}
@@ -291,7 +291,7 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, initialPat
 
         {/* Placeholder overlay when no pattern is loaded */}
         {!pesData && (
-          <div className="flex items-center justify-center h-[600px] text-gray-600 dark:text-gray-400 italic">
+          <div className="flex items-center justify-center h-[400px] sm:h-[500px] lg:h-[600px] text-gray-600 dark:text-gray-400 italic">
             Load a PES file to preview the pattern
           </div>
         )}
@@ -300,8 +300,8 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, initialPat
         {pesData && (
           <>
             {/* Thread Legend Overlay */}
-            <div className="absolute top-2.5 left-2.5 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-2.5 rounded-lg shadow-lg z-10 max-w-[200px]">
-              <h4 className="m-0 mb-2 text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-300 dark:border-gray-600 pb-1.5">Colors</h4>
+            <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-2 sm:p-2.5 rounded-lg shadow-lg z-10 max-w-[150px] sm:max-w-[180px] lg:max-w-[200px]">
+              <h4 className="m-0 mb-1.5 sm:mb-2 text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-300 dark:border-gray-600 pb-1 sm:pb-1.5">Colors</h4>
               {pesData.uniqueColors.map((color, idx) => {
                 // Primary metadata: brand and catalog number
                 const primaryMetadata = [
@@ -316,17 +316,17 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, initialPat
                 ].filter(Boolean).join(" ");
 
                 return (
-                  <div key={idx} className="flex items-start gap-2 mb-1.5 last:mb-0">
+                  <div key={idx} className="flex items-start gap-1.5 sm:gap-2 mb-1 sm:mb-1.5 last:mb-0">
                     <div
-                      className="w-4 h-4 rounded border border-black dark:border-gray-300 flex-shrink-0 mt-0.5"
+                      className="w-3 h-3 sm:w-4 sm:h-4 rounded border border-black dark:border-gray-300 flex-shrink-0 mt-0.5"
                       style={{ backgroundColor: color.hex }}
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="text-[11px] font-semibold text-gray-900 dark:text-gray-100">
+                      <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">
                         Color {idx + 1}
                       </div>
                       {(primaryMetadata || secondaryMetadata) && (
-                        <div className="text-[9px] text-gray-600 dark:text-gray-400 leading-tight mt-0.5 break-words">
+                        <div className="text-xs text-gray-600 dark:text-gray-400 leading-tight mt-0.5 break-words">
                           {primaryMetadata}
                           {primaryMetadata && secondaryMetadata && <span className="mx-1">•</span>}
                           {secondaryMetadata}
@@ -339,37 +339,37 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, initialPat
             </div>
 
             {/* Pattern Offset Indicator */}
-            <div className={`absolute bottom-20 right-5 backdrop-blur-sm p-2.5 px-3.5 rounded-lg shadow-lg z-[11] min-w-[180px] transition-colors ${
+            <div className={`absolute bottom-16 sm:bottom-20 right-2 sm:right-5 backdrop-blur-sm p-2 sm:p-2.5 px-2.5 sm:px-3.5 rounded-lg shadow-lg z-[11] min-w-[160px] sm:min-w-[180px] transition-colors ${
               patternUploaded ? 'bg-amber-50/95 dark:bg-amber-900/80 border-2 border-amber-300 dark:border-amber-600' : 'bg-white/95 dark:bg-gray-800/95'
             }`}>
               <div className="flex items-center justify-between mb-1">
-                <div className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Pattern Position:</div>
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Pattern Position:</div>
                 {patternUploaded && (
                   <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                    <LockClosedIcon className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-bold">LOCKED</span>
+                    <LockClosedIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <span className="text-xs font-bold">LOCKED</span>
                   </div>
                 )}
               </div>
-              <div className="text-[13px] font-semibold text-blue-600 dark:text-blue-400 mb-1">
+              <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-1">
                 X: {(patternOffset.x / 10).toFixed(1)}mm, Y: {(patternOffset.y / 10).toFixed(1)}mm
               </div>
-              <div className="text-[10px] text-gray-600 dark:text-gray-400 italic">
+              <div className="text-xs text-gray-600 dark:text-gray-400 italic">
                 {patternUploaded ? 'Pattern locked • Drag background to pan' : 'Drag pattern to move • Drag background to pan'}
               </div>
             </div>
 
             {/* Zoom Controls Overlay */}
-            <div className="absolute bottom-5 right-5 flex gap-2 items-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg z-10">
-              <button className="w-8 h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleZoomIn} title="Zoom In">
-                <PlusIcon className="w-5 h-5 dark:text-gray-200" />
+            <div className="absolute bottom-2 sm:bottom-5 right-2 sm:right-5 flex gap-1.5 sm:gap-2 items-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg shadow-lg z-10">
+              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleZoomIn} title="Zoom In">
+                <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
               </button>
-              <span className="min-w-[50px] text-center text-[13px] font-semibold text-gray-900 dark:text-gray-100 select-none">{Math.round(stageScale * 100)}%</span>
-              <button className="w-8 h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleZoomOut} title="Zoom Out">
-                <MinusIcon className="w-5 h-5 dark:text-gray-200" />
+              <span className="min-w-[40px] sm:min-w-[50px] text-center text-sm font-semibold text-gray-900 dark:text-gray-100 select-none">{Math.round(stageScale * 100)}%</span>
+              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleZoomOut} title="Zoom Out">
+                <MinusIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
               </button>
-              <button className="w-8 h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed ml-1" onClick={handleZoomReset} title="Reset Zoom">
-                <ArrowPathIcon className="w-5 h-5 dark:text-gray-200" />
+              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed ml-1" onClick={handleZoomReset} title="Reset Zoom">
+                <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
               </button>
             </div>
           </>
