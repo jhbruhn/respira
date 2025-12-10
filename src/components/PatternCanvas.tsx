@@ -91,76 +91,80 @@ export function PatternCanvas({ pesData, sewingProgress, machineInfo, initialPat
     const stage = e.target.getStage();
     if (!stage) return;
 
-    const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
     if (!pointer) return;
 
     const scaleBy = 1.1;
     const direction = e.evt.deltaY > 0 ? -1 : 1;
-    let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
 
-    // Apply constraints
-    newScale = Math.max(0.1, Math.min(10, newScale));
+    setStageScale((oldScale) => {
+      const newScale = Math.max(0.1, Math.min(direction > 0 ? oldScale * scaleBy : oldScale / scaleBy, 2));
 
-    // Zoom towards pointer
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
+      // Zoom towards pointer
+      setStagePos((prevPos) => {
+        const mousePointTo = {
+          x: (pointer.x - prevPos.x) / oldScale,
+          y: (pointer.y - prevPos.y) / oldScale,
+        };
 
-    const newPos = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
-    };
+        return {
+          x: pointer.x - mousePointTo.x * newScale,
+          y: pointer.y - mousePointTo.y * newScale,
+        };
+      });
 
-    setStageScale(newScale);
-    setStagePos(newPos);
+      return newScale;
+    });
   }, []);
 
   // Zoom control handlers
   const handleZoomIn = useCallback(() => {
-    const oldScale = stageScale;
-    const newScale = Math.min(oldScale * 1.2, 10);
+    setStageScale((oldScale) => {
+      const newScale = Math.max(0.1, Math.min(oldScale * 1.2, 2));
 
-    // Zoom towards center of viewport
-    const centerX = containerSize.width / 2;
-    const centerY = containerSize.height / 2;
+      // Zoom towards center of viewport
+      setStagePos((prevPos) => {
+        const centerX = containerSize.width / 2;
+        const centerY = containerSize.height / 2;
 
-    const mousePointTo = {
-      x: (centerX - stagePos.x) / oldScale,
-      y: (centerY - stagePos.y) / oldScale,
-    };
+        const mousePointTo = {
+          x: (centerX - prevPos.x) / oldScale,
+          y: (centerY - prevPos.y) / oldScale,
+        };
 
-    const newPos = {
-      x: centerX - mousePointTo.x * newScale,
-      y: centerY - mousePointTo.y * newScale,
-    };
+        return {
+          x: centerX - mousePointTo.x * newScale,
+          y: centerY - mousePointTo.y * newScale,
+        };
+      });
 
-    setStageScale(newScale);
-    setStagePos(newPos);
-  }, [stageScale, stagePos, containerSize]);
+      return newScale;
+    });
+  }, [containerSize]);
 
   const handleZoomOut = useCallback(() => {
-    const oldScale = stageScale;
-    const newScale = Math.max(oldScale / 1.2, 0.1);
+    setStageScale((oldScale) => {
+      const newScale = Math.max(0.1, Math.min(oldScale / 1.2, 2));
 
-    // Zoom towards center of viewport
-    const centerX = containerSize.width / 2;
-    const centerY = containerSize.height / 2;
+      // Zoom towards center of viewport
+      setStagePos((prevPos) => {
+        const centerX = containerSize.width / 2;
+        const centerY = containerSize.height / 2;
 
-    const mousePointTo = {
-      x: (centerX - stagePos.x) / oldScale,
-      y: (centerY - stagePos.y) / oldScale,
-    };
+        const mousePointTo = {
+          x: (centerX - prevPos.x) / oldScale,
+          y: (centerY - prevPos.y) / oldScale,
+        };
 
-    const newPos = {
-      x: centerX - mousePointTo.x * newScale,
-      y: centerY - mousePointTo.y * newScale,
-    };
+        return {
+          x: centerX - mousePointTo.x * newScale,
+          y: centerY - mousePointTo.y * newScale,
+        };
+      });
 
-    setStageScale(newScale);
-    setStagePos(newPos);
-  }, [stageScale, stagePos, containerSize]);
+      return newScale;
+    });
+  }, [containerSize]);
 
   const handleZoomReset = useCallback(() => {
     const initialScale = initialScaleRef.current;
