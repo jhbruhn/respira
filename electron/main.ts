@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { join } from 'path';
 import { promises as fs } from 'fs';
 import Store from 'electron-store';
+import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 
 import started from 'electron-squirrel-startup';
 
@@ -9,6 +10,13 @@ import started from 'electron-squirrel-startup';
 if (started) {
   app.quit();
 }
+
+updateElectronApp({
+  updateSource: {
+    type: UpdateSourceType.StaticStorage,
+    baseUrl: `https://jhbruhn.github.io/respira/update/${process.platform}/${process.arch}`
+  }
+})
 
 // Enable Web Bluetooth
 app.commandLine.appendSwitch('enable-web-bluetooth', 'true');
