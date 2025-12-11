@@ -102,9 +102,37 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  build-web:
+    name: Build Web App
+    needs: draft-release
+    if: needs.draft-release.outputs.tag-name != ''
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Upload web build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: dist/
+
   publish-to-pages:
     name: Publish to GitHub Pages
-    needs: [draft-release, build-release]
+    needs: [draft-release, build-release, build-web]
     if: needs.draft-release.outputs.tag-name != ''
     runs-on: ubuntu-latest
     environment:
@@ -117,18 +145,24 @@ jobs:
         with:
           path: artifacts
 
-      - name: Organize files for auto-update
+      - name: Organize files for GitHub Pages
         run: |
-          # Create update directory structure
-          mkdir -p update/win32/x64
-          mkdir -p update/darwin/arm64
+          # Create root directory for web app
+          mkdir -p pages
+
+          # Copy web build to root
+          cp -r artifacts/web-build/* pages/
+
+          # Create update directory structure for auto-update files
+          mkdir -p pages/update/win32/x64
+          mkdir -p pages/update/darwin/arm64
 
           # Copy Windows auto-update files
-          cp artifacts/windows-artifacts/* update/win32/x64/
+          cp artifacts/windows-artifacts/* pages/update/win32/x64/
 
           # Copy macOS auto-update files (only ZIP and RELEASES.json, not DMG)
-          cp artifacts/macos-artifacts/zip/darwin/arm64/*.zip update/darwin/arm64/
-          cp artifacts/macos-artifacts/zip/darwin/arm64/RELEASES.json update/darwin/arm64/
+          cp artifacts/macos-artifacts/zip/darwin/arm64/*.zip pages/update/darwin/arm64/
+          cp artifacts/macos-artifacts/zip/darwin/arm64/RELEASES.json pages/update/darwin/arm64/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -136,7 +170,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'update'
+          path: 'pages'
 
       - name: Deploy to GitHub Pages
         id: deployment
