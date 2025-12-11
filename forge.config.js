@@ -17,7 +17,7 @@ module.exports = {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin'],
       config: {
-        macUpdateManifestBaseUrl: "https://jhbruhn.github.io/respira/update/darwin/x64"
+        macUpdateManifestBaseUrl: "https://jhbruhn.github.io/respira/update/darwin/arm64"
       }
     },
     {

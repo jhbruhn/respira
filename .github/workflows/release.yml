@@ -115,7 +115,20 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: update
+          path: artifacts
+
+      - name: Organize files for auto-update
+        run: |
+          # Create update directory structure
+          mkdir -p update/win32/x64
+          mkdir -p update/darwin/arm64
+
+          # Copy Windows auto-update files
+          cp artifacts/windows-artifacts/* update/win32/x64/
+
+          # Copy macOS auto-update files (only ZIP and RELEASES.json, not DMG)
+          cp artifacts/macos-artifacts/zip/darwin/arm64/*.zip update/darwin/arm64/
+          cp artifacts/macos-artifacts/zip/darwin/arm64/RELEASES.json update/darwin/arm64/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
