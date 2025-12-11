@@ -152,6 +152,7 @@ export function useBrotherMachine() {
       setPatternInfo(null);
       setSewingProgress(null);
       setError(null);
+      setMachineError(SewingMachineError.None);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to disconnect");
     }

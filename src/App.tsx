@@ -1,17 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useBrotherMachine } from './hooks/useBrotherMachine';
 import { FileUpload } from './components/FileUpload';
 import { PatternCanvas } from './components/PatternCanvas';
 import { ProgressMonitor } from './components/ProgressMonitor';
 import { WorkflowStepper } from './components/WorkflowStepper';
-import { NextStepGuide } from './components/NextStepGuide';
 import { PatternSummaryCard } from './components/PatternSummaryCard';
 import { BluetoothDevicePicker } from './components/BluetoothDevicePicker';
 import type { PesPatternData } from './utils/pystitchConverter';
 import { pyodideLoader } from './utils/pyodideLoader';
-import { hasError } from './utils/errorCodeHelpers';
+import { hasError, getErrorDetails } from './utils/errorCodeHelpers';
 import { canDeletePattern, getStateVisualInfo } from './utils/machineStateHelpers';
-import { CheckCircleIcon, BoltIcon, PauseCircleIcon, ExclamationTriangleIcon, ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { CheckCircleIcon, BoltIcon, PauseCircleIcon, ExclamationTriangleIcon, ArrowPathIcon, XMarkIcon, InformationCircleIcon } from '@heroicons/react/24/solid';
 import './App.css';
 
 function App() {
@@ -22,6 +21,9 @@ function App() {
   const [patternOffset, setPatternOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [patternUploaded, setPatternUploaded] = useState(false);
   const [currentFileName, setCurrentFileName] = useState<string>(''); // Track current pattern filename
+  const [showErrorPopover, setShowErrorPopover] = useState(false);
+  const errorPopoverRef = useRef<HTMLDivElement>(null);
+  const errorButtonRef = useRef<HTMLButtonElement>(null);
 
   // Initialize Pyodide on mount
   useEffect(() => {
@@ -36,6 +38,25 @@ function App() {
         console.error('[App] Failed to initialize Pyodide:', err);
       });
   }, []);
+
+  // Close error popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        errorPopoverRef.current &&
+        !errorPopoverRef.current.contains(event.target as Node) &&
+        errorButtonRef.current &&
+        !errorButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowErrorPopover(false);
+      }
+    };
+
+    if (showErrorPopover) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showErrorPopover]);
 
   // Auto-load cached pattern when available
   const resumedPattern = machine.resumedPattern;
@@ -142,7 +163,7 @@ function App() {
                   <ArrowPathIcon className="w-3.5 h-3.5 text-blue-200 animate-spin" title="Auto-refreshing status" />
                 )}
               </div>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 min-h-[32px]">
                 {machine.isConnected ? (
                   <>
                     <button
@@ -162,6 +183,122 @@ function App() {
                 ) : (
                   <p className="text-xs text-blue-200">Not Connected</p>
                 )}
+
+                {/* Error indicator - always render to prevent layout shift */}
+                <div className="relative">
+                  <button
+                    ref={errorButtonRef}
+                    onClick={() => setShowErrorPopover(!showErrorPopover)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-red-500/90 hover:bg-red-600 text-white border border-red-400 transition-all flex-shrink-0 ${
+                      (machine.error || pyodideError)
+                        ? 'cursor-pointer animate-pulse hover:animate-none'
+                        : 'invisible pointer-events-none'
+                    }`}
+                    title="Click to view error details"
+                    aria-label="View error details"
+                    disabled={!(machine.error || pyodideError)}
+                  >
+                    <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>
+                      {(() => {
+                        if (pyodideError) return 'Python Error';
+                        if (machine.isPairingError) return 'Pairing Required';
+
+                        const errorMsg = machine.error || '';
+
+                        // Categorize by error message content
+                        if (errorMsg.toLowerCase().includes('bluetooth') || errorMsg.toLowerCase().includes('connection')) {
+                          return 'Connection Error';
+                        }
+                        if (errorMsg.toLowerCase().includes('upload')) {
+                          return 'Upload Error';
+                        }
+                        if (errorMsg.toLowerCase().includes('pattern')) {
+                          return 'Pattern Error';
+                        }
+                        if (machine.machineError !== undefined) {
+                          return `Machine Error`;
+                        }
+
+                        // Default fallback
+                        return 'Error';
+                      })()}
+                    </span>
+                  </button>
+
+                  {/* Error popover */}
+                  {showErrorPopover && (machine.error || pyodideError) && (
+              <div
+                ref={errorPopoverRef}
+                className="absolute top-full mt-2 left-0 w-[600px] z-50 animate-fadeIn"
+                role="dialog"
+                aria-label="Error details"
+              >
+                {(() => {
+                  const errorDetails = getErrorDetails(machine.machineError);
+                  const isPairingError = machine.isPairingError;
+                  const errorMsg = pyodideError || machine.error || '';
+                  const isInfo = isPairingError || errorDetails?.isInformational;
+
+                  const bgColor = isInfo
+                    ? 'bg-blue-50 dark:bg-blue-900/95 border-blue-600 dark:border-blue-500'
+                    : 'bg-red-50 dark:bg-red-900/95 border-red-600 dark:border-red-500';
+
+                  const iconColor = isInfo
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-red-600 dark:text-red-400';
+
+                  const textColor = isInfo
+                    ? 'text-blue-900 dark:text-blue-200'
+                    : 'text-red-900 dark:text-red-200';
+
+                  const descColor = isInfo
+                    ? 'text-blue-800 dark:text-blue-300'
+                    : 'text-red-800 dark:text-red-300';
+
+                  const listColor = isInfo
+                    ? 'text-blue-700 dark:text-blue-300'
+                    : 'text-red-700 dark:text-red-300';
+
+                  const Icon = isInfo ? InformationCircleIcon : ExclamationTriangleIcon;
+                  const title = errorDetails?.title || (isPairingError ? 'Pairing Required' : 'Error');
+
+                  return (
+                    <div className={`${bgColor} border-l-4 p-4 rounded-lg shadow-xl backdrop-blur-sm`}>
+                      <div className="flex items-start gap-3">
+                        <Icon className={`w-6 h-6 ${iconColor} flex-shrink-0 mt-0.5`} />
+                        <div className="flex-1">
+                          <h3 className={`text-base font-semibold ${textColor} mb-2`}>
+                            {title}
+                          </h3>
+                          <p className={`text-sm ${descColor} mb-3`}>
+                            {errorDetails?.description || errorMsg}
+                          </p>
+                          {errorDetails?.solutions && errorDetails.solutions.length > 0 && (
+                            <>
+                              <h4 className={`text-sm font-semibold ${textColor} mb-2`}>
+                                {isInfo ? 'Steps:' : 'How to Fix:'}
+                              </h4>
+                              <ol className={`list-decimal list-inside text-sm ${listColor} space-y-1.5`}>
+                                {errorDetails.solutions.map((solution, index) => (
+                                  <li key={index} className="pl-2">{solution}</li>
+                                ))}
+                              </ol>
+                            </>
+                          )}
+                          {machine.machineError !== undefined && !errorDetails?.isInformational && (
+                            <p className={`text-xs ${descColor} mt-3 font-mono`}>
+                              Error Code: 0x{machine.machineError.toString(16).toUpperCase().padStart(2, '0')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+                </div>
               </div>
             </div>
           </div>
@@ -173,58 +310,15 @@ function App() {
               isConnected={machine.isConnected}
               hasPattern={pesData !== null}
               patternUploaded={patternUploaded}
+              hasError={hasError(machine.machineError)}
+              errorMessage={machine.error || undefined}
+              errorCode={machine.machineError}
             />
           </div>
         </div>
       </header>
 
       <div className="flex-1 p-4 sm:p-5 lg:p-6 w-full overflow-y-auto lg:overflow-hidden flex flex-col">
-        {/* Global errors */}
-        {machine.error && (
-          <div className={`px-6 py-4 rounded-lg border-l-4 mb-6 shadow-md hover:shadow-lg transition-shadow animate-fadeIn ${
-            machine.isPairingError
-              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 border-blue-600 dark:border-blue-500'
-              : 'bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200 border-red-600 dark:border-red-500'
-          }`}>
-            <div className="flex items-center gap-3">
-              <svg className={`w-5 h-5 flex-shrink-0 ${machine.isPairingError ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {machine.isPairingError ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                )}
-              </svg>
-              <div className="flex-1">
-                <div className="font-semibold mb-1">{machine.isPairingError ? 'Pairing Required' : 'Error'}</div>
-                <div className="text-sm">{machine.error}</div>
-              </div>
-            </div>
-          </div>
-        )}
-        {pyodideError && (
-          <div className="bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200 px-6 py-4 rounded-lg border-l-4 border-red-600 dark:border-red-500 mb-6 shadow-md hover:shadow-lg transition-shadow animate-fadeIn">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <strong className="font-semibold">Python Error:</strong> {pyodideError}
-              </div>
-            </div>
-          </div>
-        )}
-        {!pyodideReady && !pyodideError && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 px-6 py-4 rounded-lg border-l-4 border-blue-600 dark:border-blue-500 mb-6 shadow-md animate-fadeIn">
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span className="font-medium">Initializing Python environment...</span>
-            </div>
-          </div>
-        )}
-
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-4 md:gap-5 lg:gap-6 lg:overflow-hidden">
           {/* Left Column - Controls */}
           <div className="flex flex-col gap-4 md:gap-5 lg:gap-6 lg:overflow-hidden">
@@ -362,17 +456,6 @@ function App() {
         {/* Bluetooth Device Picker (Electron only) */}
         <BluetoothDevicePicker />
       </div>
-
-      {/* Next Step Guide - Fixed floating overlay */}
-      <NextStepGuide
-        machineStatus={machine.machineStatus}
-        isConnected={machine.isConnected}
-        hasPattern={pesData !== null}
-        patternUploaded={patternUploaded}
-        hasError={hasError(machine.machineError)}
-        errorMessage={machine.error || undefined}
-        errorCode={machine.machineError}
-      />
     </div>
   );
 }
