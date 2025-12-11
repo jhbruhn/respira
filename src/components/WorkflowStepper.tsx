@@ -375,7 +375,7 @@ export function WorkflowStepper({
       </div>
 
       {/* Popover */}
-      {showPopover && popoverStep !== null && stepRefs.current[popoverStep] && (
+      {showPopover && popoverStep !== null && (
         <div
           ref={popoverRef}
           className="absolute top-full mt-4 left-1/2 transform -translate-x-1/2 w-full max-w-xl z-50 animate-fadeIn"

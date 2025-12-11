@@ -23,7 +23,7 @@ export class BrowserFileService implements IFileService {
     });
   }
 
-  async saveFileDialog(_data: Uint8Array, _defaultName: string): Promise<void> {
+  async saveFileDialog(): Promise<void> {
     // No-op in browser - could implement download if needed in the future
     console.warn('saveFileDialog not implemented in browser');
   }

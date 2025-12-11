@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import {
   CheckCircleIcon,
   ArrowRightIcon,
@@ -58,53 +58,53 @@ export function ProgressMonitor({
     : 0;
 
   // Calculate color block information from pesData
-  const colorBlocks = pesData
-    ? (() => {
-        const blocks: Array<{
-          colorIndex: number;
-          threadHex: string;
-          startStitch: number;
-          endStitch: number;
-          stitchCount: number;
-          threadCatalogNumber: string | null;
-          threadBrand: string | null;
-          threadDescription: string | null;
-          threadChart: string | null;
-        }> = [];
+  const colorBlocks = useMemo(() => {
+    if (!pesData) return [];
 
-        let currentColorIndex = pesData.stitches[0]?.[3] ?? 0;
-        let blockStartStitch = 0;
+    const blocks: Array<{
+      colorIndex: number;
+      threadHex: string;
+      startStitch: number;
+      endStitch: number;
+      stitchCount: number;
+      threadCatalogNumber: string | null;
+      threadBrand: string | null;
+      threadDescription: string | null;
+      threadChart: string | null;
+    }> = [];
 
-        for (let i = 0; i < pesData.stitches.length; i++) {
-          const stitchColorIndex = pesData.stitches[i][3];
+    let currentColorIndex = pesData.stitches[0]?.[3] ?? 0;
+    let blockStartStitch = 0;
 
-          // When color changes, save the previous block
-          if (
-            stitchColorIndex !== currentColorIndex ||
-            i === pesData.stitches.length - 1
-          ) {
-            const endStitch = i === pesData.stitches.length - 1 ? i + 1 : i;
-            const thread = pesData.threads[currentColorIndex];
-            blocks.push({
-              colorIndex: currentColorIndex,
-              threadHex: thread?.hex || "#000000",
-              threadCatalogNumber: thread?.catalogNumber ?? null,
-              threadBrand: thread?.brand ?? null,
-              threadDescription: thread?.description ?? null,
-              threadChart: thread?.chart ?? null,
-              startStitch: blockStartStitch,
-              endStitch: endStitch,
-              stitchCount: endStitch - blockStartStitch,
-            });
+    for (let i = 0; i < pesData.stitches.length; i++) {
+      const stitchColorIndex = pesData.stitches[i][3];
 
-            currentColorIndex = stitchColorIndex;
-            blockStartStitch = i;
-          }
-        }
+      // When color changes, save the previous block
+      if (
+        stitchColorIndex !== currentColorIndex ||
+        i === pesData.stitches.length - 1
+      ) {
+        const endStitch = i === pesData.stitches.length - 1 ? i + 1 : i;
+        const thread = pesData.threads[currentColorIndex];
+        blocks.push({
+          colorIndex: currentColorIndex,
+          threadHex: thread?.hex || "#000000",
+          threadCatalogNumber: thread?.catalogNumber ?? null,
+          threadBrand: thread?.brand ?? null,
+          threadDescription: thread?.description ?? null,
+          threadChart: thread?.chart ?? null,
+          startStitch: blockStartStitch,
+          endStitch: endStitch,
+          stitchCount: endStitch - blockStartStitch,
+        });
 
-        return blocks;
-      })()
-    : [];
+        currentColorIndex = stitchColorIndex;
+        blockStartStitch = i;
+      }
+    }
+
+    return blocks;
+  }, [pesData]);
 
   // Determine current color block based on current stitch
   const currentStitch = sewingProgress?.currentStitch || 0;

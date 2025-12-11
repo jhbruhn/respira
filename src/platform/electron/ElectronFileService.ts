@@ -4,7 +4,7 @@ import type { IFileService } from '../interfaces/IFileService';
  * Electron implementation of file service using native dialogs via IPC
  */
 export class ElectronFileService implements IFileService {
-  async openFileDialog(_options: { accept: string }): Promise<File | null> {
+  async openFileDialog(): Promise<File | null> {
     if (!window.electronAPI) {
       throw new Error('Electron API not available');
     }

@@ -68,7 +68,7 @@ export class ElectronStorageService implements IStorageService {
     }
   }
 
-  async hasPattern(_uuid: string): Promise<boolean> {
+  async hasPattern(): Promise<boolean> {
     // Since this is async in Electron, we can't truly implement this synchronously
     // Returning false as a safe default
     console.warn('[ElectronStorage] hasPattern called synchronously, returning false');
