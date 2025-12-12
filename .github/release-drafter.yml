@@ -1,38 +1,38 @@
-name-template: 'v$RESOLVED_VERSION'
-tag-template: 'v$RESOLVED_VERSION'
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
 
 categories:
-  - title: '🚀 Features'
+  - title: "🚀 Features"
     labels:
-      - 'feature'
-      - 'enhancement'
-  - title: '🐛 Bug Fixes'
+      - "feature"
+      - "enhancement"
+  - title: "🐛 Bug Fixes"
     labels:
-      - 'fix'
-      - 'bugfix'
-      - 'bug'
-  - title: '🧰 Maintenance'
+      - "fix"
+      - "bugfix"
+      - "bug"
+  - title: "🧰 Maintenance"
     labels:
-      - 'chore'
-      - 'dependencies'
+      - "chore"
+      - "dependencies"
 
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 
 version-resolver:
   major:
     labels:
-      - 'major'
-      - 'breaking'
+      - "major"
+      - "breaking"
   minor:
     labels:
-      - 'minor'
-      - 'feature'
+      - "minor"
+      - "feature"
   patch:
     labels:
-      - 'patch'
-      - 'fix'
-      - 'bugfix'
+      - "patch"
+      - "fix"
+      - "bugfix"
   default: patch
 
 template: |
@@ -41,3 +41,23 @@ template: |
   $CHANGES
 
   **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
+
+autolabeler:
+  - label: "bug"
+    branch:
+      - '/fix\/.+/'
+    title:
+      - "/fix/i"
+      - "/bug/i"
+      - "/bugfix/i"
+  - label: "enhancement"
+    branch:
+      - '/feature\/.+/'
+    title:
+      - "/feature/i"
+      - "/enhancement/i"
+  - label: "breaking"
+    branch:
+      - '/breaking\/.+/'
+    title:
+      - "/breaking/i"
