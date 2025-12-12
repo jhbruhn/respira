@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useBrotherMachine } from './hooks/useBrotherMachine';
+import { useEffect, useCallback, useRef } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+import { useMachineStore } from './stores/useMachineStore';
+import { usePatternStore } from './stores/usePatternStore';
+import { useUIStore } from './stores/useUIStore';
 import { FileUpload } from './components/FileUpload';
 import { PatternCanvas } from './components/PatternCanvas';
 import { ProgressMonitor } from './components/ProgressMonitor';
@@ -7,37 +10,112 @@ import { WorkflowStepper } from './components/WorkflowStepper';
 import { PatternSummaryCard } from './components/PatternSummaryCard';
 import { BluetoothDevicePicker } from './components/BluetoothDevicePicker';
 import type { PesPatternData } from './utils/pystitchConverter';
-import { pyodideLoader } from './utils/pyodideLoader';
 import { hasError, getErrorDetails } from './utils/errorCodeHelpers';
 import { canDeletePattern, getStateVisualInfo } from './utils/machineStateHelpers';
 import { CheckCircleIcon, BoltIcon, PauseCircleIcon, ExclamationTriangleIcon, ArrowPathIcon, XMarkIcon, InformationCircleIcon } from '@heroicons/react/24/solid';
 import './App.css';
 
 function App() {
-  const machine = useBrotherMachine();
-  const [pesData, setPesData] = useState<PesPatternData | null>(null);
-  const [pyodideReady, setPyodideReady] = useState(false);
-  const [pyodideError, setPyodideError] = useState<string | null>(null);
-  const [patternOffset, setPatternOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [patternUploaded, setPatternUploaded] = useState(false);
-  const [currentFileName, setCurrentFileName] = useState<string>(''); // Track current pattern filename
-  const [showErrorPopover, setShowErrorPopover] = useState(false);
+  // Machine store
+  const {
+    isConnected,
+    machineInfo,
+    machineStatus,
+    machineStatusName,
+    machineError,
+    patternInfo,
+    sewingProgress,
+    uploadProgress,
+    error: machineErrorMessage,
+    isPairingError,
+    isCommunicating: isPolling,
+    isUploading,
+    isDeleting,
+    resumeAvailable,
+    resumeFileName,
+    resumedPattern,
+    connect,
+    disconnect,
+    uploadPattern,
+    startMaskTrace,
+    startSewing,
+    resumeSewing,
+    deletePattern,
+  } = useMachineStore(
+    useShallow((state) => ({
+      isConnected: state.isConnected,
+      machineInfo: state.machineInfo,
+      machineStatus: state.machineStatus,
+      machineStatusName: state.machineStatusName,
+      machineError: state.machineError,
+      patternInfo: state.patternInfo,
+      sewingProgress: state.sewingProgress,
+      uploadProgress: state.uploadProgress,
+      error: state.error,
+      isPairingError: state.isPairingError,
+      isCommunicating: state.isCommunicating,
+      isUploading: state.isUploading,
+      isDeleting: state.isDeleting,
+      resumeAvailable: state.resumeAvailable,
+      resumeFileName: state.resumeFileName,
+      resumedPattern: state.resumedPattern,
+      connect: state.connect,
+      disconnect: state.disconnect,
+      uploadPattern: state.uploadPattern,
+      startMaskTrace: state.startMaskTrace,
+      startSewing: state.startSewing,
+      resumeSewing: state.resumeSewing,
+      deletePattern: state.deletePattern,
+    }))
+  );
+
+  // Pattern store
+  const {
+    pesData,
+    currentFileName,
+    patternOffset,
+    patternUploaded,
+    setPattern,
+    setPatternOffset,
+    setPatternUploaded,
+    clearPattern,
+  } = usePatternStore(
+    useShallow((state) => ({
+      pesData: state.pesData,
+      currentFileName: state.currentFileName,
+      patternOffset: state.patternOffset,
+      patternUploaded: state.patternUploaded,
+      setPattern: state.setPattern,
+      setPatternOffset: state.setPatternOffset,
+      setPatternUploaded: state.setPatternUploaded,
+      clearPattern: state.clearPattern,
+    }))
+  );
+
+  // UI store
+  const {
+    pyodideReady,
+    pyodideError,
+    showErrorPopover,
+    initializePyodide,
+    setErrorPopover,
+  } = useUIStore(
+    useShallow((state) => ({
+      pyodideReady: state.pyodideReady,
+      pyodideError: state.pyodideError,
+      showErrorPopover: state.showErrorPopover,
+      initializePyodide: state.initializePyodide,
+      setErrorPopover: state.setErrorPopover,
+    }))
+  );
+
   const errorPopoverRef = useRef<HTMLDivElement>(null);
   const errorButtonRef = useRef<HTMLButtonElement>(null);
 
   // Initialize Pyodide on mount
   useEffect(() => {
-    pyodideLoader
-      .initialize()
-      .then(() => {
-        setPyodideReady(true);
-        console.log('[App] Pyodide initialized successfully');
-      })
-      .catch((err) => {
-        setPyodideError(err instanceof Error ? err.message : 'Failed to initialize Python environment');
-        console.error('[App] Failed to initialize Pyodide:', err);
-      });
-  }, []);
+    initializePyodide();
+  }, [initializePyodide]);
 
   // Close error popover when clicking outside
   useEffect(() => {
@@ -48,7 +126,7 @@ function App() {
         errorButtonRef.current &&
         !errorButtonRef.current.contains(event.target as Node)
       ) {
-        setShowErrorPopover(false);
+        setErrorPopover(false);
       }
     };
 
@@ -56,54 +134,39 @@ function App() {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [showErrorPopover]);
+  }, [showErrorPopover, setErrorPopover]);
 
   // Auto-load cached pattern when available
-  const resumedPattern = machine.resumedPattern;
-  const resumeFileName = machine.resumeFileName;
-
   if (resumedPattern && !pesData) {
     console.log('[App] Loading resumed pattern:', resumeFileName, 'Offset:', resumedPattern.patternOffset);
-    setPesData(resumedPattern.pesData);
+    setPattern(resumedPattern.pesData, resumeFileName || '');
     // Restore the cached pattern offset
     if (resumedPattern.patternOffset) {
-      setPatternOffset(resumedPattern.patternOffset);
-    }
-    // Preserve the filename from cache
-    if (resumeFileName) {
-      setCurrentFileName(resumeFileName);
+      setPatternOffset(resumedPattern.patternOffset.x, resumedPattern.patternOffset.y);
     }
   }
 
   const handlePatternLoaded = useCallback((data: PesPatternData, fileName: string) => {
-    setPesData(data);
-    setCurrentFileName(fileName);
-    // Reset pattern offset when new pattern is loaded
-    setPatternOffset({ x: 0, y: 0 });
-    setPatternUploaded(false);
-  }, []);
+    setPattern(data, fileName);
+  }, [setPattern]);
 
   const handlePatternOffsetChange = useCallback((offsetX: number, offsetY: number) => {
-    setPatternOffset({ x: offsetX, y: offsetY });
-    console.log('[App] Pattern offset changed:', { x: offsetX, y: offsetY });
-  }, []);
+    setPatternOffset(offsetX, offsetY);
+  }, [setPatternOffset]);
 
   const handleUpload = useCallback(async (penData: Uint8Array, pesData: PesPatternData, fileName: string, patternOffset?: { x: number; y: number }) => {
-    await machine.uploadPattern(penData, pesData, fileName, patternOffset);
+    await uploadPattern(penData, pesData, fileName, patternOffset);
     setPatternUploaded(true);
-  }, [machine]);
+  }, [uploadPattern, setPatternUploaded]);
 
   const handleDeletePattern = useCallback(async () => {
-    await machine.deletePattern();
-    setPatternUploaded(false);
-    // NOTE: We intentionally DON'T clear setPesData(null) here
+    await deletePattern();
+    clearPattern();
+    // NOTE: We intentionally DON'T clear pesData in the pattern store
     // so the pattern remains visible in the canvas for re-editing and re-uploading
-  }, [machine]);
+  }, [deletePattern, clearPattern]);
 
   // Track pattern uploaded state based on machine status
-  const isConnected = machine.isConnected;
-  const patternInfo = machine.patternInfo;
-
   if (!isConnected) {
     if (patternUploaded) {
       setPatternUploaded(false);
@@ -117,7 +180,7 @@ function App() {
   }
 
   // Get state visual info for header status badge
-  const stateVisual = getStateVisualInfo(machine.machineStatus);
+  const stateVisual = getStateVisualInfo(machineStatus);
   const stateIcons = {
     ready: CheckCircleIcon,
     active: BoltIcon,
@@ -134,40 +197,40 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 lg:gap-8 items-center">
           {/* Machine Connection Status - Responsive width column */}
           <div className="flex items-center gap-3 w-full lg:w-[280px]">
-            <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50" style={{ visibility: machine.isConnected ? 'visible' : 'hidden' }}></div>
-            <div className="w-2.5 h-2.5 bg-gray-400 rounded-full -ml-2.5" style={{ visibility: !machine.isConnected ? 'visible' : 'hidden' }}></div>
+            <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50" style={{ visibility: isConnected ? 'visible' : 'hidden' }}></div>
+            <div className="w-2.5 h-2.5 bg-gray-400 rounded-full -ml-2.5" style={{ visibility: !isConnected ? 'visible' : 'hidden' }}></div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="text-lg lg:text-xl font-bold text-white leading-tight">Respira</h1>
-                {machine.isConnected && machine.machineInfo?.serialNumber && (
+                {isConnected && machineInfo?.serialNumber && (
                   <span
                     className="text-xs text-blue-200 cursor-help"
-                    title={`Serial: ${machine.machineInfo.serialNumber}${
-                      machine.machineInfo.macAddress
-                        ? `\nMAC: ${machine.machineInfo.macAddress}`
+                    title={`Serial: ${machineInfo.serialNumber}${
+                      machineInfo.macAddress
+                        ? `\nMAC: ${machineInfo.macAddress}`
                         : ''
                     }${
-                      machine.machineInfo.totalCount !== undefined
-                        ? `\nTotal stitches: ${machine.machineInfo.totalCount.toLocaleString()}`
+                      machineInfo.totalCount !== undefined
+                        ? `\nTotal stitches: ${machineInfo.totalCount.toLocaleString()}`
                         : ''
                     }${
-                      machine.machineInfo.serviceCount !== undefined
-                        ? `\nStitches since service: ${machine.machineInfo.serviceCount.toLocaleString()}`
+                      machineInfo.serviceCount !== undefined
+                        ? `\nStitches since service: ${machineInfo.serviceCount.toLocaleString()}`
                         : ''
                     }`}
                   >
-                    • {machine.machineInfo.serialNumber}
+                    • {machineInfo.serialNumber}
                   </span>
                 )}
-                {machine.isPolling && (
+                {isPolling && (
                   <ArrowPathIcon className="w-3.5 h-3.5 text-blue-200 animate-spin" title="Auto-refreshing status" />
                 )}
               </div>
               <div className="flex items-center gap-2 mt-1 min-h-[32px]">
-                {machine.isConnected ? (
+                {isConnected ? (
                   <>
                     <button
-                      onClick={machine.disconnect}
+                      onClick={disconnect}
                       className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-white/10 hover:bg-red-600 text-blue-100 hover:text-white border border-white/20 hover:border-red-600 cursor-pointer transition-all flex-shrink-0"
                       title="Disconnect from machine"
                       aria-label="Disconnect from machine"
@@ -177,7 +240,7 @@ function App() {
                     </button>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-semibold bg-white/20 text-white border border-white/30 flex-shrink-0">
                       <StatusIcon className="w-3 h-3" />
-                      {machine.machineStatusName}
+                      {machineStatusName}
                     </span>
                   </>
                 ) : (
@@ -188,23 +251,23 @@ function App() {
                 <div className="relative">
                   <button
                     ref={errorButtonRef}
-                    onClick={() => setShowErrorPopover(!showErrorPopover)}
+                    onClick={() => setErrorPopover(!showErrorPopover)}
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-red-500/90 hover:bg-red-600 text-white border border-red-400 transition-all flex-shrink-0 ${
-                      (machine.error || pyodideError)
+                      (machineErrorMessage || pyodideError)
                         ? 'cursor-pointer animate-pulse hover:animate-none'
                         : 'invisible pointer-events-none'
                     }`}
                     title="Click to view error details"
                     aria-label="View error details"
-                    disabled={!(machine.error || pyodideError)}
+                    disabled={!(machineErrorMessage || pyodideError)}
                   >
                     <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />
                     <span>
                       {(() => {
                         if (pyodideError) return 'Python Error';
-                        if (machine.isPairingError) return 'Pairing Required';
+                        if (isPairingError) return 'Pairing Required';
 
-                        const errorMsg = machine.error || '';
+                        const errorMsg = machineErrorMessage || '';
 
                         // Categorize by error message content
                         if (errorMsg.toLowerCase().includes('bluetooth') || errorMsg.toLowerCase().includes('connection')) {
@@ -216,7 +279,7 @@ function App() {
                         if (errorMsg.toLowerCase().includes('pattern')) {
                           return 'Pattern Error';
                         }
-                        if (machine.machineError !== undefined) {
+                        if (machineError !== undefined) {
                           return `Machine Error`;
                         }
 
@@ -227,7 +290,7 @@ function App() {
                   </button>
 
                   {/* Error popover */}
-                  {showErrorPopover && (machine.error || pyodideError) && (
+                  {showErrorPopover && (machineErrorMessage || pyodideError) && (
               <div
                 ref={errorPopoverRef}
                 className="absolute top-full mt-2 left-0 w-[600px] z-50 animate-fadeIn"
@@ -235,10 +298,10 @@ function App() {
                 aria-label="Error details"
               >
                 {(() => {
-                  const errorDetails = getErrorDetails(machine.machineError);
-                  const isPairingError = machine.isPairingError;
-                  const errorMsg = pyodideError || machine.error || '';
-                  const isInfo = isPairingError || errorDetails?.isInformational;
+                  const errorDetails = getErrorDetails(machineError);
+                  const isPairingErr = isPairingError;
+                  const errorMsg = pyodideError || machineErrorMessage || '';
+                  const isInfo = isPairingErr || errorDetails?.isInformational;
 
                   const bgColor = isInfo
                     ? 'bg-blue-50 dark:bg-blue-900/95 border-blue-600 dark:border-blue-500'
@@ -261,7 +324,7 @@ function App() {
                     : 'text-red-700 dark:text-red-300';
 
                   const Icon = isInfo ? InformationCircleIcon : ExclamationTriangleIcon;
-                  const title = errorDetails?.title || (isPairingError ? 'Pairing Required' : 'Error');
+                  const title = errorDetails?.title || (isPairingErr ? 'Pairing Required' : 'Error');
 
                   return (
                     <div className={`${bgColor} border-l-4 p-4 rounded-lg shadow-xl backdrop-blur-sm`}>
@@ -286,9 +349,9 @@ function App() {
                               </ol>
                             </>
                           )}
-                          {machine.machineError !== undefined && !errorDetails?.isInformational && (
+                          {machineError !== undefined && !errorDetails?.isInformational && (
                             <p className={`text-xs ${descColor} mt-3 font-mono`}>
-                              Error Code: 0x{machine.machineError.toString(16).toUpperCase().padStart(2, '0')}
+                              Error Code: 0x{machineError.toString(16).toUpperCase().padStart(2, '0')}
                             </p>
                           )}
                         </div>
@@ -306,13 +369,13 @@ function App() {
           {/* Workflow Stepper - Flexible width column */}
           <div>
             <WorkflowStepper
-              machineStatus={machine.machineStatus}
-              isConnected={machine.isConnected}
+              machineStatus={machineStatus}
+              isConnected={isConnected}
               hasPattern={pesData !== null}
               patternUploaded={patternUploaded}
-              hasError={hasError(machine.machineError)}
-              errorMessage={machine.error || undefined}
-              errorCode={machine.machineError}
+              hasError={hasError(machineError)}
+              errorMessage={machineErrorMessage || undefined}
+              errorCode={machineError}
             />
           </div>
         </div>
@@ -323,7 +386,7 @@ function App() {
           {/* Left Column - Controls */}
           <div className="flex flex-col gap-4 md:gap-5 lg:gap-6 lg:overflow-hidden">
             {/* Connect Button - Show when disconnected */}
-            {!machine.isConnected && (
+            {!isConnected && (
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-gray-400 dark:border-gray-600">
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-6 h-6 text-gray-600 dark:text-gray-400 flex-shrink-0 mt-0.5">
@@ -337,7 +400,7 @@ function App() {
                   </div>
                 </div>
                 <button
-                  onClick={machine.connect}
+                  onClick={connect}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2.5 sm:py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-sm hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer"
                 >
                   Connect to Machine
@@ -346,49 +409,49 @@ function App() {
             )}
 
             {/* Pattern File - Show during upload stage (before pattern is uploaded) */}
-            {machine.isConnected && !patternUploaded && (
+            {isConnected && !patternUploaded && (
               <FileUpload
-                isConnected={machine.isConnected}
-                machineStatus={machine.machineStatus}
-                uploadProgress={machine.uploadProgress}
+                isConnected={isConnected}
+                machineStatus={machineStatus}
+                uploadProgress={uploadProgress}
                 onPatternLoaded={handlePatternLoaded}
                 onUpload={handleUpload}
                 pyodideReady={pyodideReady}
                 patternOffset={patternOffset}
                 patternUploaded={patternUploaded}
-                resumeAvailable={machine.resumeAvailable}
-                resumeFileName={machine.resumeFileName}
+                resumeAvailable={resumeAvailable}
+                resumeFileName={resumeFileName}
                 pesData={pesData}
                 currentFileName={currentFileName}
-                isUploading={machine.isUploading}
-                machineInfo={machine.machineInfo}
+                isUploading={isUploading}
+                machineInfo={machineInfo}
               />
             )}
 
             {/* Compact Pattern Summary - Show after upload (during sewing stages) */}
-            {machine.isConnected && patternUploaded && pesData && (
+            {isConnected && patternUploaded && pesData && (
               <PatternSummaryCard
                 pesData={pesData}
                 fileName={currentFileName}
                 onDeletePattern={handleDeletePattern}
-                canDelete={canDeletePattern(machine.machineStatus)}
-                isDeleting={machine.isDeleting}
+                canDelete={canDeletePattern(machineStatus)}
+                isDeleting={isDeleting}
               />
             )}
 
             {/* Progress Monitor - Show when pattern is uploaded */}
-            {machine.isConnected && patternUploaded && (
+            {isConnected && patternUploaded && (
               <div className="lg:flex-1 lg:min-h-0">
                 <ProgressMonitor
-                  machineStatus={machine.machineStatus}
-                  patternInfo={machine.patternInfo}
-                  sewingProgress={machine.sewingProgress}
+                  machineStatus={machineStatus}
+                  patternInfo={patternInfo}
+                  sewingProgress={sewingProgress}
                   pesData={pesData}
-                  onStartMaskTrace={machine.startMaskTrace}
-                  onStartSewing={machine.startSewing}
-                  onResumeSewing={machine.resumeSewing}
+                  onStartMaskTrace={startMaskTrace}
+                  onStartSewing={startSewing}
+                  onResumeSewing={resumeSewing}
                   onDeletePattern={handleDeletePattern}
-                  isDeleting={machine.isDeleting}
+                  isDeleting={isDeleting}
                 />
               </div>
             )}
@@ -399,12 +462,12 @@ function App() {
             {pesData ? (
               <PatternCanvas
                 pesData={pesData}
-                sewingProgress={machine.sewingProgress}
-                machineInfo={machine.machineInfo}
+                sewingProgress={sewingProgress}
+                machineInfo={machineInfo}
                 initialPatternOffset={patternOffset}
                 onPatternOffsetChange={handlePatternOffsetChange}
                 patternUploaded={patternUploaded}
-                isUploading={machine.uploadProgress > 0 && machine.uploadProgress < 100}
+                isUploading={uploadProgress > 0 && uploadProgress < 100}
               />
             ) : (
               <div className="lg:h-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md animate-fadeIn flex flex-col">

@@ -30,7 +30,8 @@
     "react-dom": "^19.2.0",
     "react-konva": "^19.2.1",
     "tailwindcss": "^4.1.17",
-    "update-electron-app": "^3.1.2"
+    "update-electron-app": "^3.1.2",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.10.2",

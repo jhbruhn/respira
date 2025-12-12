@@ -1,0 +1,554 @@
+import { create } from 'zustand';
+import { BrotherPP1Service, BluetoothPairingError } from '../services/BrotherPP1Service';
+import type {
+  MachineInfo,
+  PatternInfo,
+  SewingProgress,
+} from '../types/machine';
+import { MachineStatus, MachineStatusNames } from '../types/machine';
+import { SewingMachineError } from '../utils/errorCodeHelpers';
+import { uuidToString } from '../services/PatternCacheService';
+import { createStorageService } from '../platform';
+import type { IStorageService } from '../platform/interfaces/IStorageService';
+import type { PesPatternData } from '../utils/pystitchConverter';
+
+interface MachineState {
+  // Service instances
+  service: BrotherPP1Service;
+  storageService: IStorageService;
+
+  // Connection state
+  isConnected: boolean;
+  machineInfo: MachineInfo | null;
+
+  // Machine status
+  machineStatus: MachineStatus;
+  machineStatusName: string;
+  machineError: number;
+
+  // Pattern state
+  patternInfo: PatternInfo | null;
+  sewingProgress: SewingProgress | null;
+
+  // Upload state
+  uploadProgress: number;
+  isUploading: boolean;
+
+  // Resume state
+  resumeAvailable: boolean;
+  resumeFileName: string | null;
+  resumedPattern: { pesData: PesPatternData; patternOffset?: { x: number; y: number } } | null;
+
+  // Error state
+  error: string | null;
+  isPairingError: boolean;
+
+  // Communication state
+  isCommunicating: boolean;
+  isDeleting: boolean;
+
+  // Polling control
+  pollIntervalId: NodeJS.Timeout | null;
+  serviceCountIntervalId: NodeJS.Timeout | null;
+
+  // Actions
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  refreshStatus: () => Promise<void>;
+  refreshPatternInfo: () => Promise<void>;
+  refreshProgress: () => Promise<void>;
+  refreshServiceCount: () => Promise<void>;
+  uploadPattern: (
+    penData: Uint8Array,
+    pesData: PesPatternData,
+    fileName: string,
+    patternOffset?: { x: number; y: number }
+  ) => Promise<void>;
+  startMaskTrace: () => Promise<void>;
+  startSewing: () => Promise<void>;
+  resumeSewing: () => Promise<void>;
+  deletePattern: () => Promise<void>;
+  checkResume: () => Promise<PesPatternData | null>;
+  loadCachedPattern: () => Promise<{ pesData: PesPatternData; patternOffset?: { x: number; y: number } } | null>;
+
+  // Internal methods
+  _setupSubscriptions: () => void;
+  _startPolling: () => void;
+  _stopPolling: () => void;
+}
+
+export const useMachineStore = create<MachineState>((set, get) => ({
+  // Initial state
+  service: new BrotherPP1Service(),
+  storageService: createStorageService(),
+  isConnected: false,
+  machineInfo: null,
+  machineStatus: MachineStatus.None,
+  machineStatusName: MachineStatusNames[MachineStatus.None] || 'Unknown',
+  machineError: SewingMachineError.None,
+  patternInfo: null,
+  sewingProgress: null,
+  uploadProgress: 0,
+  isUploading: false,
+  resumeAvailable: false,
+  resumeFileName: null,
+  resumedPattern: null,
+  error: null,
+  isPairingError: false,
+  isCommunicating: false,
+  isDeleting: false,
+  pollIntervalId: null,
+  serviceCountIntervalId: null,
+
+  // Check for resumable pattern
+  checkResume: async (): Promise<PesPatternData | null> => {
+    try {
+      const { service, storageService } = get();
+      console.log('[Resume] Checking for cached pattern...');
+
+      const machineUuid = await service.getPatternUUID();
+      console.log(
+        '[Resume] Machine UUID:',
+        machineUuid ? uuidToString(machineUuid) : 'none',
+      );
+
+      if (!machineUuid) {
+        console.log('[Resume] No pattern loaded on machine');
+        set({ resumeAvailable: false, resumeFileName: null });
+        return null;
+      }
+
+      const uuidStr = uuidToString(machineUuid);
+      const cached = await storageService.getPatternByUUID(uuidStr);
+
+      if (cached) {
+        console.log('[Resume] Pattern found in cache:', cached.fileName, 'Offset:', cached.patternOffset);
+        console.log('[Resume] Auto-loading cached pattern...');
+        set({
+          resumeAvailable: true,
+          resumeFileName: cached.fileName,
+          resumedPattern: { pesData: cached.pesData, patternOffset: cached.patternOffset },
+        });
+
+        // Fetch pattern info from machine
+        try {
+          const info = await service.getPatternInfo();
+          set({ patternInfo: info });
+          console.log('[Resume] Pattern info loaded from machine');
+        } catch (err) {
+          console.error('[Resume] Failed to load pattern info:', err);
+        }
+
+        return cached.pesData;
+      } else {
+        console.log('[Resume] Pattern on machine not found in cache');
+        set({ resumeAvailable: false, resumeFileName: null });
+        return null;
+      }
+    } catch (err) {
+      console.error('[Resume] Failed to check resume:', err);
+      set({ resumeAvailable: false, resumeFileName: null });
+      return null;
+    }
+  },
+
+  // Connect to machine
+  connect: async () => {
+    try {
+      const { service, checkResume } = get();
+      set({ error: null, isPairingError: false });
+
+      await service.connect();
+      set({ isConnected: true });
+
+      // Fetch initial machine info and status
+      const info = await service.getMachineInfo();
+      const state = await service.getMachineState();
+
+      set({
+        machineInfo: info,
+        machineStatus: state.status,
+        machineStatusName: MachineStatusNames[state.status] || 'Unknown',
+        machineError: state.error,
+      });
+
+      // Check for resume possibility
+      await checkResume();
+
+      // Start polling
+      get()._startPolling();
+    } catch (err) {
+      console.log(err);
+      const isPairing = err instanceof BluetoothPairingError;
+      set({
+        isPairingError: isPairing,
+        error: err instanceof Error ? err.message : 'Failed to connect',
+        isConnected: false,
+      });
+    }
+  },
+
+  // Disconnect from machine
+  disconnect: async () => {
+    try {
+      const { service, _stopPolling } = get();
+      _stopPolling();
+
+      await service.disconnect();
+      set({
+        isConnected: false,
+        machineInfo: null,
+        machineStatus: MachineStatus.None,
+        machineStatusName: MachineStatusNames[MachineStatus.None] || 'Unknown',
+        patternInfo: null,
+        sewingProgress: null,
+        error: null,
+        machineError: SewingMachineError.None,
+      });
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Failed to disconnect',
+      });
+    }
+  },
+
+  // Refresh machine status
+  refreshStatus: async () => {
+    const { isConnected, service } = get();
+    if (!isConnected) return;
+
+    try {
+      const state = await service.getMachineState();
+      set({
+        machineStatus: state.status,
+        machineStatusName: MachineStatusNames[state.status] || 'Unknown',
+        machineError: state.error,
+      });
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Failed to get status',
+      });
+    }
+  },
+
+  // Refresh pattern info
+  refreshPatternInfo: async () => {
+    const { isConnected, service } = get();
+    if (!isConnected) return;
+
+    try {
+      const info = await service.getPatternInfo();
+      set({ patternInfo: info });
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Failed to get pattern info',
+      });
+    }
+  },
+
+  // Refresh sewing progress
+  refreshProgress: async () => {
+    const { isConnected, service } = get();
+    if (!isConnected) return;
+
+    try {
+      const progress = await service.getSewingProgress();
+      set({ sewingProgress: progress });
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Failed to get progress',
+      });
+    }
+  },
+
+  // Refresh service count
+  refreshServiceCount: async () => {
+    const { isConnected, machineInfo, service } = get();
+    if (!isConnected || !machineInfo) return;
+
+    try {
+      const counts = await service.getServiceCount();
+      set({
+        machineInfo: {
+          ...machineInfo,
+          serviceCount: counts.serviceCount,
+          totalCount: counts.totalCount,
+        },
+      });
+    } catch (err) {
+      console.warn('Failed to get service count:', err);
+    }
+  },
+
+  // Upload pattern to machine
+  uploadPattern: async (
+    penData: Uint8Array,
+    pesData: PesPatternData,
+    fileName: string,
+    patternOffset?: { x: number; y: number }
+  ) => {
+    const { isConnected, service, storageService, refreshStatus, refreshPatternInfo } = get();
+    if (!isConnected) {
+      set({ error: 'Not connected to machine' });
+      return;
+    }
+
+    try {
+      set({ error: null, uploadProgress: 0, isUploading: true });
+
+      const uuid = await service.uploadPattern(
+        penData,
+        (progress) => {
+          set({ uploadProgress: progress });
+        },
+        pesData.bounds,
+        patternOffset,
+      );
+
+      set({ uploadProgress: 100 });
+
+      // Cache the pattern with its UUID and offset
+      const uuidStr = uuidToString(uuid);
+      storageService.savePattern(uuidStr, pesData, fileName, patternOffset);
+      console.log('[Cache] Saved pattern:', fileName, 'with UUID:', uuidStr, 'Offset:', patternOffset);
+
+      // Clear resume state since we just uploaded
+      set({
+        resumeAvailable: false,
+        resumeFileName: null,
+      });
+
+      // Refresh status and pattern info after upload
+      await refreshStatus();
+      await refreshPatternInfo();
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Failed to upload pattern',
+      });
+    } finally {
+      set({ isUploading: false });
+    }
+  },
+
+  // Start mask trace
+  startMaskTrace: async () => {
+    const { isConnected, service, refreshStatus } = get();
+    if (!isConnected) return;
+
+    try {
+      set({ error: null });
+      await service.startMaskTrace();
+      await refreshStatus();
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Failed to start mask trace',
+      });
+    }
+  },
+
+  // Start sewing
+  startSewing: async () => {
+    const { isConnected, service, refreshStatus } = get();
+    if (!isConnected) return;
+
+    try {
+      set({ error: null });
+      await service.startSewing();
+      await refreshStatus();
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Failed to start sewing',
+      });
+    }
+  },
+
+  // Resume sewing
+  resumeSewing: async () => {
+    const { isConnected, service, refreshStatus } = get();
+    if (!isConnected) return;
+
+    try {
+      set({ error: null });
+      await service.resumeSewing();
+      await refreshStatus();
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Failed to resume sewing',
+      });
+    }
+  },
+
+  // Delete pattern from machine
+  deletePattern: async () => {
+    const { isConnected, service, storageService, refreshStatus } = get();
+    if (!isConnected) return;
+
+    try {
+      set({ error: null, isDeleting: true });
+
+      // Delete pattern from cache to prevent auto-resume
+      try {
+        const machineUuid = await service.getPatternUUID();
+        if (machineUuid) {
+          const uuidStr = uuidToString(machineUuid);
+          await storageService.deletePattern(uuidStr);
+          console.log('[Cache] Deleted pattern with UUID:', uuidStr);
+        }
+      } catch (err) {
+        console.warn('[Cache] Failed to get UUID for cache deletion:', err);
+      }
+
+      await service.deletePattern();
+
+      // Clear machine-related state
+      set({
+        patternInfo: null,
+        sewingProgress: null,
+        uploadProgress: 0,
+        resumeAvailable: false,
+        resumeFileName: null,
+      });
+
+      await refreshStatus();
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Failed to delete pattern',
+      });
+    } finally {
+      set({ isDeleting: false });
+    }
+  },
+
+  // Load cached pattern
+  loadCachedPattern: async (): Promise<{ pesData: PesPatternData; patternOffset?: { x: number; y: number } } | null> => {
+    const { resumeAvailable, service, storageService, refreshPatternInfo } = get();
+    if (!resumeAvailable) return null;
+
+    try {
+      const machineUuid = await service.getPatternUUID();
+      if (!machineUuid) return null;
+
+      const uuidStr = uuidToString(machineUuid);
+      const cached = await storageService.getPatternByUUID(uuidStr);
+
+      if (cached) {
+        console.log('[Resume] Loading cached pattern:', cached.fileName, 'Offset:', cached.patternOffset);
+        await refreshPatternInfo();
+        return { pesData: cached.pesData, patternOffset: cached.patternOffset };
+      }
+
+      return null;
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Failed to load cached pattern',
+      });
+      return null;
+    }
+  },
+
+  // Setup service subscriptions
+  _setupSubscriptions: () => {
+    const { service } = get();
+
+    // Subscribe to communication state changes
+    service.onCommunicationChange((isCommunicating) => {
+      set({ isCommunicating });
+    });
+
+    // Subscribe to disconnect events
+    service.onDisconnect(() => {
+      console.log('[useMachineStore] Device disconnected');
+      get()._stopPolling();
+      set({
+        isConnected: false,
+        machineInfo: null,
+        machineStatus: MachineStatus.None,
+        machineStatusName: MachineStatusNames[MachineStatus.None] || 'Unknown',
+        machineError: SewingMachineError.None,
+        patternInfo: null,
+        sewingProgress: null,
+        error: 'Device disconnected',
+        isPairingError: false,
+      });
+    });
+  },
+
+  // Start polling for status updates
+  _startPolling: () => {
+    const { _stopPolling, refreshStatus, refreshProgress, refreshServiceCount } = get();
+
+    // Stop any existing polling
+    _stopPolling();
+
+    // Function to determine polling interval based on machine status
+    const getPollInterval = () => {
+      const status = get().machineStatus;
+
+      // Fast polling for active states
+      if (
+        status === MachineStatus.SEWING ||
+        status === MachineStatus.MASK_TRACING ||
+        status === MachineStatus.SEWING_DATA_RECEIVE
+      ) {
+        return 500;
+      } else if (
+        status === MachineStatus.COLOR_CHANGE_WAIT ||
+        status === MachineStatus.MASK_TRACE_LOCK_WAIT ||
+        status === MachineStatus.SEWING_WAIT
+      ) {
+        return 1000;
+      }
+      return 2000; // Default for idle states
+    };
+
+    // Main polling function
+    const poll = async () => {
+      await refreshStatus();
+
+      // Refresh progress during sewing
+      if (get().machineStatus === MachineStatus.SEWING) {
+        await refreshProgress();
+      }
+
+      // Schedule next poll with updated interval
+      const newInterval = getPollInterval();
+      const pollIntervalId = setTimeout(poll, newInterval);
+      set({ pollIntervalId });
+    };
+
+    // Start polling
+    const initialInterval = getPollInterval();
+    const pollIntervalId = setTimeout(poll, initialInterval);
+
+    // Service count polling (every 10 seconds)
+    const serviceCountIntervalId = setInterval(refreshServiceCount, 10000);
+
+    set({ pollIntervalId, serviceCountIntervalId });
+  },
+
+  // Stop polling
+  _stopPolling: () => {
+    const { pollIntervalId, serviceCountIntervalId } = get();
+
+    if (pollIntervalId) {
+      clearTimeout(pollIntervalId);
+      set({ pollIntervalId: null });
+    }
+
+    if (serviceCountIntervalId) {
+      clearInterval(serviceCountIntervalId);
+      set({ serviceCountIntervalId: null });
+    }
+  },
+}));
+
+// Initialize subscriptions when store is created
+useMachineStore.getState()._setupSubscriptions();
+
+// Selector hooks for common use cases
+export const useIsConnected = () => useMachineStore((state) => state.isConnected);
+export const useMachineInfo = () => useMachineStore((state) => state.machineInfo);
+export const useMachineStatus = () => useMachineStore((state) => state.machineStatus);
+export const useMachineError = () => useMachineStore((state) => state.machineError);
+export const usePatternInfo = () => useMachineStore((state) => state.patternInfo);
+export const useSewingProgress = () => useMachineStore((state) => state.sewingProgress);
