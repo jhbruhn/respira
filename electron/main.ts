@@ -29,7 +29,7 @@ function createWindow() {
     width: 1600,
     height: 1000,
     minWidth: 1280, // Prevent layout from breaking into single-column mobile view
-    minHeight: 720,
+    minHeight: 800,
     autoHideMenuBar: true, // Hide the menu bar (can be toggled with Alt key)
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
