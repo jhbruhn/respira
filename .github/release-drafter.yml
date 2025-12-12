@@ -28,6 +28,7 @@ version-resolver:
     labels:
       - "minor"
       - "feature"
+      - "enhancement"
   patch:
     labels:
       - "patch"
