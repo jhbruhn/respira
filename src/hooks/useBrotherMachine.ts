@@ -267,9 +267,11 @@ export function useBrotherMachine() {
         setResumeAvailable(false);
         setResumeFileName(null);
 
-        // Refresh status and pattern info after upload
+        // Refresh status after upload
+        // NOTE: We don't call refreshPatternInfo() here because the machine hasn't
+        // finished processing the pattern yet. Pattern info (stitch count, time estimate)
+        // is only available AFTER startMaskTrace() is called.
         await refreshStatus();
-        await refreshPatternInfo();
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to upload pattern",
@@ -287,13 +289,24 @@ export function useBrotherMachine() {
     try {
       setError(null);
       await service.startMaskTrace();
-      await refreshStatus();
+
+      // After mask trace, poll machine status a few times to ensure it's ready
+      // The machine needs time to process the pattern before pattern info is accurate
+      console.log('[MaskTrace] Polling machine status...');
+      for (let i = 0; i < 3; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        await refreshStatus();
+      }
+
+      // Now the machine should have accurate pattern info
+      console.log('[MaskTrace] Refreshing pattern info...');
+      await refreshPatternInfo();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to start mask trace",
       );
     }
-  }, [service, isConnected, refreshStatus]);
+  }, [service, isConnected, refreshStatus, refreshPatternInfo]);
 
   const startSewing = useCallback(async () => {
     if (!isConnected) return;

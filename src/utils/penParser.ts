@@ -34,15 +34,17 @@ export function parsePenData(data: Uint8Array): PenData {
 
     // Decode coordinates (shift right by 3 to get actual position)
     // The coordinates are stored as signed 16-bit values, left-shifted by 3
-    // We need to interpret them as signed before shifting
+    // Step 1: Clear the flag bits (low 3 bits) from the raw values
+    const xRawClean = xRaw & 0xFFF8;
+    const yRawClean = yRaw & 0xFFF8;
 
-    // Convert from unsigned 16-bit to signed 16-bit
-    let xSigned = xRaw;
-    let ySigned = yRaw;
+    // Step 2: Convert from unsigned 16-bit to signed 16-bit
+    let xSigned = xRawClean;
+    let ySigned = yRawClean;
     if (xSigned > 0x7FFF) xSigned = xSigned - 0x10000;
     if (ySigned > 0x7FFF) ySigned = ySigned - 0x10000;
 
-    // Now shift right by 3 (arithmetic shift, preserves sign)
+    // Step 3: Shift right by 3 (arithmetic shift, preserves sign)
     let x = xSigned >> 3;
     let y = ySigned >> 3;
 

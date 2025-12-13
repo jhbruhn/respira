@@ -394,7 +394,7 @@ export class BrotherPP1Service {
     const readUInt16LE = (offset: number) =>
       data[offset] | (data[offset + 1] << 8);
 
-    return {
+    const patternInfo = {
       boundLeft: readInt16LE(0),
       boundTop: readInt16LE(2),
       boundRight: readInt16LE(4),
@@ -403,6 +403,13 @@ export class BrotherPP1Service {
       totalStitches: readUInt16LE(10),
       speed: readUInt16LE(12),
     };
+
+    console.log('[BrotherPP1] Pattern Info Response:', {
+      rawData: Array.from(data).map(b => b.toString(16).padStart(2, '0')).join(' '),
+      parsed: patternInfo,
+    });
+
+    return patternInfo;
   }
 
   async getSewingProgress(): Promise<SewingProgress> {
