@@ -4,7 +4,7 @@ import { useMachineStore } from '../stores/useMachineStore';
 import { usePatternStore } from '../stores/usePatternStore';
 import { Stage, Layer, Group } from 'react-konva';
 import Konva from 'konva';
-import { PlusIcon, MinusIcon, ArrowPathIcon, LockClosedIcon, PhotoIcon } from '@heroicons/react/24/solid';
+import { PlusIcon, MinusIcon, ArrowPathIcon, LockClosedIcon, PhotoIcon, ArrowsPointingInIcon } from '@heroicons/react/24/solid';
 import type { PesPatternData } from '../utils/pystitchConverter';
 import { calculateInitialScale } from '../utils/konvaRenderers';
 import { Grid, Origin, Hoop, Stitches, PatternBounds, CurrentPosition } from './KonvaComponents';
@@ -190,6 +190,17 @@ export function PatternCanvas() {
     setStageScale(initialScale);
     setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
   }, [containerSize]);
+
+  const handleCenterPattern = useCallback(() => {
+    if (!pesData) return;
+
+    const { bounds } = pesData;
+    const centerOffsetX = -(bounds.minX + bounds.maxX) / 2;
+    const centerOffsetY = -(bounds.minY + bounds.maxY) / 2;
+
+    setLocalPatternOffset({ x: centerOffsetX, y: centerOffsetY });
+    setPatternOffset(centerOffsetX, centerOffsetY);
+  }, [pesData, setPatternOffset]);
 
   // Pattern drag handlers
   const handlePatternDragEnd = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
@@ -377,6 +388,9 @@ export function PatternCanvas() {
 
             {/* Zoom Controls Overlay */}
             <div className="absolute bottom-2 sm:bottom-5 right-2 sm:right-5 flex gap-1.5 sm:gap-2 items-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg shadow-lg z-10">
+              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleCenterPattern} disabled={!pesData || patternUploaded || isUploading} title="Center Pattern in Hoop">
+                <ArrowsPointingInIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
+              </button>
               <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleZoomIn} title="Zoom In">
                 <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
               </button>
