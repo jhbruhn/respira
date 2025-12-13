@@ -99,6 +99,13 @@ jobs:
         with:
           path: artifacts
 
+      - name: Delete existing release artifacts
+        run: |
+          gh release view ${{ needs.draft-release.outputs.tag-name }} --json assets --jq '.assets[].name' | \
+          xargs -I {} gh release delete-asset ${{ needs.draft-release.outputs.tag-name }} {} --yes || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload all assets to release
         run: |
           find artifacts -type f -exec gh release upload ${{ needs.draft-release.outputs.tag-name }} {} --clobber \;
