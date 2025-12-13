@@ -15,6 +15,10 @@ import { CheckCircleIcon, BoltIcon, PauseCircleIcon, ExclamationTriangleIcon, Ar
 import './App.css';
 
 function App() {
+  // Set page title with version
+  useEffect(() => {
+    document.title = `Respira v${__APP_VERSION__}`;
+  }, []);
   // Machine store
   const {
     isConnected,

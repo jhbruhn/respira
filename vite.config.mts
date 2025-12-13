@@ -4,7 +4,12 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 import tailwindcss from '@tailwindcss/vite'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
+import { readFileSync } from 'fs'
 import type { Plugin } from 'vite'
+
+// Read version from package.json
+const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'))
+const appVersion = packageJson.version
 
 const PYODIDE_EXCLUDE = [
   '!**/*.{md,html}',
@@ -133,6 +138,9 @@ export function downloadPyPIWheels(packages: PyPIPackage[]): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   plugins: [
     react(),
     tailwindcss(),
