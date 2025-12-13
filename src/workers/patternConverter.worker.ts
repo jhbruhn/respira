@@ -210,15 +210,21 @@ def map_cmd(pystitch_cmd):
 # Each stitch in pattern.stitches is [x, y, cmd]
 # We need to assign color indices based on COLOR_CHANGE commands
 # and filter out COLOR_CHANGE and STOP commands (they're not actual stitches)
+#
+# IMPORTANT: In PES files, COLOR_CHANGE commands can appear before finishing
+# stitches (tack/lock stitches) that semantically belong to the PREVIOUS color.
+# We need to detect this pattern and assign colors correctly.
 
 stitches_with_colors = []
 current_color = 0
+prev_color = 0
 
 for i, stitch in enumerate(pattern.stitches):
     x, y, cmd = stitch
 
-    # Check for color change command - increment color but don't add stitch
+    # Check for color change command
     if cmd == COLOR_CHANGE:
+        prev_color = current_color
         current_color += 1
         continue
 
@@ -230,10 +236,44 @@ for i, stitch in enumerate(pattern.stitches):
     if cmd == END:
         continue
 
-    # Add actual stitch with color index and mapped command
-    # Map PyStitch cmd values to our known JavaScript constant values
+    # Determine which color this stitch belongs to
+    # After a COLOR_CHANGE, check if this might be a finishing tack stitch
+    # belonging to the previous color rather than the new color
+    stitch_color = current_color
+
+    # If this is the first stitch after a color change (color just incremented)
+    # and it's a very small stitch before a JUMP, it's likely a tack stitch
+    if current_color != prev_color and len(stitches_with_colors) > 0:
+        last_x, last_y = stitches_with_colors[-1][0], stitches_with_colors[-1][1]
+        dx, dy = x - last_x, y - last_y
+        dist = (dx*dx + dy*dy)**0.5
+
+        # Check if this is a tiny stitch (< 1.0 unit - typical tack stitch)
+        # and if there's a JUMP coming soon
+        if dist < 1.0:
+            # Look ahead to see if there's a JUMP within next 10 stitches
+            has_jump_ahead = False
+            for j in range(i+1, min(i+11, len(pattern.stitches))):
+                next_stitch = pattern.stitches[j]
+                next_cmd = next_stitch[2]
+                if next_cmd == JUMP:
+                    has_jump_ahead = True
+                    break
+                elif next_cmd == STITCH:
+                    # If we hit a regular stitch before a JUMP, this might be the new color
+                    next_x, next_y = next_stitch[0], next_stitch[1]
+                    next_dist = ((next_x - last_x)**2 + (next_y - last_y)**2)**0.5
+                    # Only continue if following stitches are also tiny
+                    if next_dist >= 1.0:
+                        break
+
+            # If we found a jump ahead, this small stitch belongs to previous color
+            if has_jump_ahead:
+                stitch_color = prev_color
+
+    # Add actual stitch with assigned color index and mapped command
     mapped_cmd = map_cmd(cmd)
-    stitches_with_colors.append([x, y, mapped_cmd, current_color])
+    stitches_with_colors.append([x, y, mapped_cmd, stitch_color])
 
 # Convert to JSON-serializable format
 {

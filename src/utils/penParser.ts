@@ -33,13 +33,18 @@ export function parsePenData(data: Uint8Array): PenData {
     const yFlags = data[offset + 2] & 0x07;
 
     // Decode coordinates (shift right by 3 to get actual position)
-    // Using signed 16-bit interpretation
-    let x = (xRaw >> 3);
-    let y = (yRaw >> 3);
+    // The coordinates are stored as signed 16-bit values, left-shifted by 3
+    // We need to interpret them as signed before shifting
 
-    // Convert to signed if needed
-    if (x > 0x7FF) x = x - 0x2000;
-    if (y > 0x7FF) y = y - 0x2000;
+    // Convert from unsigned 16-bit to signed 16-bit
+    let xSigned = xRaw;
+    let ySigned = yRaw;
+    if (xSigned > 0x7FFF) xSigned = xSigned - 0x10000;
+    if (ySigned > 0x7FFF) ySigned = ySigned - 0x10000;
+
+    // Now shift right by 3 (arithmetic shift, preserves sign)
+    let x = xSigned >> 3;
+    let y = ySigned >> 3;
 
     const stitch: PenStitch = {
       x,

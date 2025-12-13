@@ -159,14 +159,15 @@ export function renderStitches(
   // Create Konva.Line for each group
   groups.forEach((group) => {
     if (group.isJump) {
-      // Jump stitches - dashed gray lines
+      // Jump stitches - dashed lines in thread color
       const line = new Konva.Line({
         points: group.points,
-        stroke: group.completed ? '#cccccc' : '#e8e8e8',
-        strokeWidth: 1.5,
+        stroke: group.color,
+        strokeWidth: 1.0,
         lineCap: 'round',
         lineJoin: 'round',
-        dash: [3, 3],
+        dash: [5, 5],
+        opacity: group.completed ? 0.6 : 0.25,
       });
       stitchesGroup.add(line);
     } else {

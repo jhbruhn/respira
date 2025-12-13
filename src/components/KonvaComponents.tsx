@@ -154,6 +154,9 @@ export const Stitches = memo(({ stitches, pesData, currentStitchIndex, showProgr
     const groups: StitchGroup[] = [];
     let currentGroup: StitchGroup | null = null;
 
+    let prevX = 0;
+    let prevY = 0;
+
     for (let i = 0; i < stitches.length; i++) {
       const stitch = stitches[i];
       const [x, y, cmd, colorIndex] = stitch;
@@ -168,16 +171,30 @@ export const Stitches = memo(({ stitches, pesData, currentStitchIndex, showProgr
         currentGroup.completed !== isCompleted ||
         currentGroup.isJump !== isJump
       ) {
-        currentGroup = {
-          color,
-          points: [x, y],
-          completed: isCompleted,
-          isJump,
-        };
+        // For jump stitches, we need to create a line from previous position to current position
+        // So we include both the previous point and current point
+        if (isJump && i > 0) {
+          currentGroup = {
+            color,
+            points: [prevX, prevY, x, y],
+            completed: isCompleted,
+            isJump,
+          };
+        } else {
+          currentGroup = {
+            color,
+            points: [x, y],
+            completed: isCompleted,
+            isJump,
+          };
+        }
         groups.push(currentGroup);
       } else {
         currentGroup.points.push(x, y);
       }
+
+      prevX = x;
+      prevY = y;
     }
 
     return groups;
@@ -189,12 +206,12 @@ export const Stitches = memo(({ stitches, pesData, currentStitchIndex, showProgr
         <Line
           key={i}
           points={group.points}
-          stroke={group.isJump ? (group.completed ? '#cccccc' : '#e8e8e8') : group.color}
-          strokeWidth={1.5}
+          stroke={group.color}
+          strokeWidth={group.isJump ? 1.5 : 1.5}
           lineCap="round"
           lineJoin="round"
-          dash={group.isJump ? [3, 3] : undefined}
-          opacity={group.isJump ? 1 : (showProgress && !group.completed ? 0.75 : 1.0)}
+          dash={group.isJump ? [8, 4] : undefined}
+          opacity={group.isJump ? (group.completed ? 0.8 : 0.5) : (showProgress && !group.completed ? 0.3 : 1.0)}
         />
       ))}
     </Group>
