@@ -292,11 +292,11 @@ export function PatternCanvas() {
                 }}
               >
                 <Stitches
-                  stitches={pesData.penStitches.stitches.map((s, i) => {
+                  stitches={pesData.penStitches.stitches.map((s, i): [number, number, number, number] => {
                     // Convert PEN stitch format {x, y, flags, isJump} to PES format [x, y, cmd, colorIndex]
                     const cmd = s.isJump ? 0x10 : 0;  // MOVE flag if jump
                     const colorIndex = pesData.penStitches.colorBlocks.find(
-                      b => i >= b.startStitch && i <= b.endStitch
+                      (b) => i >= b.startStitch && i <= b.endStitch
                     )?.colorIndex ?? 0;
                     return [s.x, s.y, cmd, colorIndex];
                   })}
@@ -315,10 +315,10 @@ export function PatternCanvas() {
               <Group x={localPatternOffset.x} y={localPatternOffset.y}>
                 <CurrentPosition
                   currentStitchIndex={sewingProgress.currentStitch}
-                  stitches={pesData.penStitches.stitches.map((s, i) => {
+                  stitches={pesData.penStitches.stitches.map((s, i): [number, number, number, number] => {
                     const cmd = s.isJump ? 0x10 : 0;
                     const colorIndex = pesData.penStitches.colorBlocks.find(
-                      b => i >= b.startStitch && i <= b.endStitch
+                      (b) => i >= b.startStitch && i <= b.endStitch
                     )?.colorIndex ?? 0;
                     return [s.x, s.y, cmd, colorIndex];
                   })}

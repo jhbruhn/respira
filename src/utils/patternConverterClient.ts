@@ -1,6 +1,7 @@
 import type { WorkerMessage, WorkerResponse } from '../workers/patternConverter.worker';
 import PatternConverterWorker from '../workers/patternConverter.worker?worker';
-import { parsePenData, type PenData } from './penParser';
+import { parsePenData } from './penParser';
+import type { PenData } from '../types/machine';
 
 export type PyodideState = 'not_loaded' | 'loading' | 'ready' | 'error';
 
