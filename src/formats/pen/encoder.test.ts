@@ -298,21 +298,15 @@ describe('encodeStitchesToPen', () => {
       idx++;
     }
 
-    // 4. Cut command
-    const cutStitch = decoded[idx];
-    expect(cutStitch.x).toBe(10);
-    expect(cutStitch.y).toBe(0);
-    expect(cutStitch.isCut).toBe(true);
+    // 4. COLOR_END + CUT command (combined on same stitch)
+    const colorEndCutStitch = decoded[idx];
+    expect(colorEndCutStitch.x).toBe(10);
+    expect(colorEndCutStitch.y).toBe(0);
+    expect(colorEndCutStitch.isCut).toBe(true);
+    expect(colorEndCutStitch.isColorEnd).toBe(true);
     idx++;
 
-    // 5. COLOR_END marker (no jump needed since same position)
-    const colorEndStitch = decoded[idx];
-    expect(colorEndStitch.x).toBe(10);
-    expect(colorEndStitch.y).toBe(0);
-    expect(colorEndStitch.isColorEnd).toBe(true);
-    idx++;
-
-    // 6. 8 starting lock stitches for new color
+    // 5. 8 starting lock stitches for new color
     for (let i = 0; i < 8; i++) {
       const lockStitch = decoded[idx];
       expect(lockStitch.x).to.be.closeTo(10, LOCK_STITCH_JUMP_SIZE);
@@ -320,7 +314,7 @@ describe('encodeStitchesToPen', () => {
       idx++;
     }
 
-    // 7. First stitch of new color
+    // 6. First stitch of new color
     expect(decoded[idx].x).toBe(10);
     expect(decoded[idx].y).toBe(0);
     idx++;
@@ -353,9 +347,11 @@ describe('encodeStitchesToPen', () => {
       idx++;
     }
 
-    // 2. Cut command at (10, 0)
-    expect(decoded[idx].isCut).toBe(true);
+    // 2. COLOR_END + CUT command at (10, 0) - combined on same stitch
     expect(decoded[idx].x).toBe(10);
+    expect(decoded[idx].y).toBe(0);
+    expect(decoded[idx].isCut).toBe(true);
+    expect(decoded[idx].isColorEnd).toBe(true);
     idx++;
 
     // 3. Jump to new position (30, 10)
@@ -364,20 +360,14 @@ describe('encodeStitchesToPen', () => {
     expect(decoded[idx].isFeed).toBe(true);
     idx++;
 
-    // 4. COLOR_END marker at (30, 10)
-    expect(decoded[idx].x).toBe(30);
-    expect(decoded[idx].y).toBe(10);
-    expect(decoded[idx].isColorEnd).toBe(true);
-    idx++;
-
-    // 5. 8 starting lock stitches at (30, 10)
+    // 4. 8 starting lock stitches at (30, 10)
     for (let i = 0; i < 8; i++) {
       expect(decoded[idx].x).to.be.closeTo(30, LOCK_STITCH_JUMP_SIZE);
       expect(decoded[idx].y).to.be.closeTo(10, LOCK_STITCH_JUMP_SIZE);
       idx++;
     }
 
-    // 6. Continue with new color stitches
+    // 5. Continue with new color stitches
     expect(decoded[idx].x).toBe(30);
     expect(decoded[idx].y).toBe(10);
   });
@@ -421,10 +411,11 @@ describe('encodeStitchesToPen', () => {
       idx++;
     }
 
-    // 4. Cut command at (10, 0)
+    // 4. COLOR_END + CUT command at (10, 0) - combined on same stitch
     expect(decoded[idx].x).toBe(10);
     expect(decoded[idx].y).toBe(0);
     expect(decoded[idx].isCut).toBe(true);
+    expect(decoded[idx].isColorEnd).toBe(true);
     idx++;
 
     // 5. Jump to new location (50, 20) - extracted from the MOVE stitch
@@ -433,26 +424,20 @@ describe('encodeStitchesToPen', () => {
     expect(decoded[idx].isFeed).toBe(true);
     idx++;
 
-    // 6. COLOR_END marker at (50, 20)
-    expect(decoded[idx].x).toBe(50);
-    expect(decoded[idx].y).toBe(20);
-    expect(decoded[idx].isColorEnd).toBe(true);
-    idx++;
-
-    // 7. 8 starting lock stitches at (50, 20)
+    // 6. 8 starting lock stitches at (50, 20)
     for (let i = 0; i < 8; i++) {
       expect(decoded[idx].x).to.be.closeTo(50, LOCK_STITCH_JUMP_SIZE);
       expect(decoded[idx].y).to.be.closeTo(20, LOCK_STITCH_JUMP_SIZE);
       idx++;
     }
 
-    // 8. First actual stitch of new color at (50, 20)
+    // 7. First actual stitch of new color at (50, 20)
     expect(decoded[idx].x).toBe(50);
     expect(decoded[idx].y).toBe(20);
     expect(decoded[idx].isFeed).toBe(false);
     idx++;
 
-    // 9. Last stitch with DATA_END
+    // 8. Last stitch with DATA_END
     expect(decoded[idx].x).toBe(60);
     expect(decoded[idx].y).toBe(20);
     expect(decoded[idx].isDataEnd).toBe(true);
@@ -666,7 +651,7 @@ describe('encodeStitchesToPen', () => {
 
     const result = encodeStitchesToPen(stitches);
     const decoded = decodeAllPenStitches(result.penBytes);
-    console.log(decoded);
+
     // Expected sequence:
     // 0. Feed move to proper location (should always happen here)
     // 1. 8 starting lock stitches at (10, 20)

@@ -17,7 +17,7 @@ const PEN_DATA_END = 0x05;  // Last stitch of entire pattern
 const FEED_LENGTH = 50; // Long jump threshold requiring lock stitches and cut
 const TARGET_LENGTH = 8.0;  // Target accumulated length for lock stitch direction
 const MAX_POINTS = 5;        // Maximum points to accumulate for lock stitch direction
-export const LOCK_STITCH_JUMP_SIZE = 4.0;
+export const LOCK_STITCH_JUMP_SIZE = 2.0;
 const LOCK_STITCH_SCALE = LOCK_STITCH_JUMP_SIZE / 8.0; // Scale the magnitude-8 vector down to 4
 
 export interface StitchData {
@@ -286,7 +286,7 @@ export function encodeStitchesToPen(stitches: number[][]): PenEncodingResult {
       penStitches.push(...generateLockStitches(absX, absY, startDir.dirX, startDir.dirY));
     }
 
-    // Handle color change: finishing lock, cut, jump, COLOR_END, starting lock
+    // Handle color change: finishing lock, COLOR_END+CUT, jump, starting lock
     if (isColorChange) {
       const nextStitchCmd = nextStitch[2];
       const nextStitchX = Math.round(nextStitch[0]);
@@ -299,16 +299,25 @@ export function encodeStitchesToPen(stitches: number[][]): PenEncodingResult {
       const finishDir = calculateLockDirection(stitches, i, true);
       penStitches.push(...generateLockStitches(absX, absY, finishDir.dirX, finishDir.dirY));
 
-      // Step 2: Add cut command at current position
-      const cutXEncoded = (absX << 3) & 0xffff;
-      const cutYEncoded = ((absY << 3) & 0xffff) | PEN_CUT_DATA;
+      // Step 2: Add COLOR_END + CUT command at CURRENT position (same stitch!)
+      // This is where the machine pauses and waits for the user to change thread color
+      // IMPORTANT: COLOR_END and CUT must be on the SAME stitch, not separate stitches
+      let colorEndCutXEncoded = (absX << 3) & 0xffff;
+      let colorEndCutYEncoded = (absY << 3) & 0xffff;
+
+      // Add COLOR_END flag to X coordinate and CUT flag to Y coordinate
+      colorEndCutXEncoded = (colorEndCutXEncoded & 0xfff8) | PEN_COLOR_END;
+      colorEndCutYEncoded |= PEN_CUT_DATA;
 
       penStitches.push(
-        cutXEncoded & 0xff,
-        (cutXEncoded >> 8) & 0xff,
-        cutYEncoded & 0xff,
-        (cutYEncoded >> 8) & 0xff
+        colorEndCutXEncoded & 0xff,
+        (colorEndCutXEncoded >> 8) & 0xff,
+        colorEndCutYEncoded & 0xff,
+        (colorEndCutYEncoded >> 8) & 0xff
       );
+
+      // Machine pauses here for color change
+      // After user changes color, the following stitches execute with the new color
 
       // Step 3: If next stitch is a JUMP, encode it and skip it in the loop
       // Otherwise, add a jump ourselves if positions differ
@@ -334,22 +343,7 @@ export function encodeStitchesToPen(stitches: number[][]): PenEncodingResult {
         );
       }
 
-      // Step 4: Add COLOR_END marker at NEW position
-      // This is where the machine pauses and waits for the user to change thread color
-      let colorEndXEncoded = (jumpToX << 3) & 0xffff;
-      const colorEndYEncoded = (jumpToY << 3) & 0xffff;
-
-      // Add COLOR_END flag to X coordinate
-      colorEndXEncoded = (colorEndXEncoded & 0xfff8) | PEN_COLOR_END;
-
-      penStitches.push(
-        colorEndXEncoded & 0xff,
-        (colorEndXEncoded >> 8) & 0xff,
-        colorEndYEncoded & 0xff,
-        (colorEndYEncoded >> 8) & 0xff
-      );
-
-      // Step 5: Add starting lock stitches at the new position
+      // Step 4: Add starting lock stitches at the new position
       // Loop A: Jump/Entry Vector - Look FORWARD at upcoming stitches in new color
       // This hides the knot under the stitches we're about to make
       const nextStitchIdx = nextIsJump ? i + 2 : i + 1;
