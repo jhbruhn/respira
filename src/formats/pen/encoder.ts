@@ -17,7 +17,8 @@ const PEN_DATA_END = 0x05;  // Last stitch of entire pattern
 const FEED_LENGTH = 50; // Long jump threshold requiring lock stitches and cut
 const TARGET_LENGTH = 8.0;  // Target accumulated length for lock stitch direction
 const MAX_POINTS = 5;        // Maximum points to accumulate for lock stitch direction
-const LOCK_STITCH_SCALE = 0.4 / 8.0; // Scale the magnitude-8 vector down to 0.4
+export const LOCK_STITCH_JUMP_SIZE = 4.0;
+const LOCK_STITCH_SCALE = LOCK_STITCH_JUMP_SIZE / 8.0; // Scale the magnitude-8 vector down to 4
 
 export interface StitchData {
   x: number;
@@ -153,7 +154,9 @@ export function generateLockStitches(x: number, y: number, dirX: number, dirY: n
   for (let i = 0; i < 8; i++) {
     // Alternate between forward (+) and backward (-) direction
     const sign = (i % 2 === 0) ? 1 : -1;
-    lockBytes.push(...encodeStitchPosition(x + scaledDirX * sign, y + scaledDirY * sign));
+    const xAdd = scaledDirX * sign;
+    const yAdd = scaledDirY * sign;
+    lockBytes.push(...encodeStitchPosition(x + xAdd, y + yAdd));
   }
 
   return lockBytes;
@@ -177,20 +180,7 @@ export function encodeStitchesToPen(stitches: number[][]): PenEncodingResult {
   // Track position for calculating jump distances
   let prevX = 0;
   let prevY = 0;
-
-  // Add starting lock stitches at the very beginning of the pattern
-  // Matches C# behavior: Nuihajime_TomeDataPlus is called when counter <= 2
-  // Find the first non-MOVE stitch to place the starting locks
-  const firstStitchIndex = stitches.findIndex(s => (s[2] & MOVE) === 0);
-  if (firstStitchIndex !== -1) {
-    const firstStitch = stitches[firstStitchIndex];
-    const startX = Math.round(firstStitch[0]);
-    const startY = Math.round(firstStitch[1]);
-
-    // Calculate direction for starting locks (look forward into the pattern)
-    const startDir = calculateLockDirection(stitches, firstStitchIndex, true);
-    penStitches.push(...generateLockStitches(startX, startY, startDir.dirX, startDir.dirY));
-  }
+  
 
   for (let i = 0; i < stitches.length; i++) {
     const stitch = stitches[i];
@@ -208,11 +198,13 @@ export function encodeStitchesToPen(stitches: number[][]): PenEncodingResult {
       maxY = Math.max(maxY, absY);
     }
 
+    const isFirstStitch = i == 0;
+
     // Check for long jumps that need lock stitches and cuts
     if (cmd & MOVE) {
       const jumpDist = Math.sqrt((absX - prevX) ** 2 + (absY - prevY) ** 2);
 
-      if (jumpDist > FEED_LENGTH) {
+      if (!isFirstStitch && jumpDist > FEED_LENGTH) {
         // Long jump - add finishing lock stitches at previous position
         // Loop B: End/Cut Vector - Look BACKWARD at previous stitches
         // This hides the knot inside the embroidery we just finished
@@ -284,6 +276,15 @@ export function encodeStitchesToPen(stitches: number[][]): PenEncodingResult {
     // Update position for next iteration
     prevX = absX;
     prevY = absY;
+
+    if (isFirstStitch) {
+      // Add starting lock stitches at the very beginning of the pattern
+      // Matches C# behavior: Nuihajime_TomeDataPlus is called when counter <= 2
+
+      // Calculate direction for starting locks (look forward into the pattern)
+      const startDir = calculateLockDirection(stitches, i, true);
+      penStitches.push(...generateLockStitches(absX, absY, startDir.dirX, startDir.dirY));
+    }
 
     // Handle color change: finishing lock, cut, jump, COLOR_END, starting lock
     if (isColorChange) {
