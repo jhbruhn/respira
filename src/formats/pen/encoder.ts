@@ -178,6 +178,20 @@ export function encodeStitchesToPen(stitches: number[][]): PenEncodingResult {
   let prevX = 0;
   let prevY = 0;
 
+  // Add starting lock stitches at the very beginning of the pattern
+  // Matches C# behavior: Nuihajime_TomeDataPlus is called when counter <= 2
+  // Find the first non-MOVE stitch to place the starting locks
+  const firstStitchIndex = stitches.findIndex(s => (s[2] & MOVE) === 0);
+  if (firstStitchIndex !== -1) {
+    const firstStitch = stitches[firstStitchIndex];
+    const startX = Math.round(firstStitch[0]);
+    const startY = Math.round(firstStitch[1]);
+
+    // Calculate direction for starting locks (look forward into the pattern)
+    const startDir = calculateLockDirection(stitches, firstStitchIndex, true);
+    penStitches.push(...generateLockStitches(startX, startY, startDir.dirX, startDir.dirY));
+  }
+
   for (let i = 0; i < stitches.length; i++) {
     const stitch = stitches[i];
     const absX = Math.round(stitch[0]);
