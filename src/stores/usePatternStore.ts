@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { PesPatternData } from '../utils/pystitchConverter';
+import type { PesPatternData } from '../formats/import/pesImporter';
 
 interface PatternState {
   // Pattern data

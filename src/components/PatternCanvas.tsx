@@ -5,7 +5,7 @@ import { usePatternStore } from '../stores/usePatternStore';
 import { Stage, Layer, Group } from 'react-konva';
 import Konva from 'konva';
 import { PlusIcon, MinusIcon, ArrowPathIcon, LockClosedIcon, PhotoIcon, ArrowsPointingInIcon } from '@heroicons/react/24/solid';
-import type { PesPatternData } from '../utils/pystitchConverter';
+import type { PesPatternData } from '../formats/import/pesImporter';
 import { calculateInitialScale } from '../utils/konvaRenderers';
 import { Grid, Origin, Hoop, Stitches, PatternBounds, CurrentPosition } from './KonvaComponents';
 

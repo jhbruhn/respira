@@ -1,9 +1,9 @@
 import { memo, useMemo } from 'react';
 import { Group, Line, Rect, Text, Circle } from 'react-konva';
-import type { PesPatternData } from '../utils/pystitchConverter';
-import { getThreadColor } from '../utils/pystitchConverter';
+import type { PesPatternData } from '../formats/import/pesImporter';
+import { getThreadColor } from '../formats/import/pesImporter';
 import type { MachineInfo } from '../types/machine';
-import { MOVE } from '../utils/embroideryConstants';
+import { MOVE } from '../formats/import/constants';
 
 interface GridProps {
   gridSize: number;

@@ -3,7 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useMachineStore } from '../stores/useMachineStore';
 import { usePatternStore } from '../stores/usePatternStore';
 import { useUIStore } from '../stores/useUIStore';
-import { convertPesToPen, type PesPatternData } from '../utils/pystitchConverter';
+import { convertPesToPen, type PesPatternData } from '../formats/import/pesImporter';
 import { canUploadPattern, getMachineStateCategory } from '../utils/machineStateHelpers';
 import { PatternInfoSkeleton } from './SkeletonLoader';
 import { ArrowUpTrayIcon, CheckCircleIcon, DocumentTextIcon, FolderOpenIcon } from '@heroicons/react/24/solid';

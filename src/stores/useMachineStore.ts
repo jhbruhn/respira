@@ -10,7 +10,7 @@ import { SewingMachineError } from '../utils/errorCodeHelpers';
 import { uuidToString } from '../services/PatternCacheService';
 import { createStorageService } from '../platform';
 import type { IStorageService } from '../platform/interfaces/IStorageService';
-import type { PesPatternData } from '../utils/pystitchConverter';
+import type { PesPatternData } from '../formats/import/pesImporter';
 
 interface MachineState {
   // Service instances

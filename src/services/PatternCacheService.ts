@@ -1,4 +1,4 @@
-import type { PesPatternData } from '../utils/pystitchConverter';
+import type { PesPatternData } from '../formats/import/pesImporter';
 
 interface CachedPattern {
   uuid: string;

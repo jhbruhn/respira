@@ -1,5 +1,5 @@
 import type { IStorageService, ICachedPattern } from '../interfaces/IStorageService';
-import type { PesPatternData } from '../../utils/pystitchConverter';
+import type { PesPatternData } from '../../formats/import/pesImporter';
 
 /**
  * Electron implementation of storage service using electron-store via IPC

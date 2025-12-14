@@ -1,8 +1,8 @@
 import Konva from 'konva';
-import type { PesPatternData } from './pystitchConverter';
-import { getThreadColor } from './pystitchConverter';
+import type { PesPatternData } from '../formats/import/pesImporter';
+import { getThreadColor } from '../formats/import/pesImporter';
 import type { MachineInfo } from '../types/machine';
-import { MOVE } from './embroideryConstants';
+import { MOVE } from '../formats/import/constants';
 
 /**
  * Renders a grid with specified spacing

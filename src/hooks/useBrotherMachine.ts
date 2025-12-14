@@ -11,7 +11,7 @@ import {
 } from "../services/PatternCacheService";
 import type { IStorageService } from "../platform/interfaces/IStorageService";
 import { createStorageService } from "../platform";
-import type { PesPatternData } from "../utils/pystitchConverter";
+import type { PesPatternData } from "../formats/import/pesImporter";
 import { SewingMachineError } from "../utils/errorCodeHelpers";
 
 export function useBrotherMachine() {

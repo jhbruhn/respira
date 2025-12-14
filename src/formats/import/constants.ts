@@ -15,9 +15,3 @@ export const TRIM = 0x20;         // Trim thread command
 export const COLOR_CHANGE = 0x40; // Color change command
 export const STOP = 0x80;         // Stop command
 export const END = 0x100;         // End of pattern
-
-// PEN format flags for Brother machines
-export const PEN_FEED_DATA = 0x01; // Bit 0: Jump stitch (move without stitching)
-export const PEN_CUT_DATA = 0x02;  // Bit 1: Trim/cut thread command
-export const PEN_COLOR_END = 0x03; // Last stitch before color change
-export const PEN_DATA_END = 0x05;  // Last stitch of entire pattern

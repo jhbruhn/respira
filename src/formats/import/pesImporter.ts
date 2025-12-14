@@ -1,4 +1,4 @@
-import { patternConverterClient, type PesPatternData } from "./patternConverterClient";
+import { patternConverterClient, type PesPatternData } from "./client";
 
 // Re-export the type for backwards compatibility
 export type { PesPatternData };

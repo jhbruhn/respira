@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { patternConverterClient } from '../utils/patternConverterClient';
+import { patternConverterClient } from '../formats/import/client';
 
 interface UIState {
   // Pyodide state
