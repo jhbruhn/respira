@@ -5,74 +5,12 @@ import {
   generateLockStitches,
   encodeStitchesToPen,
 } from './encoder';
+import { decodeAllPenStitches } from './decoder';
 import { STITCH, MOVE, TRIM, END } from '../import/constants';
 
 // PEN format flag constants for testing
 const PEN_FEED_DATA = 0x01;
 const PEN_CUT_DATA = 0x02;
-const PEN_COLOR_END = 0x03;
-const PEN_DATA_END = 0x05;
-
-/**
- * Helper function to decode a single PEN stitch (4 bytes) into coordinates and flags
- */
-function decodePenStitch(bytes: number[], offset: number): {
-  x: number;
-  y: number;
-  xFlags: number;
-  yFlags: number;
-  isFeed: boolean;
-  isCut: boolean;
-  isColorEnd: boolean;
-  isDataEnd: boolean;
-} {
-  const xLow = bytes[offset];
-  const xHigh = bytes[offset + 1];
-  const yLow = bytes[offset + 2];
-  const yHigh = bytes[offset + 3];
-
-  const xRaw = xLow | (xHigh << 8);
-  const yRaw = yLow | (yHigh << 8);
-
-  // Extract flags from low 3 bits
-  const xFlags = xRaw & 0x07;
-  const yFlags = yRaw & 0x07;
-
-  // Clear flags and shift right to get actual coordinates
-  const xClean = xRaw & 0xFFF8;
-  const yClean = yRaw & 0xFFF8;
-
-  // Convert to signed
-  let xSigned = xClean;
-  let ySigned = yClean;
-  if (xSigned > 0x7FFF) xSigned = xSigned - 0x10000;
-  if (ySigned > 0x7FFF) ySigned = ySigned - 0x10000;
-
-  const x = xSigned >> 3;
-  const y = ySigned >> 3;
-
-  return {
-    x,
-    y,
-    xFlags,
-    yFlags,
-    isFeed: (yFlags & PEN_FEED_DATA) !== 0,
-    isCut: (yFlags & PEN_CUT_DATA) !== 0,
-    isColorEnd: xFlags === PEN_COLOR_END,
-    isDataEnd: xFlags === PEN_DATA_END,
-  };
-}
-
-/**
- * Helper to parse all stitches from PEN bytes
- */
-function decodeAllPenStitches(bytes: number[]) {
-  const stitches = [];
-  for (let i = 0; i < bytes.length; i += 4) {
-    stitches.push(decodePenStitch(bytes, i));
-  }
-  return stitches;
-}
 
 describe('encodeStitchPosition', () => {
   it('should encode position (0, 0) correctly', () => {

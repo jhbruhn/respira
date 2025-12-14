@@ -1,7 +1,7 @@
 import type { WorkerMessage, WorkerResponse } from './worker';
 import PatternConverterWorker from './worker?worker';
-import { parsePenData } from '../pen/parser';
-import type { PenData } from '../../types/machine';
+import { decodePenData } from '../pen/decoder';
+import type { DecodedPenData } from '../pen/types';
 
 export type PyodideState = 'not_loaded' | 'loading' | 'ready' | 'error';
 
@@ -24,8 +24,8 @@ export interface PesPatternData {
     chart: string | null;
     threadIndices: number[];
   }>;
-  penData: Uint8Array;   // Raw PEN bytes sent to machine
-  penStitches: PenData;   // Parsed PEN stitches (for rendering)
+  penData: Uint8Array;        // Raw PEN bytes sent to machine
+  penStitches: DecodedPenData; // Decoded PEN stitches (for rendering)
   colorCount: number;
   stitchCount: number;
   bounds: {
@@ -180,9 +180,9 @@ class PatternConverterClient {
             // Convert penData array back to Uint8Array
             const penData = new Uint8Array(message.data.penData);
 
-            // Parse the PEN data to get stitches for rendering
-            const penStitches = parsePenData(penData);
-            console.log('[PatternConverter] Parsed PEN data:', penStitches.totalStitches, 'stitches,', penStitches.colorCount, 'colors');
+            // Decode the PEN data to get stitches for rendering
+            const penStitches = decodePenData(penData);
+            console.log('[PatternConverter] Decoded PEN data:', penStitches.stitches.length, 'stitches,', penStitches.colorBlocks.length, 'colors');
 
             const result: PesPatternData = {
               ...message.data,
