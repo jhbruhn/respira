@@ -10,35 +10,8 @@ permissions:
   id-token: write
 
 jobs:
-  build-web:
-    name: Build Web App
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: ".node-version"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build web app
-        run: npm run build -- --base=/respira/
-
-      - name: Upload web build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-build
-          path: dist/
-
   publish-to-pages:
     name: Publish to GitHub Pages
-    needs: build-web
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -48,20 +21,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download web build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web-build
-          path: web-build
-
       - name: Download release assets
         run: |
           # Create directory structure
           mkdir -p pages/update/win32/x64
           mkdir -p pages/update/darwin/arm64
 
-          # Copy web build to root
-          cp -r web-build/* pages/
+          # Download and extract web build from the release
+          gh release download ${{ github.event.release.tag_name }} --pattern "respira-web-*.zip"
+          unzip -q respira-web-*.zip -d pages/
 
           # Download Windows auto-update files from the release
           gh release download ${{ github.event.release.tag_name }} --pattern "*.exe" --dir pages/update/win32/x64

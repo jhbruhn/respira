@@ -1,4 +1,4 @@
-name: Release
+name: Draft Release
 
 on:
   push:
@@ -27,10 +27,47 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  build-web:
+    name: Build Web App
+    needs: draft-release
+    if: needs.draft-release.outputs.tag-name != '' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".node-version"
+          cache: "npm"
+
+      - name: Update package.json version
+        run: |
+          npm version ${{ needs.draft-release.outputs.version }} --no-git-tag-version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build -- --base=/respira/
+
+      - name: Create web artifact zip
+        run: |
+          cd dist
+          zip -r ../respira-web-${{ needs.draft-release.outputs.version }}.zip .
+
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-artifacts
+          path: respira-web-${{ needs.draft-release.outputs.version }}.zip
+
   build-release:
     name: Build Release - ${{ matrix.os }}
     needs: draft-release
-    if: needs.draft-release.outputs.tag-name != ''
+    if: needs.draft-release.outputs.tag-name != '' && github.ref == 'refs/heads/main'
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -86,8 +123,8 @@ jobs:
 
   upload-to-release:
     name: Upload to GitHub Release
-    needs: [draft-release, build-release]
-    if: needs.draft-release.outputs.tag-name != ''
+    needs: [draft-release, build-web, build-release]
+    if: needs.draft-release.outputs.tag-name != '' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
