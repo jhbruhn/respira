@@ -30,7 +30,7 @@ jobs:
   build-web:
     name: Build Web App
     needs: draft-release
-    if: needs.draft-release.outputs.tag-name != ''
+    if: needs.draft-release.outputs.tag-name != '' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -67,7 +67,7 @@ jobs:
   build-release:
     name: Build Release - ${{ matrix.os }}
     needs: draft-release
-    if: needs.draft-release.outputs.tag-name != ''
+    if: needs.draft-release.outputs.tag-name != '' && github.ref == 'refs/heads/main'
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -124,7 +124,7 @@ jobs:
   upload-to-release:
     name: Upload to GitHub Release
     needs: [draft-release, build-web, build-release]
-    if: needs.draft-release.outputs.tag-name != ''
+    if: needs.draft-release.outputs.tag-name != '' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
