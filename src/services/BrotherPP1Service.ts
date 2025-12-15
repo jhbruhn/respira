@@ -131,12 +131,18 @@ export class BrotherPP1Service {
 
       console.log("Connected to Brother PP1 machine");
 
-      console.log("Send dummy command");
+      // Validate connection by sending a test command
+      // If the device is not paired, it won't respond properly
+      console.log("Validating connection with test command...");
       try {
-        await this.getMachineInfo();
-        console.log("Dummy command success");
+        await this.getMachineState();
+        console.log("Connection validation successful - device is properly paired");
       } catch (e) {
-        console.log(e);
+        console.log("Connection validation failed:", e);
+        // Disconnect to clean up
+        if (this.server) {
+          this.server.disconnect();
+        }
         throw e;
       }
     } finally {
@@ -279,6 +285,23 @@ export class BrotherPP1Service {
         const hexResponse = Array.from(response)
           .map((b) => b.toString(16).padStart(2, "0"))
           .join(" ");
+
+        // Detect pairing issues during initial connection - empty or invalid response
+        if (this.isInitialConnection) {
+          if (response.length === 0) {
+            console.log('[BrotherPP1] Empty response received - device likely not paired');
+            throw new BluetoothPairingError(
+              'Device not paired. To pair: long-press the Bluetooth button on the machine, then pair it using your operating system\'s Bluetooth settings. After pairing, try connecting again.'
+            );
+          }
+          // Check for invalid response (less than 3 bytes means no proper command response)
+          if (response.length < 3) {
+            console.log('[BrotherPP1] Invalid response length:', response.length);
+            throw new BluetoothPairingError(
+              'Device not paired. To pair: long-press the Bluetooth button on the machine, then pair it using your operating system\'s Bluetooth settings. After pairing, try connecting again.'
+            );
+          }
+        }
 
         // Parse response
         let parsed = "";
