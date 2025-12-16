@@ -1,0 +1,16 @@
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  autolabel:
+    name: Autolabel PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Draft release
+        id: drafter
+        uses: release-drafter/release-drafter@v6
+        with:
+          disable-releaser: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
