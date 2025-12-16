@@ -4,12 +4,16 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   autolabel:
     name: Autolabel PR
     runs-on: ubuntu-latest
     steps:
-      - name: Draft release
+      - name: Label PR
         id: drafter
         uses: release-drafter/release-drafter@v6
         with:

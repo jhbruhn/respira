@@ -60,9 +60,9 @@ export function ProgressMonitor() {
     ? ((sewingProgress?.currentStitch || 0) / patternInfo.totalStitches) * 100
     : 0;
 
-  // Calculate color block information from pesData
+  // Calculate color block information from decoded penStitches
   const colorBlocks = useMemo(() => {
-    if (!pesData) return [];
+    if (!pesData || !pesData.penStitches) return [];
 
     const blocks: Array<{
       colorIndex: number;
@@ -76,34 +76,20 @@ export function ProgressMonitor() {
       threadChart: string | null;
     }> = [];
 
-    let currentColorIndex = pesData.stitches[0]?.[3] ?? 0;
-    let blockStartStitch = 0;
-
-    for (let i = 0; i < pesData.stitches.length; i++) {
-      const stitchColorIndex = pesData.stitches[i][3];
-
-      // When color changes, save the previous block
-      if (
-        stitchColorIndex !== currentColorIndex ||
-        i === pesData.stitches.length - 1
-      ) {
-        const endStitch = i === pesData.stitches.length - 1 ? i + 1 : i;
-        const thread = pesData.threads[currentColorIndex];
-        blocks.push({
-          colorIndex: currentColorIndex,
-          threadHex: thread?.hex || "#000000",
-          threadCatalogNumber: thread?.catalogNumber ?? null,
-          threadBrand: thread?.brand ?? null,
-          threadDescription: thread?.description ?? null,
-          threadChart: thread?.chart ?? null,
-          startStitch: blockStartStitch,
-          endStitch: endStitch,
-          stitchCount: endStitch - blockStartStitch,
-        });
-
-        currentColorIndex = stitchColorIndex;
-        blockStartStitch = i;
-      }
+    // Use the pre-computed color blocks from decoded PEN data
+    for (const penBlock of pesData.penStitches.colorBlocks) {
+      const thread = pesData.threads[penBlock.colorIndex];
+      blocks.push({
+        colorIndex: penBlock.colorIndex,
+        threadHex: thread?.hex || "#000000",
+        threadCatalogNumber: thread?.catalogNumber ?? null,
+        threadBrand: thread?.brand ?? null,
+        threadDescription: thread?.description ?? null,
+        threadChart: thread?.chart ?? null,
+        startStitch: penBlock.startStitchIndex,
+        endStitch: penBlock.endStitchIndex,
+        stitchCount: penBlock.endStitchIndex - penBlock.startStitchIndex,
+      });
     }
 
     return blocks;
