@@ -4,12 +4,12 @@
  */
 export function isBluetoothSupported(): boolean {
   // Always supported in Electron app
-  if (typeof window !== 'undefined' && (window as any).electronAPI) {
+  if (typeof window !== "undefined" && "electronAPI" in window) {
     return true;
   }
 
   // Check for Web Bluetooth API support in browser
-  if (typeof navigator !== 'undefined' && 'bluetooth' in navigator) {
+  if (typeof navigator !== "undefined" && "bluetooth" in navigator) {
     return true;
   }
 
