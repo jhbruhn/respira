@@ -56,8 +56,15 @@ export function ProgressMonitor() {
 
   const stateVisual = getStateVisualInfo(machineStatus);
 
-  const progressPercent = patternInfo
-    ? ((sewingProgress?.currentStitch || 0) / patternInfo.totalStitches) * 100
+  // Use PEN stitch count as fallback when machine reports 0 total stitches
+  const totalStitches = patternInfo
+    ? (patternInfo.totalStitches === 0 && pesData?.penStitches
+        ? pesData.penStitches.stitches.length
+        : patternInfo.totalStitches)
+    : 0;
+
+  const progressPercent = totalStitches > 0
+    ? ((sewingProgress?.currentStitch || 0) / totalStitches) * 100
     : 0;
 
   // Calculate color block information from decoded penStitches
@@ -173,7 +180,7 @@ export function ProgressMonitor() {
               Total Stitches
             </span>
             <span className="font-semibold text-gray-900 dark:text-gray-100">
-              {patternInfo.totalStitches.toLocaleString()}
+              {totalStitches.toLocaleString()}
             </span>
           </div>
           <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
@@ -213,7 +220,7 @@ export function ProgressMonitor() {
               </span>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
                 {sewingProgress.currentStitch.toLocaleString()} /{" "}
-                {patternInfo?.totalStitches.toLocaleString() || 0}
+                {totalStitches.toLocaleString()}
               </span>
             </div>
             <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
