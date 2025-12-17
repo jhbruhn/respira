@@ -21,6 +21,7 @@ import {
   canResumeSewing,
   getStateVisualInfo,
 } from "../utils/machineStateHelpers";
+import { calculatePatternTime } from "../utils/timeCalculation";
 
 export function ProgressMonitor() {
   // Machine store
@@ -109,6 +110,15 @@ export function ProgressMonitor() {
       currentStitch >= block.startStitch && currentStitch < block.endStitch,
   );
 
+  // Calculate time based on color blocks (matches Brother app calculation)
+  const { totalMinutes, elapsedMinutes } = useMemo(() => {
+    if (colorBlocks.length === 0) {
+      return { totalMinutes: 0, elapsedMinutes: 0 };
+    }
+    const result = calculatePatternTime(colorBlocks, currentStitch);
+    return { totalMinutes: result.totalMinutes, elapsedMinutes: result.elapsedMinutes };
+  }, [colorBlocks, currentStitch]);
+
   // Auto-scroll to current block
   useEffect(() => {
     if (currentBlockRef.current) {
@@ -185,11 +195,10 @@ export function ProgressMonitor() {
           </div>
           <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
             <span className="text-gray-600 dark:text-gray-400 block">
-              Est. Time
+              Total Time
             </span>
             <span className="font-semibold text-gray-900 dark:text-gray-100">
-              {Math.floor(patternInfo.totalTime / 60)}:
-              {String(patternInfo.totalTime % 60).padStart(2, "0")}
+              {totalMinutes} min
             </span>
           </div>
           <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
@@ -225,11 +234,10 @@ export function ProgressMonitor() {
             </div>
             <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
               <span className="text-gray-600 dark:text-gray-400 block">
-                Time Elapsed
+                Time
               </span>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {Math.floor(sewingProgress.currentTime / 60)}:
-                {String(sewingProgress.currentTime % 60).padStart(2, "0")}
+                {elapsedMinutes} / {totalMinutes} min
               </span>
             </div>
           </div>
