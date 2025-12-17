@@ -23,7 +23,7 @@ export function PatternCanvasSkeleton() {
       <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600">
         <SkeletonLoader className="h-7 w-40" variant="text" />
       </div>
-      <div className="relative w-full h-[600px] border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-900 overflow-hidden">
+      <div className="relative w-full h-[600px] border border-gray-300 dark:border-gray-600 rounded bg-gray-200 dark:bg-gray-900 overflow-hidden">
         <div className="flex items-center justify-center h-full">
           <div className="text-center space-y-4">
             <div className="relative w-24 h-24 mx-auto">
@@ -50,7 +50,7 @@ export function PatternInfoSkeleton() {
   return (
     <div className="mt-4">
       <SkeletonLoader className="h-6 w-40 mb-4" variant="text" />
-      <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg space-y-3">
+      <div className="bg-gray-200 dark:bg-gray-900 p-4 rounded-lg space-y-3">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="flex justify-between">
             <SkeletonLoader className="h-4 w-24" variant="text" />
@@ -73,7 +73,7 @@ export function MachineConnectionSkeleton() {
           <SkeletonLoader className="h-4 w-16" variant="text" />
           <SkeletonLoader className="h-8 w-32 rounded-lg" />
         </div>
-        <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg space-y-2">
+        <div className="bg-gray-200 dark:bg-gray-900 p-4 rounded-lg space-y-2">
           <div className="flex justify-between">
             <SkeletonLoader className="h-4 w-20" variant="text" />
             <SkeletonLoader className="h-4 w-24" variant="text" />

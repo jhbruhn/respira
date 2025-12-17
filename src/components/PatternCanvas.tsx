@@ -213,8 +213,8 @@ export function PatternCanvas() {
     setPatternOffset(newOffset.x, newOffset.y);
   }, [setPatternOffset]);
 
-  const borderColor = pesData ? 'border-teal-600 dark:border-teal-500' : 'border-gray-400 dark:border-gray-600';
-  const iconColor = pesData ? 'text-teal-600 dark:text-teal-400' : 'text-gray-600 dark:text-gray-400';
+  const borderColor = pesData ? 'border-tertiary-600 dark:border-tertiary-500' : 'border-gray-400 dark:border-gray-600';
+  const iconColor = pesData ? 'text-tertiary-600 dark:text-tertiary-400' : 'text-gray-600 dark:text-gray-400';
 
   return (
     <div className={`lg:h-full bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 ${borderColor} flex flex-col`}>
@@ -231,7 +231,7 @@ export function PatternCanvas() {
           )}
         </div>
       </div>
-      <div className="relative w-full h-[400px] sm:h-[500px] lg:flex-1 lg:min-h-0 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-900 overflow-hidden" ref={containerRef}>
+      <div className="relative w-full h-[400px] sm:h-[500px] lg:flex-1 lg:min-h-0 border border-gray-300 dark:border-gray-600 rounded bg-gray-200 dark:bg-gray-900 overflow-hidden" ref={containerRef}>
         {containerSize.width > 0 && (
           <Stage
             width={containerSize.width}
@@ -392,7 +392,7 @@ export function PatternCanvas() {
                   </div>
                 )}
               </div>
-              <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-1">
+              <div className="text-sm font-semibold text-primary-600 dark:text-primary-400 mb-1">
                 X: {(localPatternOffset.x / 10).toFixed(1)}mm, Y: {(localPatternOffset.y / 10).toFixed(1)}mm
               </div>
               <div className="text-xs text-gray-600 dark:text-gray-400 italic">
@@ -402,17 +402,17 @@ export function PatternCanvas() {
 
             {/* Zoom Controls Overlay */}
             <div className="absolute bottom-2 sm:bottom-5 right-2 sm:right-5 flex gap-1.5 sm:gap-2 items-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg shadow-lg z-10">
-              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleCenterPattern} disabled={!pesData || patternUploaded || isUploading} title="Center Pattern in Hoop">
+              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-primary-600 hover:text-white hover:border-primary-600 dark:hover:border-primary-600 hover:shadow-md hover:shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleCenterPattern} disabled={!pesData || patternUploaded || isUploading} title="Center Pattern in Hoop">
                 <ArrowsPointingInIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
               </button>
-              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleZoomIn} title="Zoom In">
+              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-primary-600 hover:text-white hover:border-primary-600 dark:hover:border-primary-600 hover:shadow-md hover:shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleZoomIn} title="Zoom In">
                 <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
               </button>
               <span className="min-w-[40px] sm:min-w-[50px] text-center text-sm font-semibold text-gray-900 dark:text-gray-100 select-none">{Math.round(stageScale * 100)}%</span>
-              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleZoomOut} title="Zoom Out">
+              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-primary-600 hover:text-white hover:border-primary-600 dark:hover:border-primary-600 hover:shadow-md hover:shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleZoomOut} title="Zoom Out">
                 <MinusIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
               </button>
-              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed ml-1" onClick={handleZoomReset} title="Reset Zoom">
+              <button className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-primary-600 hover:text-white hover:border-primary-600 dark:hover:border-primary-600 hover:shadow-md hover:shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed ml-1" onClick={handleZoomReset} title="Reset Zoom">
                 <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
               </button>
             </div>

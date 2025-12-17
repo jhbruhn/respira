@@ -61,16 +61,16 @@ export function MachineConnection({
   };
 
   const statusBadgeColors = {
-    idle: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-300',
-    info: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-300',
-    active: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
-    waiting: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
-    warning: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
-    complete: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-    success: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-    interrupted: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
-    error: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
-    danger: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+    idle: 'bg-info-100 dark:bg-info-900/30 text-info-800 dark:text-info-300',
+    info: 'bg-info-100 dark:bg-info-900/30 text-info-800 dark:text-info-300',
+    active: 'bg-warning-100 dark:bg-warning-900/30 text-warning-800 dark:text-warning-300',
+    waiting: 'bg-warning-100 dark:bg-warning-900/30 text-warning-800 dark:text-warning-300',
+    warning: 'bg-warning-100 dark:bg-warning-900/30 text-warning-800 dark:text-warning-300',
+    complete: 'bg-success-100 dark:bg-success-900/30 text-success-800 dark:text-success-300',
+    success: 'bg-success-100 dark:bg-success-900/30 text-success-800 dark:text-success-300',
+    interrupted: 'bg-danger-100 dark:bg-danger-900/30 text-danger-800 dark:text-danger-300',
+    error: 'bg-danger-100 dark:bg-danger-900/30 text-danger-800 dark:text-danger-300',
+    danger: 'bg-danger-100 dark:bg-danger-900/30 text-danger-800 dark:text-danger-300',
   };
 
   // Only show error info when connected AND there's an actual error
@@ -90,15 +90,15 @@ export function MachineConnection({
 
           <button
             onClick={onConnect}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-primary-600 dark:bg-primary-700 text-white rounded font-semibold text-xs hover:bg-primary-700 dark:hover:bg-primary-600 active:bg-primary-800 dark:active:bg-primary-500 transition-colors cursor-pointer"
           >
             Connect to Machine
           </button>
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-green-600 dark:border-green-500">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-success-600 dark:border-success-500">
           <div className="flex items-start gap-3 mb-3">
-            <WifiIcon className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+            <WifiIcon className="w-6 h-6 text-success-600 dark:text-success-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Machine Info</h3>
               <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -110,21 +110,21 @@ export function MachineConnection({
           {/* Error/Info Display */}
           {errorInfo && (
             errorInfo.isInformational ? (
-              <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="mb-3 p-3 bg-info-50 dark:bg-info-900/20 border border-info-200 dark:border-info-800 rounded-lg">
                 <div className="flex items-start gap-2">
-                  <InformationCircleIcon className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                  <InformationCircleIcon className="w-4 h-4 text-info-600 dark:text-info-400 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-blue-900 dark:text-blue-200 text-xs">{errorInfo.title}</div>
+                    <div className="font-semibold text-info-900 dark:text-info-200 text-xs">{errorInfo.title}</div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <div className="mb-3 p-3 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg">
                 <div className="flex items-start gap-2">
-                  <span className="text-red-600 dark:text-red-400 flex-shrink-0">⚠️</span>
+                  <span className="text-danger-600 dark:text-danger-400 flex-shrink-0">⚠️</span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-red-900 dark:text-red-200 text-xs mb-1">{errorInfo.title}</div>
-                    <div className="text-xs text-red-700 dark:text-red-300 font-mono">
+                    <div className="font-semibold text-danger-900 dark:text-danger-200 text-xs mb-1">{errorInfo.title}</div>
+                    <div className="text-xs text-danger-700 dark:text-danger-300 font-mono">
                       Error Code: 0x{machineError.toString(16).toUpperCase().padStart(2, '0')}
                     </div>
                   </div>
@@ -148,14 +148,14 @@ export function MachineConnection({
           {/* Machine Info */}
           {machineInfo && (
             <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-              <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+              <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
                 <span className="text-gray-600 dark:text-gray-400 block">Max Area</span>
                 <span className="font-semibold text-gray-900 dark:text-gray-100">
                   {(machineInfo.maxWidth / 10).toFixed(1)} × {(machineInfo.maxHeight / 10).toFixed(1)} mm
                 </span>
               </div>
               {machineInfo.totalCount !== undefined && (
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+                <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
                   <span className="text-gray-600 dark:text-gray-400 block">Total Stitches</span>
                   <span className="font-semibold text-gray-900 dark:text-gray-100">
                     {machineInfo.totalCount.toLocaleString()}

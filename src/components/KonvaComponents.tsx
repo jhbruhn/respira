@@ -4,6 +4,7 @@ import type { PesPatternData } from '../formats/import/pesImporter';
 import { getThreadColor } from '../formats/import/pesImporter';
 import type { MachineInfo } from '../types/machine';
 import { MOVE } from '../formats/import/constants';
+import { canvasColors } from '../utils/cssVariables';
 
 interface GridProps {
   gridSize: number;
@@ -34,9 +35,7 @@ export const Grid = memo(({ gridSize, bounds, machineInfo }: GridProps) => {
     return { verticalLines, horizontalLines };
   }, [gridSize, bounds, machineInfo]);
 
-  // Detect dark mode
-  const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const gridColor = isDarkMode ? '#404040' : '#e0e0e0';
+  const gridColor = canvasColors.grid();
 
   return (
     <Group name="grid">
@@ -63,8 +62,7 @@ export const Grid = memo(({ gridSize, bounds, machineInfo }: GridProps) => {
 Grid.displayName = 'Grid';
 
 export const Origin = memo(() => {
-  const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const originColor = isDarkMode ? '#999' : '#888';
+  const originColor = canvasColors.origin();
 
   return (
     <Group name="origin">
@@ -84,6 +82,7 @@ export const Hoop = memo(({ machineInfo }: HoopProps) => {
   const { maxWidth, maxHeight } = machineInfo;
   const hoopLeft = -maxWidth / 2;
   const hoopTop = -maxHeight / 2;
+  const hoopColor = canvasColors.hoop();
 
   return (
     <Group name="hoop">
@@ -92,7 +91,7 @@ export const Hoop = memo(({ machineInfo }: HoopProps) => {
         y={hoopTop}
         width={maxWidth}
         height={maxHeight}
-        stroke="#2196F3"
+        stroke={hoopColor}
         strokeWidth={3}
         dash={[10, 5]}
       />
@@ -103,7 +102,7 @@ export const Hoop = memo(({ machineInfo }: HoopProps) => {
         fontSize={14}
         fontFamily="sans-serif"
         fontStyle="bold"
-        fill="#2196F3"
+        fill={hoopColor}
       />
     </Group>
   );
@@ -119,6 +118,7 @@ export const PatternBounds = memo(({ bounds }: PatternBoundsProps) => {
   const { minX, maxX, minY, maxY } = bounds;
   const width = maxX - minX;
   const height = maxY - minY;
+  const boundsColor = canvasColors.bounds();
 
   return (
     <Rect
@@ -126,7 +126,7 @@ export const PatternBounds = memo(({ bounds }: PatternBoundsProps) => {
       y={minY}
       width={width}
       height={height}
-      stroke="#ff0000"
+      stroke={boundsColor}
       strokeWidth={2}
       dash={[5, 5]}
     />
@@ -231,6 +231,7 @@ export const CurrentPosition = memo(({ currentStitchIndex, stitches }: CurrentPo
   }
 
   const [x, y] = stitches[currentStitchIndex];
+  const positionColor = canvasColors.position();
 
   return (
     <Group name="currentPosition">
@@ -238,14 +239,14 @@ export const CurrentPosition = memo(({ currentStitchIndex, stitches }: CurrentPo
         x={x}
         y={y}
         radius={8}
-        fill="rgba(255, 0, 0, 0.3)"
-        stroke="#ff0000"
+        fill={`${positionColor}4d`}
+        stroke={positionColor}
         strokeWidth={3}
       />
-      <Line points={[x - 12, y, x - 3, y]} stroke="#ff0000" strokeWidth={2} />
-      <Line points={[x + 12, y, x + 3, y]} stroke="#ff0000" strokeWidth={2} />
-      <Line points={[x, y - 12, x, y - 3]} stroke="#ff0000" strokeWidth={2} />
-      <Line points={[x, y + 12, x, y + 3]} stroke="#ff0000" strokeWidth={2} />
+      <Line points={[x - 12, y, x - 3, y]} stroke={positionColor} strokeWidth={2} />
+      <Line points={[x + 12, y, x + 3, y]} stroke={positionColor} strokeWidth={2} />
+      <Line points={[x, y - 12, x, y - 3]} stroke={positionColor} strokeWidth={2} />
+      <Line points={[x, y + 12, x, y + 3]} stroke={positionColor} strokeWidth={2} />
     </Group>
   );
 });

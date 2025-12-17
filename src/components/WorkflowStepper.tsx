@@ -320,11 +320,11 @@ export function WorkflowStepper() {
   return (
     <div className="relative max-w-5xl mx-auto mt-2 lg:mt-4" role="navigation" aria-label="Workflow progress">
       {/* Progress bar background */}
-      <div className="absolute top-4 lg:top-5 left-0 right-0 h-0.5 lg:h-1 bg-blue-400/20 dark:bg-blue-600/20 rounded-full" style={{ left: '16px', right: '16px' }} />
+      <div className="absolute top-4 lg:top-5 left-0 right-0 h-0.5 lg:h-1 bg-primary-400/20 dark:bg-primary-600/20 rounded-full" style={{ left: '16px', right: '16px' }} />
 
       {/* Progress bar fill */}
       <div
-        className="absolute top-4 lg:top-5 left-0 h-0.5 lg:h-1 bg-gradient-to-r from-green-500 to-blue-500 dark:from-green-600 dark:to-blue-600 transition-all duration-500 rounded-full"
+        className="absolute top-4 lg:top-5 left-0 h-0.5 lg:h-1 bg-gradient-to-r from-success-500 to-primary-500 dark:from-success-600 dark:to-primary-600 transition-all duration-500 rounded-full"
         style={{
           left: '16px',
           width: `calc(${((currentStep - 1) / (steps.length - 1)) * 100}% - 16px)`
@@ -358,9 +358,9 @@ export function WorkflowStepper() {
                 className={`
                   w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 border-2 shadow-md
                   ${step.id <= currentStep ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed'}
-                  ${isComplete ? 'bg-green-500 dark:bg-green-600 border-green-400 dark:border-green-500 text-white shadow-green-500/30 dark:shadow-green-600/30' : ''}
-                  ${isCurrent ? 'bg-blue-600 dark:bg-blue-700 border-blue-500 dark:border-blue-600 text-white scale-105 lg:scale-110 shadow-blue-600/40 dark:shadow-blue-700/40 ring-2 ring-blue-300 dark:ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : ''}
-                  ${isUpcoming ? 'bg-blue-700 dark:bg-blue-800 border-blue-500/30 dark:border-blue-600/30 text-blue-200/70 dark:text-blue-300/70' : ''}
+                  ${isComplete ? 'bg-success-500 dark:bg-success-600 border-success-400 dark:border-success-500 text-white shadow-success-500/30 dark:shadow-success-600/30' : ''}
+                  ${isCurrent ? 'bg-primary-600 dark:bg-primary-700 border-primary-500 dark:border-primary-600 text-white scale-105 lg:scale-110 shadow-primary-600/40 dark:shadow-primary-700/40 ring-2 ring-primary-300 dark:ring-primary-500 ring-offset-2 dark:ring-offset-gray-900' : ''}
+                  ${isUpcoming ? 'bg-primary-700 dark:bg-primary-800 border-primary-500/30 dark:border-primary-600/30 text-primary-200/70 dark:text-primary-300/70' : ''}
                   ${showPopover && popoverStep === step.id ? 'ring-4 ring-white dark:ring-gray-800' : ''}
                 `}
                 aria-label={`${step.label}: ${isComplete ? 'completed' : isCurrent ? 'current' : 'upcoming'}. Click for details.`}
@@ -377,7 +377,7 @@ export function WorkflowStepper() {
               {/* Step label */}
               <div className="mt-1 lg:mt-2 text-center">
                 <div className={`text-xs font-semibold leading-tight ${
-                  isCurrent ? 'text-white' : isComplete ? 'text-green-200 dark:text-green-300' : 'text-blue-300/70 dark:text-blue-400/70'
+                  isCurrent ? 'text-white' : isComplete ? 'text-success-200 dark:text-success-300' : 'text-primary-300/70 dark:text-primary-400/70'
                 }`}>
                   {step.label}
                 </div>
@@ -400,35 +400,35 @@ export function WorkflowStepper() {
             if (!content) return null;
 
             const colorClasses = {
-              info: 'bg-blue-50 dark:bg-blue-900/95 border-blue-600 dark:border-blue-500',
-              success: 'bg-green-50 dark:bg-green-900/95 border-green-600 dark:border-green-500',
-              warning: 'bg-yellow-50 dark:bg-yellow-900/95 border-yellow-600 dark:border-yellow-500',
-              error: 'bg-red-50 dark:bg-red-900/95 border-red-600 dark:border-red-500',
-              progress: 'bg-cyan-50 dark:bg-cyan-900/95 border-cyan-600 dark:border-cyan-500'
+              info: 'bg-info-50 dark:bg-info-900/95 border-info-600 dark:border-info-500',
+              success: 'bg-success-50 dark:bg-success-900/95 border-success-600 dark:border-success-500',
+              warning: 'bg-warning-50 dark:bg-warning-900/95 border-warning-600 dark:border-warning-500',
+              error: 'bg-danger-50 dark:bg-danger-900/95 border-danger-600 dark:border-danger-500',
+              progress: 'bg-info-50 dark:bg-info-900/95 border-info-600 dark:border-info-500'
             };
 
             const iconColorClasses = {
-              info: 'text-blue-600 dark:text-blue-400',
-              success: 'text-green-600 dark:text-green-400',
-              warning: 'text-yellow-600 dark:text-yellow-400',
-              error: 'text-red-600 dark:text-red-400',
-              progress: 'text-cyan-600 dark:text-cyan-400'
+              info: 'text-info-600 dark:text-info-400',
+              success: 'text-success-600 dark:text-success-400',
+              warning: 'text-warning-600 dark:text-warning-400',
+              error: 'text-danger-600 dark:text-danger-400',
+              progress: 'text-info-600 dark:text-info-400'
             };
 
             const textColorClasses = {
-              info: 'text-blue-900 dark:text-blue-200',
-              success: 'text-green-900 dark:text-green-200',
-              warning: 'text-yellow-900 dark:text-yellow-200',
-              error: 'text-red-900 dark:text-red-200',
-              progress: 'text-cyan-900 dark:text-cyan-200'
+              info: 'text-info-900 dark:text-info-200',
+              success: 'text-success-900 dark:text-success-200',
+              warning: 'text-warning-900 dark:text-warning-200',
+              error: 'text-danger-900 dark:text-danger-200',
+              progress: 'text-info-900 dark:text-info-200'
             };
 
             const descColorClasses = {
-              info: 'text-blue-800 dark:text-blue-300',
-              success: 'text-green-800 dark:text-green-300',
-              warning: 'text-yellow-800 dark:text-yellow-300',
-              error: 'text-red-800 dark:text-red-300',
-              progress: 'text-cyan-800 dark:text-cyan-300'
+              info: 'text-info-800 dark:text-info-300',
+              success: 'text-success-800 dark:text-success-300',
+              warning: 'text-warning-800 dark:text-warning-300',
+              error: 'text-danger-800 dark:text-danger-300',
+              progress: 'text-info-800 dark:text-info-300'
             };
 
             const listColorClasses = {

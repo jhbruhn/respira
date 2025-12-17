@@ -26,7 +26,7 @@ export function ConnectionPrompt() {
         </div>
         <button
           onClick={connect}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 sm:py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-sm hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 sm:py-2 bg-primary-600 dark:bg-primary-700 text-white rounded font-semibold text-sm hover:bg-primary-700 dark:hover:bg-primary-600 active:bg-primary-800 dark:active:bg-primary-500 transition-colors cursor-pointer"
         >
           Connect to Machine
         </button>
@@ -35,17 +35,17 @@ export function ConnectionPrompt() {
   }
 
   return (
-    <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg shadow-md border-l-4 border-amber-500 dark:border-amber-600">
+    <div className="bg-warning-50 dark:bg-warning-900/20 p-4 rounded-lg shadow-md border-l-4 border-warning-500 dark:border-warning-600">
       <div className="flex items-start gap-3">
-        <ExclamationTriangleIcon className="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+        <ExclamationTriangleIcon className="w-6 h-6 text-warning-600 dark:text-warning-400 flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-semibold text-amber-900 dark:text-amber-100 mb-2">Browser Not Supported</h3>
-          <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
+          <h3 className="text-base font-semibold text-warning-900 dark:text-warning-100 mb-2">Browser Not Supported</h3>
+          <p className="text-sm text-warning-800 dark:text-warning-200 mb-3">
             Your browser doesn't support Web Bluetooth, which is required to connect to your embroidery machine.
           </p>
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">Please try one of these options:</p>
-            <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1.5 ml-4 list-disc">
+            <p className="text-sm font-semibold text-warning-900 dark:text-warning-100">Please try one of these options:</p>
+            <ul className="text-sm text-warning-800 dark:text-warning-200 space-y-1.5 ml-4 list-disc">
               <li>Use a supported browser (Chrome, Edge, or Opera)</li>
               <li>
                 Download the Desktop app from{' '}
@@ -53,7 +53,7 @@ export function ConnectionPrompt() {
                   href="https://github.com/jhbruhn/respira/releases/latest"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-semibold underline hover:text-amber-900 dark:hover:text-amber-50 transition-colors"
+                  className="font-semibold underline hover:text-warning-900 dark:hover:text-warning-50 transition-colors"
                 >
                   GitHub Releases
                 </a>
