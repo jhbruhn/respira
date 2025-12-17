@@ -552,3 +552,5 @@ export const useMachineStatus = () => useMachineStore((state) => state.machineSt
 export const useMachineError = () => useMachineStore((state) => state.machineError);
 export const usePatternInfo = () => useMachineStore((state) => state.patternInfo);
 export const useSewingProgress = () => useMachineStore((state) => state.sewingProgress);
+// Derived state: pattern is uploaded if machine has pattern info
+export const usePatternUploaded = () => useMachineStore((state) => state.patternInfo !== null);

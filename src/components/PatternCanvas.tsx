@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { useMachineStore } from '../stores/useMachineStore';
+import { useMachineStore, usePatternUploaded } from '../stores/useMachineStore';
 import { usePatternStore } from '../stores/usePatternStore';
 import { Stage, Layer, Group } from 'react-konva';
 import Konva from 'konva';
@@ -27,16 +27,17 @@ export function PatternCanvas() {
   const {
     pesData,
     patternOffset: initialPatternOffset,
-    patternUploaded,
     setPatternOffset,
   } = usePatternStore(
     useShallow((state) => ({
       pesData: state.pesData,
       patternOffset: state.patternOffset,
-      patternUploaded: state.patternUploaded,
       setPatternOffset: state.setPatternOffset,
     }))
   );
+
+  // Derived state: pattern is uploaded if machine has pattern info
+  const patternUploaded = usePatternUploaded();
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage | null>(null);
 

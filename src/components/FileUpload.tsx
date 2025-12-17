@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { useMachineStore } from '../stores/useMachineStore';
+import { useMachineStore, usePatternUploaded } from '../stores/useMachineStore';
 import { usePatternStore } from '../stores/usePatternStore';
 import { useUIStore } from '../stores/useUIStore';
 import { convertPesToPen, type PesPatternData } from '../formats/import/pesImporter';
@@ -40,17 +40,18 @@ export function FileUpload() {
     pesData: pesDataProp,
     currentFileName,
     patternOffset,
-    patternUploaded,
     setPattern,
   } = usePatternStore(
     useShallow((state) => ({
       pesData: state.pesData,
       currentFileName: state.currentFileName,
       patternOffset: state.patternOffset,
-      patternUploaded: state.patternUploaded,
       setPattern: state.setPattern,
     }))
   );
+
+  // Derived state: pattern is uploaded if machine has pattern info
+  const patternUploaded = usePatternUploaded();
 
   // UI store
   const {

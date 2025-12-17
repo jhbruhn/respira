@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { useMachineStore } from '../stores/useMachineStore';
+import { useMachineStore, usePatternUploaded } from '../stores/useMachineStore';
 import { usePatternStore } from '../stores/usePatternStore';
 import { CheckCircleIcon, InformationCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 import { MachineStatus } from '../types/machine';
@@ -268,14 +268,14 @@ export function WorkflowStepper() {
   // Pattern store
   const {
     pesData,
-    patternUploaded,
   } = usePatternStore(
     useShallow((state) => ({
       pesData: state.pesData,
-      patternUploaded: state.patternUploaded,
     }))
   );
 
+  // Derived state: pattern is uploaded if machine has pattern info
+  const patternUploaded = usePatternUploaded();
   const hasPattern = pesData !== null;
   const hasErrorFlag = hasError(machineError);
   const currentStep = getCurrentStep(machineStatus, isConnected, hasPattern, patternUploaded);

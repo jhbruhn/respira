@@ -1,5 +1,5 @@
 import { useShallow } from 'zustand/react/shallow';
-import { useMachineStore } from '../stores/useMachineStore';
+import { useMachineStore, usePatternUploaded } from '../stores/useMachineStore';
 import { usePatternStore } from '../stores/usePatternStore';
 import { ConnectionPrompt } from './ConnectionPrompt';
 import { FileUpload } from './FileUpload';
@@ -13,12 +13,14 @@ export function LeftSidebar() {
     }))
   );
 
-  const { pesData, patternUploaded } = usePatternStore(
+  const { pesData } = usePatternStore(
     useShallow((state) => ({
       pesData: state.pesData,
-      patternUploaded: state.patternUploaded,
     }))
   );
+
+  // Derived state: pattern is uploaded if machine has pattern info
+  const patternUploaded = usePatternUploaded();
 
   return (
     <div className="flex flex-col gap-4 md:gap-5 lg:gap-6 lg:overflow-hidden">
