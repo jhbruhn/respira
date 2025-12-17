@@ -11,7 +11,7 @@ permissions:
 jobs:
   autolabel:
     name: Autolabel PR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Label PR
         id: drafter

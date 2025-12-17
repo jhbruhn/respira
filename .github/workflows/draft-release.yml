@@ -124,7 +124,7 @@ jobs:
     name: Upload to GitHub Release
     needs: [draft-release, build-web, build-release]
     if: needs.draft-release.outputs.tag-name != '' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
       - name: Checkout code
