@@ -86,18 +86,18 @@ export function AppHeader() {
   }, [showErrorPopover, setErrorPopover]);
 
   return (
-    <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-700 dark:via-blue-800 dark:to-blue-900 px-4 sm:px-6 lg:px-8 py-3 shadow-lg border-b-2 border-blue-900/20 dark:border-blue-800/30 flex-shrink-0">
+    <header className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 dark:from-primary-700 dark:via-primary-800 dark:to-primary-900 px-4 sm:px-6 lg:px-8 py-3 shadow-lg border-b-2 border-primary-900/20 dark:border-primary-800/30 flex-shrink-0">
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 lg:gap-8 items-center">
         {/* Machine Connection Status - Responsive width column */}
         <div className="flex items-center gap-3 w-full lg:w-[280px]">
-          <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50" style={{ visibility: isConnected ? 'visible' : 'hidden' }}></div>
+          <div className="w-2.5 h-2.5 bg-success-400 rounded-full animate-pulse shadow-lg shadow-success-400/50" style={{ visibility: isConnected ? 'visible' : 'hidden' }}></div>
           <div className="w-2.5 h-2.5 bg-gray-400 rounded-full -ml-2.5" style={{ visibility: !isConnected ? 'visible' : 'hidden' }}></div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="text-lg lg:text-xl font-bold text-white leading-tight">Respira</h1>
               {isConnected && machineInfo?.serialNumber && (
                 <span
-                  className="text-xs text-blue-200 cursor-help"
+                  className="text-xs text-primary-200 cursor-help"
                   title={`Serial: ${machineInfo.serialNumber}${
                     machineInfo.macAddress
                       ? `\nMAC: ${machineInfo.macAddress}`
@@ -116,7 +116,7 @@ export function AppHeader() {
                 </span>
               )}
               {isPolling && (
-                <ArrowPathIcon className="w-3.5 h-3.5 text-blue-200 animate-spin" title="Auto-refreshing status" />
+                <ArrowPathIcon className="w-3.5 h-3.5 text-primary-200 animate-spin" title="Auto-refreshing status" />
               )}
             </div>
             <div className="flex items-center gap-2 mt-1 min-h-[32px]">
@@ -124,7 +124,7 @@ export function AppHeader() {
                 <>
                   <button
                     onClick={disconnect}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-white/10 hover:bg-red-600 text-blue-100 hover:text-white border border-white/20 hover:border-red-600 cursor-pointer transition-all flex-shrink-0"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-white/10 hover:bg-danger-600 text-primary-100 hover:text-white border border-white/20 hover:border-danger-600 cursor-pointer transition-all flex-shrink-0"
                     title="Disconnect from machine"
                     aria-label="Disconnect from machine"
                   >
@@ -137,7 +137,7 @@ export function AppHeader() {
                   </span>
                 </>
               ) : (
-                <p className="text-xs text-blue-200">Not Connected</p>
+                <p className="text-xs text-primary-200">Not Connected</p>
               )}
 
               {/* Error indicator - always render to prevent layout shift */}
@@ -145,7 +145,7 @@ export function AppHeader() {
                 <button
                   ref={errorButtonRef}
                   onClick={() => setErrorPopover(!showErrorPopover)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-red-500/90 hover:bg-red-600 text-white border border-red-400 transition-all flex-shrink-0 ${
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-danger-500/90 hover:bg-danger-600 text-white border border-danger-400 transition-all flex-shrink-0 ${
                     (machineErrorMessage || pyodideError)
                       ? 'cursor-pointer animate-pulse hover:animate-none'
                       : 'invisible pointer-events-none'

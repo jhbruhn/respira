@@ -171,8 +171,8 @@ export function FileUpload() {
 
   const boundsCheck = checkPatternFitsInHoop();
 
-  const borderColor = pesData ? 'border-orange-600 dark:border-orange-500' : 'border-gray-400 dark:border-gray-600';
-  const iconColor = pesData ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400';
+  const borderColor = pesData ? 'border-secondary-600 dark:border-secondary-500' : 'border-gray-400 dark:border-gray-600';
+  const iconColor = pesData ? 'text-secondary-600 dark:text-secondary-400' : 'text-gray-600 dark:text-gray-400';
 
   return (
     <div className={`bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 ${borderColor}`}>
@@ -191,8 +191,8 @@ export function FileUpload() {
       </div>
 
       {resumeAvailable && resumeFileName && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-3 py-2 rounded mb-3">
-          <p className="text-xs text-green-800 dark:text-green-200">
+        <div className="bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 px-3 py-2 rounded mb-3">
+          <p className="text-xs text-success-800 dark:text-success-200">
             <strong>Cached:</strong> "{resumeFileName}"
           </p>
         </div>
@@ -249,7 +249,7 @@ export function FileUpload() {
           <button
             onClick={handleUpload}
             disabled={!isConnected || isUploading || !boundsCheck.fits}
-            className="flex-1 px-3 py-2.5 sm:py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-sm hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-3 py-2.5 sm:py-2 bg-primary-600 dark:bg-primary-700 text-white rounded font-semibold text-sm hover:bg-primary-700 dark:hover:bg-primary-600 active:bg-primary-800 dark:active:bg-primary-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={isUploading ? `Uploading pattern: ${uploadProgress.toFixed(0)}% complete` : boundsCheck.error || 'Upload pattern to machine'}
           >
             {isUploading ? (
@@ -279,13 +279,13 @@ export function FileUpload() {
                 ? 'Please wait - initializing Python environment...'
                 : pyodideLoadingStep || 'Initializing Python environment...'}
             </span>
-            <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+            <span className="text-xs font-bold text-primary-600 dark:text-primary-400">
               {pyodideProgress.toFixed(0)}%
             </span>
           </div>
           <div className="h-2.5 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden shadow-inner relative">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 dark:from-blue-600 dark:via-blue-700 dark:to-blue-800 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite] rounded-full"
+              className="h-full bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 dark:from-primary-600 dark:via-primary-700 dark:to-primary-800 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite] rounded-full"
               style={{ width: `${pyodideProgress}%` }}
             />
           </div>
@@ -303,13 +303,13 @@ export function FileUpload() {
         marginTop: (pesData && (boundsCheck.error || !canUploadPattern(machineStatus))) ? '12px' : '0px'
       }}>
         {pesData && !canUploadPattern(machineStatus) && (
-          <div className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 px-3 py-2 rounded border border-yellow-200 dark:border-yellow-800 text-sm">
+          <div className="bg-warning-100 dark:bg-warning-900/20 text-warning-800 dark:text-warning-200 px-3 py-2 rounded border border-warning-200 dark:border-warning-800 text-sm">
             Cannot upload while {getMachineStateCategory(machineStatus)}
           </div>
         )}
 
         {pesData && boundsCheck.error && (
-          <div className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 px-3 py-2 rounded border border-red-200 dark:border-red-800 text-sm">
+          <div className="bg-danger-100 dark:bg-danger-900/20 text-danger-800 dark:text-danger-200 px-3 py-2 rounded border border-danger-200 dark:border-danger-800 text-sm">
             <strong>Pattern too large:</strong> {boundsCheck.error}
           </div>
         )}
@@ -319,13 +319,13 @@ export function FileUpload() {
         <div className="mt-3">
           <div className="flex justify-between items-center mb-1.5">
             <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Uploading</span>
-            <span className="text-xs font-bold text-orange-600 dark:text-orange-400">
+            <span className="text-xs font-bold text-secondary-600 dark:text-secondary-400">
               {uploadProgress > 0 ? uploadProgress.toFixed(1) + '%' : 'Starting...'}
             </span>
           </div>
           <div className="h-2.5 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden shadow-inner relative">
             <div
-              className="h-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 dark:from-orange-600 dark:via-orange-700 dark:to-orange-800 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite] rounded-full"
+              className="h-full bg-gradient-to-r from-secondary-500 via-secondary-600 to-secondary-700 dark:from-secondary-600 dark:via-secondary-700 dark:to-secondary-800 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite] rounded-full"
               style={{ width: `${uploadProgress}%` }}
             />
           </div>

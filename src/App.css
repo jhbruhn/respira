@@ -1,6 +1,129 @@
 @import "tailwindcss";
 
-/* Custom animations for shimmer effect */
+/* ============================================
+   THEME DEFINITION - Tailwind v4
+   Semantic color system that references Tailwind colors
+   ============================================ */
+
+@theme {
+  /* PRIMARY - Main brand color (references Blue) */
+  --color-primary-50: var(--color-blue-50);
+  --color-primary-100: var(--color-blue-100);
+  --color-primary-200: var(--color-blue-200);
+  --color-primary-300: var(--color-blue-300);
+  --color-primary-400: var(--color-blue-400);
+  --color-primary-500: var(--color-blue-500);
+  --color-primary-600: var(--color-blue-600);
+  --color-primary-700: var(--color-blue-700);
+  --color-primary-800: var(--color-blue-800);
+  --color-primary-900: var(--color-blue-900);
+  --color-primary-950: var(--color-blue-950);
+
+  /* SUCCESS - Positive states, completion (references Green) */
+  --color-success-50: var(--color-green-50);
+  --color-success-100: var(--color-green-100);
+  --color-success-200: var(--color-green-200);
+  --color-success-300: var(--color-green-300);
+  --color-success-400: var(--color-green-400);
+  --color-success-500: var(--color-green-500);
+  --color-success-600: var(--color-green-600);
+  --color-success-700: var(--color-green-700);
+  --color-success-800: var(--color-green-800);
+  --color-success-900: var(--color-green-900);
+  --color-success-950: var(--color-green-950);
+
+  /* WARNING - Caution, waiting states (references Amber) */
+  --color-warning-50: var(--color-amber-50);
+  --color-warning-100: var(--color-amber-100);
+  --color-warning-200: var(--color-amber-200);
+  --color-warning-300: var(--color-amber-300);
+  --color-warning-400: var(--color-amber-400);
+  --color-warning-500: var(--color-amber-500);
+  --color-warning-600: var(--color-amber-600);
+  --color-warning-700: var(--color-amber-700);
+  --color-warning-800: var(--color-amber-800);
+  --color-warning-900: var(--color-amber-900);
+  --color-warning-950: var(--color-amber-950);
+
+  /* DANGER - Errors, destructive actions (references Red) */
+  --color-danger-50: var(--color-red-50);
+  --color-danger-100: var(--color-red-100);
+  --color-danger-200: var(--color-red-200);
+  --color-danger-300: var(--color-red-300);
+  --color-danger-400: var(--color-red-400);
+  --color-danger-500: var(--color-red-500);
+  --color-danger-600: var(--color-red-600);
+  --color-danger-700: var(--color-red-700);
+  --color-danger-800: var(--color-red-800);
+  --color-danger-900: var(--color-red-900);
+  --color-danger-950: var(--color-red-950);
+
+  /* INFO - Informational states (references Cyan) */
+  --color-info-50: var(--color-cyan-50);
+  --color-info-100: var(--color-cyan-100);
+  --color-info-200: var(--color-cyan-200);
+  --color-info-300: var(--color-cyan-300);
+  --color-info-400: var(--color-cyan-400);
+  --color-info-500: var(--color-cyan-500);
+  --color-info-600: var(--color-cyan-600);
+  --color-info-700: var(--color-cyan-700);
+  --color-info-800: var(--color-cyan-800);
+  --color-info-900: var(--color-cyan-900);
+  --color-info-950: var(--color-cyan-950);
+
+  /* ACCENT - Progress, sewing states (references Purple) */
+  --color-accent-50: var(--color-purple-50);
+  --color-accent-100: var(--color-purple-100);
+  --color-accent-200: var(--color-purple-200);
+  --color-accent-300: var(--color-purple-300);
+  --color-accent-400: var(--color-purple-400);
+  --color-accent-500: var(--color-purple-500);
+  --color-accent-600: var(--color-purple-600);
+  --color-accent-700: var(--color-purple-700);
+  --color-accent-800: var(--color-purple-800);
+  --color-accent-900: var(--color-purple-900);
+  --color-accent-950: var(--color-purple-950);
+
+  /* SECONDARY - Upload operations (references Orange) */
+  --color-secondary-50: var(--color-orange-50);
+  --color-secondary-100: var(--color-orange-100);
+  --color-secondary-200: var(--color-orange-200);
+  --color-secondary-300: var(--color-orange-300);
+  --color-secondary-400: var(--color-orange-400);
+  --color-secondary-500: var(--color-orange-500);
+  --color-secondary-600: var(--color-orange-600);
+  --color-secondary-700: var(--color-orange-700);
+  --color-secondary-800: var(--color-orange-800);
+  --color-secondary-900: var(--color-orange-900);
+  --color-secondary-950: var(--color-orange-950);
+
+  /* TERTIARY - Pattern canvas theme (references Teal) */
+  --color-tertiary-500: var(--color-teal-500);
+  --color-tertiary-600: var(--color-teal-600);
+
+  /* Canvas/Konva-specific colors for embroidery rendering */
+  --color-canvas-grid: #e0e0e0;
+  --color-canvas-origin: #888888;
+  --color-canvas-hoop: #2196F3;
+  --color-canvas-bounds: #ff0000;
+  --color-canvas-position: #ff0000;
+}
+
+/* Dark Mode Overrides - Media Query */
+@media (prefers-color-scheme: dark) {
+  @theme {
+    /* Canvas colors adjusted for dark mode */
+    --color-canvas-grid: #404040;
+    --color-canvas-origin: #999999;
+    /* hoop, bounds, position stay the same for visibility */
+  }
+}
+
+/* ============================================
+   CUSTOM ANIMATIONS
+   ============================================ */
+
+/* Shimmer effect for progress bars */
 @keyframes shimmer {
   0% {
     transform: translateX(-100%);
@@ -44,13 +167,13 @@
   }
 }
 
-/* Pulse glow effect */
+/* Pulse glow effect - uses primary-600 */
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 0 rgb(37 99 235 / 0.4); /* primary-600 with 40% opacity */
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 8px rgb(37 99 235 / 0); /* primary-600 fully transparent */
   }
 }
 

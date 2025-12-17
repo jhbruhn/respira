@@ -154,22 +154,22 @@ export function ProgressMonitor() {
   }, [colorBlocks]);
 
   const stateIndicatorColors = {
-    idle: "bg-blue-50 dark:bg-blue-900/20 border-blue-600",
-    info: "bg-blue-50 dark:bg-blue-900/20 border-blue-600",
-    active: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500",
-    waiting: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500",
-    warning: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500",
-    complete: "bg-green-50 dark:bg-green-900/20 border-green-600",
-    success: "bg-green-50 dark:bg-green-900/20 border-green-600",
-    interrupted: "bg-red-50 dark:bg-red-900/20 border-red-600",
-    error: "bg-red-50 dark:bg-red-900/20 border-red-600",
-    danger: "bg-red-50 dark:bg-red-900/20 border-red-600",
+    idle: "bg-info-50 dark:bg-info-900/20 border-info-600",
+    info: "bg-info-50 dark:bg-info-900/20 border-info-600",
+    active: "bg-warning-50 dark:bg-warning-900/20 border-warning-500",
+    waiting: "bg-warning-50 dark:bg-warning-900/20 border-warning-500",
+    warning: "bg-warning-50 dark:bg-warning-900/20 border-warning-500",
+    complete: "bg-success-50 dark:bg-success-900/20 border-success-600",
+    success: "bg-success-50 dark:bg-success-900/20 border-success-600",
+    interrupted: "bg-danger-50 dark:bg-danger-900/20 border-danger-600",
+    error: "bg-danger-50 dark:bg-danger-900/20 border-danger-600",
+    danger: "bg-danger-50 dark:bg-danger-900/20 border-danger-600",
   };
 
   return (
-    <div className="lg:h-full bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-purple-600 dark:border-purple-500 flex flex-col lg:overflow-hidden">
+    <div className="lg:h-full bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-accent-600 dark:border-accent-500 flex flex-col lg:overflow-hidden">
       <div className="flex items-start gap-3 mb-3">
-        <ChartBarIcon className="w-6 h-6 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
+        <ChartBarIcon className="w-6 h-6 text-accent-600 dark:text-accent-400 flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
             Sewing Progress
@@ -185,7 +185,7 @@ export function ProgressMonitor() {
       {/* Pattern Info */}
       {patternInfo && (
         <div className="grid grid-cols-3 gap-2 text-xs mb-3">
-          <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+          <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
             <span className="text-gray-600 dark:text-gray-400 block">
               Total Stitches
             </span>
@@ -193,7 +193,7 @@ export function ProgressMonitor() {
               {totalStitches.toLocaleString()}
             </span>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+          <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
             <span className="text-gray-600 dark:text-gray-400 block">
               Total Time
             </span>
@@ -201,7 +201,7 @@ export function ProgressMonitor() {
               {totalMinutes} min
             </span>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+          <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
             <span className="text-gray-600 dark:text-gray-400 block">
               Speed
             </span>
@@ -217,13 +217,13 @@ export function ProgressMonitor() {
         <div className="mb-3">
           <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded-md overflow-hidden shadow-inner relative mb-2">
             <div
-              className="h-full bg-gradient-to-r from-purple-600 to-purple-700 dark:from-purple-600 dark:to-purple-800 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite]"
+              className="h-full bg-gradient-to-r from-accent-600 to-accent-700 dark:from-accent-600 dark:to-accent-800 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite]"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-            <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+            <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
               <span className="text-gray-600 dark:text-gray-400 block">
                 Current Stitch
               </span>
@@ -232,7 +232,7 @@ export function ProgressMonitor() {
                 {totalStitches.toLocaleString()}
               </span>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+            <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
               <span className="text-gray-600 dark:text-gray-400 block">
                 Time
               </span>
@@ -249,22 +249,22 @@ export function ProgressMonitor() {
         (() => {
           const iconMap = {
             ready: (
-              <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <ClockIcon className="w-5 h-5 text-info-600 dark:text-info-400" />
             ),
             active: (
-              <PlayIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+              <PlayIcon className="w-5 h-5 text-warning-600 dark:text-warning-400" />
             ),
             waiting: (
-              <PauseCircleIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+              <PauseCircleIcon className="w-5 h-5 text-warning-600 dark:text-warning-400" />
             ),
             complete: (
-              <CheckBadgeIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <CheckBadgeIcon className="w-5 h-5 text-success-600 dark:text-success-400" />
             ),
             interrupted: (
-              <PauseCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
+              <PauseCircleIcon className="w-5 h-5 text-danger-600 dark:text-danger-400" />
             ),
             error: (
-              <ExclamationCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
+              <ExclamationCircleIcon className="w-5 h-5 text-danger-600 dark:text-danger-400" />
             ),
           };
 
@@ -297,7 +297,7 @@ export function ProgressMonitor() {
             <div
               ref={colorBlocksScrollRef}
               onScroll={handleColorBlocksScroll}
-              className="lg:absolute lg:inset-0 flex flex-col gap-2 lg:overflow-y-auto scroll-smooth pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-blue-600 dark:[&::-webkit-scrollbar-thumb]:bg-blue-500 [&::-webkit-scrollbar-thumb]:rounded-full"
+              className="lg:absolute lg:inset-0 flex flex-col gap-2 lg:overflow-y-auto scroll-smooth pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-primary-600 dark:[&::-webkit-scrollbar-thumb]:bg-primary-500 [&::-webkit-scrollbar-thumb]:rounded-full"
             >
               {colorBlocks.map((block, index) => {
               const isCompleted = currentStitch >= block.endStitch;
@@ -319,10 +319,10 @@ export function ProgressMonitor() {
                   ref={isCurrent ? currentBlockRef : null}
                   className={`p-2.5 rounded-lg border-2 transition-all duration-300 ${
                     isCompleted
-                      ? "border-green-600 bg-green-50 dark:bg-green-900/20"
+                      ? "border-success-600 bg-success-50 dark:bg-success-900/20"
                       : isCurrent
-                        ? "border-purple-600 bg-purple-50 dark:bg-purple-900/20 shadow-lg shadow-purple-600/20 animate-pulseGlow"
-                        : "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 opacity-70"
+                        ? "border-accent-600 bg-accent-50 dark:bg-accent-900/20 shadow-lg shadow-accent-600/20 animate-pulseGlow"
+                        : "border-gray-200 dark:border-gray-600 bg-gray-300 dark:bg-gray-800/50 opacity-70"
                   }`}
                   role="listitem"
                   aria-label={`Thread ${block.colorIndex + 1}, ${block.stitchCount} stitches, ${isCompleted ? "completed" : isCurrent ? "in progress" : "pending"}`}
@@ -374,12 +374,12 @@ export function ProgressMonitor() {
                     {/* Status icon */}
                     {isCompleted ? (
                       <CheckCircleIcon
-                        className="w-5 h-5 text-green-600 flex-shrink-0"
+                        className="w-5 h-5 text-success-600 flex-shrink-0"
                         aria-label="Completed"
                       />
                     ) : isCurrent ? (
                       <ArrowRightIcon
-                        className="w-5 h-5 text-purple-600 flex-shrink-0 animate-pulse"
+                        className="w-5 h-5 text-accent-600 flex-shrink-0 animate-pulse"
                         aria-label="In progress"
                       />
                     ) : (
@@ -394,7 +394,7 @@ export function ProgressMonitor() {
                   {isCurrent && (
                     <div className="mt-2 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-purple-600 dark:bg-purple-500 transition-all duration-300 rounded-full"
+                        className="h-full bg-accent-600 dark:bg-accent-500 transition-all duration-300 rounded-full"
                         style={{ width: `${blockProgress}%` }}
                         role="progressbar"
                         aria-valuenow={Math.round(blockProgress)}
@@ -423,7 +423,7 @@ export function ProgressMonitor() {
           <button
             onClick={resumeSewing}
             disabled={isDeleting}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-primary-600 dark:bg-primary-700 text-white rounded font-semibold text-xs hover:bg-primary-700 dark:hover:bg-primary-600 active:bg-primary-800 dark:active:bg-primary-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Resume sewing the current pattern"
           >
             <PlayIcon className="w-3.5 h-3.5" />
@@ -436,7 +436,7 @@ export function ProgressMonitor() {
           <button
             onClick={startSewing}
             disabled={isDeleting}
-            className="flex-[2] flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-blue-600 dark:bg-blue-700 text-white rounded font-semibold text-xs hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-[2] flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-primary-600 dark:bg-primary-700 text-white rounded font-semibold text-xs hover:bg-primary-700 dark:hover:bg-primary-600 active:bg-primary-800 dark:active:bg-primary-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Start sewing the pattern"
           >
             <PlayIcon className="w-3.5 h-3.5" />

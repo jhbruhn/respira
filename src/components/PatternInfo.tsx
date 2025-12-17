@@ -9,14 +9,14 @@ export function PatternInfo({ pesData, showThreadBlocks = false }: PatternInfoPr
   return (
     <>
       <div className="grid grid-cols-3 gap-2 text-xs mb-2">
-        <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+        <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
           <span className="text-gray-600 dark:text-gray-400 block">Size</span>
           <span className="font-semibold text-gray-900 dark:text-gray-100">
             {((pesData.bounds.maxX - pesData.bounds.minX) / 10).toFixed(1)} x{' '}
             {((pesData.bounds.maxY - pesData.bounds.minY) / 10).toFixed(1)} mm
           </span>
         </div>
-        <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+        <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
           <span className="text-gray-600 dark:text-gray-400 block">Stitches</span>
           <span className="font-semibold text-gray-900 dark:text-gray-100">
             {pesData.penStitches?.stitches.length.toLocaleString() || pesData.stitchCount.toLocaleString()}
@@ -30,7 +30,7 @@ export function PatternInfo({ pesData, showThreadBlocks = false }: PatternInfoPr
             )}
           </span>
         </div>
-        <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+        <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
           <span className="text-gray-600 dark:text-gray-400 block">
             {showThreadBlocks ? 'Colors / Blocks' : 'Colors'}
           </span>

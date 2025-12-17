@@ -40,7 +40,7 @@ export function ConfirmDialog({
   return (
     <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-[1000]" onClick={onCancel}>
       <div
-        className={`bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-lg w-[90%] m-4 ${variant === 'danger' ? 'border-t-4 border-red-600 dark:border-red-500' : 'border-t-4 border-yellow-500 dark:border-yellow-600'}`}
+        className={`bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-lg w-[90%] m-4 ${variant === 'danger' ? 'border-t-4 border-danger-600 dark:border-danger-500' : 'border-t-4 border-warning-500 dark:border-warning-600'}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-labelledby="dialog-title"
@@ -65,8 +65,8 @@ export function ConfirmDialog({
             onClick={onConfirm}
             className={
               variant === 'danger'
-                ? 'px-6 py-2.5 bg-red-600 dark:bg-red-700 text-white rounded-lg font-semibold text-sm hover:bg-red-700 dark:hover:bg-red-600 active:bg-red-800 dark:active:bg-red-500 hover:shadow-lg active:scale-[0.98] transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-300 dark:focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900'
-                : 'px-6 py-2.5 bg-blue-600 dark:bg-blue-700 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 hover:shadow-lg active:scale-[0.98] transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900'
+                ? 'px-6 py-2.5 bg-danger-600 dark:bg-danger-700 text-white rounded-lg font-semibold text-sm hover:bg-danger-700 dark:hover:bg-danger-600 active:bg-danger-800 dark:active:bg-danger-500 hover:shadow-lg active:scale-[0.98] transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-danger-300 dark:focus:ring-danger-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900'
+                : 'px-6 py-2.5 bg-primary-600 dark:bg-primary-700 text-white rounded-lg font-semibold text-sm hover:bg-primary-700 dark:hover:bg-primary-600 active:bg-primary-800 dark:active:bg-primary-500 hover:shadow-lg active:scale-[0.98] transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-300 dark:focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900'
             }
             aria-label={`Confirm: ${confirmText}`}
           >

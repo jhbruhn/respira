@@ -15,8 +15,8 @@ export function PatternPreviewPlaceholder() {
             <svg className="w-28 h-28 mx-auto text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </div>
@@ -27,15 +27,15 @@ export function PatternPreviewPlaceholder() {
           </p>
           <div className="flex items-center justify-center gap-6 text-xs text-gray-400 dark:text-gray-500">
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-blue-400 dark:bg-blue-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-primary-400 dark:bg-primary-500 rounded-full"></div>
               <span>Drag to Position</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-400 dark:bg-green-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-success-400 dark:bg-success-500 rounded-full"></div>
               <span>Zoom & Pan</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-purple-400 dark:bg-purple-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-accent-400 dark:bg-accent-500 rounded-full"></div>
               <span>Real-time Preview</span>
             </div>
           </div>
