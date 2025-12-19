@@ -2,6 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Content Security Policy - Strict local-only configuration -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self' app:;
+        script-src 'self' app: 'wasm-unsafe-eval';
+        style-src 'self' app: 'unsafe-inline';
+        img-src 'self' app: data: blob:;
+        font-src 'self' app: data:;
+        connect-src 'self' app:;
+        worker-src 'self' app: blob:;
+        child-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'none';
+      "
+    />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Respira</title>

@@ -1,5 +1,5 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
-import { join } from "path";
+import { app, BrowserWindow, ipcMain, dialog, protocol } from "electron";
+import { join, resolve, normalize, isAbsolute } from "path";
 import { promises as fs } from "fs";
 import Store from "electron-store";
 import { updateElectronApp, UpdateSourceType } from "update-electron-app";
@@ -22,7 +22,78 @@ updateElectronApp({
 app.commandLine.appendSwitch("enable-web-bluetooth", "true");
 app.commandLine.appendSwitch("enable-experimental-web-platform-features");
 
+// Register custom protocol for serving app files with proper COOP/COEP headers
+// This is required for SharedArrayBuffer support in production builds
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "app",
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: false,
+      bypassCSP: false,
+    },
+  },
+]);
+
 const store = new Store();
+
+// Setup custom protocol handler for production builds
+async function setupCustomProtocol() {
+  protocol.handle("app", async (request) => {
+    // Parse the URL to get the file path
+    const url = new URL(request.url);
+    let filePath = decodeURIComponent(url.pathname);
+
+    // Handle Windows paths (remove leading slash)
+    if (process.platform === "win32" && filePath.startsWith("/")) {
+      filePath = filePath.slice(1);
+    }
+
+    // Resolve relative to app resources
+    const resourcePath = join(
+      __dirname,
+      "..",
+      "renderer",
+      MAIN_WINDOW_VITE_NAME,
+      filePath,
+    );
+
+    try {
+      const data = await fs.readFile(resourcePath);
+
+      // Determine content type from extension
+      const ext = filePath.split(".").pop()?.toLowerCase();
+      const contentTypes: Record<string, string> = {
+        html: "text/html",
+        js: "application/javascript",
+        css: "text/css",
+        json: "application/json",
+        png: "image/png",
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        svg: "image/svg+xml",
+        wasm: "application/wasm",
+        whl: "application/zip",
+      };
+      const contentType = contentTypes[ext || ""] || "application/octet-stream";
+
+      // Return response with proper COOP/COEP/CORP headers
+      return new Response(data, {
+        headers: {
+          "Content-Type": contentType,
+          "Cross-Origin-Opener-Policy": "same-origin",
+          "Cross-Origin-Embedder-Policy": "require-corp",
+          "Cross-Origin-Resource-Policy": "same-origin",
+        },
+      });
+    } catch (err) {
+      console.error("[CustomProtocol] Failed to load:", resourcePath, err);
+      return new Response("Not Found", { status: 404 });
+    }
+  });
+}
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -38,8 +109,7 @@ function createWindow() {
       contextIsolation: true,
       sandbox: true,
       webSecurity: true,
-      // Enable SharedArrayBuffer for Pyodide
-      additionalArguments: ["--enable-features=SharedArrayBuffer"],
+      // SharedArrayBuffer enabled via proper COOP/COEP headers below
     },
   });
 
@@ -106,20 +176,15 @@ function createWindow() {
   // Set COOP/COEP headers for Pyodide SharedArrayBuffer support
   mainWindow.webContents.session.webRequest.onHeadersReceived(
     (details, callback) => {
-      // Apply headers to ALL resources including workers
+      // Apply security headers to enable cross-origin isolation (needed for SharedArrayBuffer)
       const headers: Record<string, string[]> = {
         ...details.responseHeaders,
-        "Cross-Origin-Opener-Policy": ["unsafe-none"],
-        "Cross-Origin-Embedder-Policy": ["unsafe-none"],
+        "Cross-Origin-Opener-Policy": ["same-origin"],
+        "Cross-Origin-Embedder-Policy": ["require-corp"],
+        // Add CORP to ALL resources since this is a local-only app
+        // This allows workers, Pyodide assets, and all other resources to load
+        "Cross-Origin-Resource-Policy": ["same-origin"],
       };
-
-      // For same-origin resources (including workers), add CORP header
-      if (
-        details.url.startsWith("http://localhost") ||
-        details.url.startsWith("file://")
-      ) {
-        headers["Cross-Origin-Resource-Policy"] = ["same-origin"];
-      }
 
       callback({ responseHeaders: headers });
     },
@@ -131,14 +196,18 @@ function createWindow() {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
     mainWindow.webContents.openDevTools();
   } else {
-    // MAIN_WINDOW_VITE_NAME is the renderer name from forge.config.js
-    mainWindow.loadFile(
-      join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
-    );
+    // Production: Use custom protocol to serve files with proper COOP/COEP/CORP headers
+    // This enables SharedArrayBuffer support for Pyodide
+    mainWindow.loadURL("app://./index.html");
   }
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(async () => {
+  // Setup custom protocol for production builds
+  await setupCustomProtocol();
+
+  createWindow();
+});
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -235,6 +304,9 @@ ipcMain.handle("dialog:openFile", async (_event, options) => {
     const filePath = result.filePaths[0];
     const fileName = filePath.split(/[\\/]/).pop() || "";
 
+    // Approve path for file operations since user explicitly selected it
+    approvePath(filePath);
+
     console.log("[Dialog] File selected:", fileName);
     return { filePath, fileName };
   } catch (err) {
@@ -254,6 +326,9 @@ ipcMain.handle("dialog:saveFile", async (_event, options) => {
       return null;
     }
 
+    // Approve path for file operations since user explicitly selected it
+    approvePath(result.filePath);
+
     console.log("[Dialog] Save file selected:", result.filePath);
     return result.filePath;
   } catch (err) {
@@ -262,8 +337,67 @@ ipcMain.handle("dialog:saveFile", async (_event, options) => {
   }
 });
 
-// File system handlers
-ipcMain.handle("fs:readFile", async (_event, filePath) => {
+// File system handlers with dialog-based path validation
+// Track paths approved by user through OS file dialogs
+// This prevents arbitrary file access while allowing users full freedom
+const userApprovedPaths = new Set<string>();
+
+/**
+ * Validates that a file path was approved by the user through a dialog
+ * Also performs basic sanitization to prevent obvious attacks
+ */
+function isPathApproved(filePath: string): boolean {
+  // Reject empty, null, or undefined paths
+  if (!filePath) {
+    console.warn("[FS Security] Rejected empty path");
+    return false;
+  }
+
+  // Reject relative paths - must be absolute
+  if (!isAbsolute(filePath)) {
+    console.warn("[FS Security] Rejected relative path:", filePath);
+    return false;
+  }
+
+  // Reject paths with null bytes (security vulnerability)
+  if (filePath.includes("\0")) {
+    console.warn("[FS Security] Rejected path with null byte:", filePath);
+    return false;
+  }
+
+  // Normalize the path to prevent traversal tricks
+  const normalizedPath = normalize(resolve(filePath));
+
+  // Check if path was approved through a dialog
+  const isApproved = userApprovedPaths.has(normalizedPath);
+
+  if (!isApproved) {
+    console.warn(
+      "[FS Security] Rejected path - not approved through file dialog:",
+      filePath,
+    );
+  }
+
+  return isApproved;
+}
+
+/**
+ * Approves a path for file operations after user selection via dialog
+ */
+function approvePath(filePath: string): void {
+  const normalizedPath = normalize(resolve(filePath));
+  userApprovedPaths.add(normalizedPath);
+  console.log("[FS Security] Approved path:", normalizedPath);
+}
+
+ipcMain.handle("fs:readFile", async (_event, filePath: string) => {
+  // Validate path was approved by user
+  if (!isPathApproved(filePath)) {
+    throw new Error(
+      "Access denied: File path not approved. Please select the file through the file dialog.",
+    );
+  }
+
   try {
     const buffer = await fs.readFile(filePath);
     console.log("[FS] Read file:", filePath, "Size:", buffer.length);
@@ -274,13 +408,23 @@ ipcMain.handle("fs:readFile", async (_event, filePath) => {
   }
 });
 
-ipcMain.handle("fs:writeFile", async (_event, filePath, data) => {
-  try {
-    await fs.writeFile(filePath, Buffer.from(data));
-    console.log("[FS] Wrote file:", filePath);
-    return true;
-  } catch (err) {
-    console.error("[FS] Failed to write file:", err);
-    throw err;
-  }
-});
+ipcMain.handle(
+  "fs:writeFile",
+  async (_event, filePath: string, data: number[]) => {
+    // Validate path was approved by user
+    if (!isPathApproved(filePath)) {
+      throw new Error(
+        "Access denied: File path not approved. Please select the file through the save dialog.",
+      );
+    }
+
+    try {
+      await fs.writeFile(filePath, Buffer.from(data));
+      console.log("[FS] Wrote file:", filePath);
+      return true;
+    } catch (err) {
+      console.error("[FS] Failed to write file:", err);
+      throw err;
+    }
+  },
+);
