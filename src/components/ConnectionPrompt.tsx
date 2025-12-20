@@ -3,6 +3,7 @@ import { useMachineStore } from "../stores/useMachineStore";
 import { isBluetoothSupported } from "../utils/bluetoothSupport";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/solid";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function ConnectionPrompt() {
@@ -14,36 +15,38 @@ export function ConnectionPrompt() {
 
   if (isBluetoothSupported()) {
     return (
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-gray-400 dark:border-gray-600">
-        <div className="flex items-start gap-3 mb-3">
-          <div className="w-6 h-6 text-gray-600 dark:text-gray-400 flex-shrink-0 mt-0.5">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
-              />
-            </svg>
+      <Card className="p-0 border-l-4 border-gray-400 dark:border-gray-600">
+        <CardContent className="p-4 rounded-lg">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-6 h-6 text-gray-600 dark:text-gray-400 flex-shrink-0 mt-0.5">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
+                />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                Get Started
+              </h3>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Connect to your embroidery machine
+              </p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-              Get Started
-            </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              Connect to your embroidery machine
-            </p>
-          </div>
-        </div>
-        <Button onClick={connect} className="w-full">
-          Connect to Machine
-        </Button>
-      </div>
+          <Button onClick={connect} className="w-full">
+            Connect to Machine
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
