@@ -1,3 +1,6 @@
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
 interface SkeletonLoaderProps {
   className?: string;
   variant?: "text" | "rect" | "circle";
@@ -7,9 +10,6 @@ export function SkeletonLoader({
   className = "",
   variant = "rect",
 }: SkeletonLoaderProps) {
-  const baseClasses =
-    "animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 bg-[length:200%_100%]";
-
   const variantClasses = {
     text: "h-4 rounded",
     rect: "rounded-lg",
@@ -17,7 +17,7 @@ export function SkeletonLoader({
   };
 
   return (
-    <div className={`${baseClasses} ${variantClasses[variant]} ${className}`} />
+    <Skeleton className={cn(variantClasses[variant], className)} />
   );
 }
 
