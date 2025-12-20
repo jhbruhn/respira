@@ -13,6 +13,9 @@ import {
   ArrowPathIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export function AppHeader() {
   const {
@@ -130,19 +133,24 @@ export function AppHeader() {
             <div className="flex items-center gap-2 mt-1 min-h-[32px]">
               {isConnected ? (
                 <>
-                  <button
+                  <Button
                     onClick={disconnect}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-white/10 hover:bg-danger-600 text-primary-100 hover:text-white border border-white/20 hover:border-danger-600 cursor-pointer transition-all flex-shrink-0"
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 bg-white/10 hover:bg-danger-600 text-primary-100 hover:text-white border-white/20 hover:border-danger-600 flex-shrink-0"
                     title="Disconnect from machine"
                     aria-label="Disconnect from machine"
                   >
                     <XMarkIcon className="w-3 h-3" />
                     Disconnect
-                  </button>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-semibold bg-white/20 text-white border border-white/30 flex-shrink-0">
+                  </Button>
+                  <Badge
+                    variant="outline"
+                    className="gap-1.5 px-2.5 py-1.5 sm:py-1 text-sm font-semibold bg-white/20 text-white border-white/30 flex-shrink-0"
+                  >
                     <StatusIcon className="w-3 h-3" />
                     {machineStatusName}
-                  </span>
+                  </Badge>
                 </>
               ) : (
                 <p className="text-xs text-primary-200">Not Connected</p>
@@ -150,14 +158,17 @@ export function AppHeader() {
 
               {/* Error indicator - always render to prevent layout shift */}
               <div className="relative">
-                <button
+                <Button
                   ref={errorButtonRef}
                   onClick={() => setErrorPopover(!showErrorPopover)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-danger-500/90 hover:bg-danger-600 text-white border border-danger-400 transition-all flex-shrink-0 ${
+                  size="sm"
+                  variant="destructive"
+                  className={cn(
+                    "gap-1.5 flex-shrink-0",
                     machineErrorMessage || pyodideError
-                      ? "cursor-pointer animate-pulse hover:animate-none"
+                      ? "animate-pulse hover:animate-none"
                       : "invisible pointer-events-none"
-                  }`}
+                  )}
                   title="Click to view error details"
                   aria-label="View error details"
                   disabled={!(machineErrorMessage || pyodideError)}
@@ -191,7 +202,7 @@ export function AppHeader() {
                       return "Error";
                     })()}
                   </span>
-                </button>
+                </Button>
 
                 {/* Error popover */}
                 {showErrorPopover && (machineErrorMessage || pyodideError) && (
