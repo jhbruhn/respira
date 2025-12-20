@@ -7,10 +7,6 @@ import {
   ArrowRightIcon,
   CircleStackIcon,
   PlayIcon,
-  CheckBadgeIcon,
-  ClockIcon,
-  PauseCircleIcon,
-  ExclamationCircleIcon,
   ChartBarIcon,
   ArrowPathIcon,
 } from "@heroicons/react/24/solid";
@@ -19,9 +15,11 @@ import {
   canStartSewing,
   canStartMaskTrace,
   canResumeSewing,
-  getStateVisualInfo,
 } from "../utils/machineStateHelpers";
 import { calculatePatternTime } from "../utils/timeCalculation";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 export function ProgressMonitor() {
   // Machine store
@@ -54,8 +52,6 @@ export function ProgressMonitor() {
   // State indicators
   const isMaskTraceComplete =
     machineStatus === MachineStatus.MASK_TRACE_COMPLETE;
-
-  const stateVisual = getStateVisualInfo(machineStatus);
 
   // Use PEN stitch count as fallback when machine reports 0 total stitches
   const totalStitches = patternInfo
@@ -158,34 +154,22 @@ export function ProgressMonitor() {
     return () => window.removeEventListener("resize", checkScrollable);
   }, [colorBlocks]);
 
-  const stateIndicatorColors = {
-    idle: "bg-info-50 dark:bg-info-900/20 border-info-600",
-    info: "bg-info-50 dark:bg-info-900/20 border-info-600",
-    active: "bg-warning-50 dark:bg-warning-900/20 border-warning-500",
-    waiting: "bg-warning-50 dark:bg-warning-900/20 border-warning-500",
-    warning: "bg-warning-50 dark:bg-warning-900/20 border-warning-500",
-    complete: "bg-success-50 dark:bg-success-900/20 border-success-600",
-    success: "bg-success-50 dark:bg-success-900/20 border-success-600",
-    interrupted: "bg-danger-50 dark:bg-danger-900/20 border-danger-600",
-    error: "bg-danger-50 dark:bg-danger-900/20 border-danger-600",
-    danger: "bg-danger-50 dark:bg-danger-900/20 border-danger-600",
-  };
-
   return (
-    <div className="lg:h-full bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-accent-600 dark:border-accent-500 flex flex-col lg:overflow-hidden">
-      <div className="flex items-start gap-3 mb-3">
-        <ChartBarIcon className="w-6 h-6 text-accent-600 dark:text-accent-400 flex-shrink-0 mt-0.5" />
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-            Sewing Progress
-          </h3>
-          {sewingProgress && (
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              {progressPercent.toFixed(1)}% complete
-            </p>
-          )}
+    <Card className="p-0 gap-0 lg:h-full border-l-4 border-accent-600 dark:border-accent-500 flex flex-col lg:overflow-hidden">
+      <CardHeader className="p-4 pb-3">
+        <div className="flex items-start gap-3">
+          <ChartBarIcon className="w-6 h-6 text-accent-600 dark:text-accent-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-sm">Sewing Progress</CardTitle>
+            {sewingProgress && (
+              <CardDescription className="text-xs">
+                {progressPercent.toFixed(1)}% complete
+              </CardDescription>
+            )}
+          </div>
         </div>
-      </div>
+      </CardHeader>
+      <CardContent className="px-4 pt-0 pb-4 flex-1 flex flex-col lg:overflow-hidden">
 
       {/* Pattern Info */}
       {patternInfo && (
@@ -220,12 +204,10 @@ export function ProgressMonitor() {
       {/* Progress Bar */}
       {sewingProgress && (
         <div className="mb-3">
-          <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded-md overflow-hidden shadow-inner relative mb-2">
-            <div
-              className="h-full bg-gradient-to-r from-accent-600 to-accent-700 dark:from-accent-600 dark:to-accent-800 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite]"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
+          <Progress
+            value={progressPercent}
+            className="h-3 mb-2 [&>div]:bg-gradient-to-r [&>div]:from-accent-600 [&>div]:to-accent-700 dark:[&>div]:from-accent-600 dark:[&>div]:to-accent-800"
+          />
 
           <div className="grid grid-cols-2 gap-2 text-xs mb-3">
             <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
@@ -248,49 +230,6 @@ export function ProgressMonitor() {
           </div>
         </div>
       )}
-
-      {/* State Visual Indicator */}
-      {patternInfo &&
-        (() => {
-          const iconMap = {
-            ready: (
-              <ClockIcon className="w-5 h-5 text-info-600 dark:text-info-400" />
-            ),
-            active: (
-              <PlayIcon className="w-5 h-5 text-warning-600 dark:text-warning-400" />
-            ),
-            waiting: (
-              <PauseCircleIcon className="w-5 h-5 text-warning-600 dark:text-warning-400" />
-            ),
-            complete: (
-              <CheckBadgeIcon className="w-5 h-5 text-success-600 dark:text-success-400" />
-            ),
-            interrupted: (
-              <PauseCircleIcon className="w-5 h-5 text-danger-600 dark:text-danger-400" />
-            ),
-            error: (
-              <ExclamationCircleIcon className="w-5 h-5 text-danger-600 dark:text-danger-400" />
-            ),
-          };
-
-          return (
-            <div
-              className={`flex items-center gap-3 p-2.5 rounded-lg mb-3 border-l-4 ${stateIndicatorColors[stateVisual.color as keyof typeof stateIndicatorColors] || stateIndicatorColors.info}`}
-            >
-              <div className="flex-shrink-0">
-                {iconMap[stateVisual.iconName]}
-              </div>
-              <div className="flex-1">
-                <div className="font-semibold text-xs dark:text-gray-100">
-                  {stateVisual.label}
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">
-                  {stateVisual.description}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
 
       {/* Color Blocks */}
       {colorBlocks.length > 0 && (
@@ -326,8 +265,8 @@ export function ProgressMonitor() {
                       isCompleted
                         ? "border-success-600 bg-success-50 dark:bg-success-900/20"
                         : isCurrent
-                          ? "border-accent-600 bg-accent-50 dark:bg-accent-900/20 shadow-lg shadow-accent-600/20 animate-pulseGlow"
-                          : "border-gray-200 dark:border-gray-600 bg-gray-300 dark:bg-gray-800/50 opacity-70"
+                          ? "border-gray-400 dark:border-gray-500 bg-white dark:bg-gray-700"
+                          : "border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/50 opacity-70"
                     }`}
                     role="listitem"
                     aria-label={`Thread ${block.colorIndex + 1}, ${block.stitchCount} stitches, ${isCompleted ? "completed" : isCurrent ? "in progress" : "pending"}`}
@@ -338,7 +277,6 @@ export function ProgressMonitor() {
                         className="w-7 h-7 rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-md flex-shrink-0"
                         style={{
                           backgroundColor: block.threadHex,
-                          ...(isCurrent && { borderColor: "#9333ea" }),
                         }}
                         title={`Thread color: ${block.threadHex}`}
                         aria-label={`Thread color ${block.threadHex}`}
@@ -395,7 +333,7 @@ export function ProgressMonitor() {
                         />
                       ) : isCurrent ? (
                         <ArrowRightIcon
-                          className="w-5 h-5 text-accent-600 flex-shrink-0 animate-pulse"
+                          className="w-5 h-5 text-gray-600 dark:text-gray-400 flex-shrink-0 animate-pulse"
                           aria-label="In progress"
                         />
                       ) : (
@@ -408,17 +346,11 @@ export function ProgressMonitor() {
 
                     {/* Progress bar for current block */}
                     {isCurrent && (
-                      <div className="mt-2 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-accent-600 dark:bg-accent-500 transition-all duration-300 rounded-full"
-                          style={{ width: `${blockProgress}%` }}
-                          role="progressbar"
-                          aria-valuenow={Math.round(blockProgress)}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-label={`${Math.round(blockProgress)}% complete`}
-                        />
-                      </div>
+                      <Progress
+                        value={blockProgress}
+                        className="mt-2 h-1.5 [&>div]:bg-gray-600 dark:[&>div]:bg-gray-500"
+                        aria-label={`${Math.round(blockProgress)}% complete`}
+                      />
                     )}
                   </div>
                 );
@@ -436,36 +368,37 @@ export function ProgressMonitor() {
       <div className="flex gap-2 flex-shrink-0">
         {/* Resume has highest priority when available */}
         {canResumeSewing(machineStatus) && (
-          <button
+          <Button
             onClick={resumeSewing}
             disabled={isDeleting}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-primary-600 dark:bg-primary-700 text-white rounded font-semibold text-xs hover:bg-primary-700 dark:hover:bg-primary-600 active:bg-primary-800 dark:active:bg-primary-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1"
             aria-label="Resume sewing the current pattern"
           >
             <PlayIcon className="w-3.5 h-3.5" />
             Resume Sewing
-          </button>
+          </Button>
         )}
 
         {/* Start Sewing - primary action, takes more space */}
         {canStartSewing(machineStatus) && !canResumeSewing(machineStatus) && (
-          <button
+          <Button
             onClick={startSewing}
             disabled={isDeleting}
-            className="flex-[2] flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-primary-600 dark:bg-primary-700 text-white rounded font-semibold text-xs hover:bg-primary-700 dark:hover:bg-primary-600 active:bg-primary-800 dark:active:bg-primary-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-[2]"
             aria-label="Start sewing the pattern"
           >
             <PlayIcon className="w-3.5 h-3.5" />
             Start Sewing
-          </button>
+          </Button>
         )}
 
         {/* Start Mask Trace - secondary action */}
         {canStartMaskTrace(machineStatus) && (
-          <button
+          <Button
             onClick={startMaskTrace}
             disabled={isDeleting}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-gray-600 dark:bg-gray-700 text-white rounded font-semibold text-xs hover:bg-gray-700 dark:hover:bg-gray-600 active:bg-gray-800 dark:active:bg-gray-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="outline"
+            className="flex-1"
             aria-label={
               isMaskTraceComplete
                 ? "Start mask trace again"
@@ -474,9 +407,10 @@ export function ProgressMonitor() {
           >
             <ArrowPathIcon className="w-3.5 h-3.5" />
             {isMaskTraceComplete ? "Trace Again" : "Start Mask Trace"}
-          </button>
+          </Button>
         )}
       </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
