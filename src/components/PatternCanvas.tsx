@@ -22,6 +22,14 @@ import {
   PatternBounds,
   CurrentPosition,
 } from "./KonvaComponents";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export function PatternCanvas() {
   // Machine store
@@ -252,126 +260,101 @@ export function PatternCanvas() {
     : "text-gray-600 dark:text-gray-400";
 
   return (
-    <div
-      className={`lg:h-full bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 ${borderColor} flex flex-col`}
+    <Card
+      className={`p-0 gap-0 lg:h-full flex flex-col border-l-4 ${borderColor}`}
     >
-      <div className="flex items-start gap-3 mb-3 flex-shrink-0">
-        <PhotoIcon className={`w-6 h-6 ${iconColor} flex-shrink-0 mt-0.5`} />
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-            Pattern Preview
-          </h3>
-          {pesData ? (
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              {((pesData.bounds.maxX - pesData.bounds.minX) / 10).toFixed(1)} ×{" "}
-              {((pesData.bounds.maxY - pesData.bounds.minY) / 10).toFixed(1)} mm
-            </p>
-          ) : (
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              No pattern loaded
-            </p>
-          )}
+      <CardHeader className="p-4 pb-3">
+        <div className="flex items-start gap-3">
+          <PhotoIcon className={`w-6 h-6 ${iconColor} flex-shrink-0 mt-0.5`} />
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-sm">Pattern Preview</CardTitle>
+            {pesData ? (
+              <CardDescription className="text-xs">
+                {((pesData.bounds.maxX - pesData.bounds.minX) / 10).toFixed(1)}{" "}
+                ×{" "}
+                {((pesData.bounds.maxY - pesData.bounds.minY) / 10).toFixed(1)}{" "}
+                mm
+              </CardDescription>
+            ) : (
+              <CardDescription className="text-xs">
+                No pattern loaded
+              </CardDescription>
+            )}
+          </div>
         </div>
-      </div>
-      <div
-        className="relative w-full h-[400px] sm:h-[500px] lg:flex-1 lg:min-h-0 border border-gray-300 dark:border-gray-600 rounded bg-gray-200 dark:bg-gray-900 overflow-hidden"
-        ref={containerRef}
-      >
-        {containerSize.width > 0 && (
-          <Stage
-            width={containerSize.width}
-            height={containerSize.height}
-            x={stagePos.x}
-            y={stagePos.y}
-            scaleX={stageScale}
-            scaleY={stageScale}
-            draggable
-            onWheel={handleWheel}
-            onDragStart={() => {
-              if (stageRef.current) {
-                stageRef.current.container().style.cursor = "grabbing";
-              }
-            }}
-            onDragEnd={() => {
-              if (stageRef.current) {
-                stageRef.current.container().style.cursor = "grab";
-              }
-            }}
-            ref={(node) => {
-              stageRef.current = node;
-              if (node) {
-                node.container().style.cursor = "grab";
-              }
-            }}
-          >
-            {/* Background layer: grid, origin, hoop */}
-            <Layer>
-              {pesData && (
-                <>
-                  <Grid
-                    gridSize={100}
-                    bounds={pesData.bounds}
-                    machineInfo={machineInfo}
-                  />
-                  <Origin />
-                  {machineInfo && <Hoop machineInfo={machineInfo} />}
-                </>
-              )}
-            </Layer>
+      </CardHeader>
+      <CardContent className="px-4 pt-0 pb-4 flex-1 flex flex-col">
+        <div
+          className="relative w-full h-[400px] sm:h-[500px] lg:flex-1 lg:min-h-0 border border-gray-300 dark:border-gray-600 rounded bg-gray-200 dark:bg-gray-900 overflow-hidden"
+          ref={containerRef}
+        >
+          {containerSize.width > 0 && (
+            <Stage
+              width={containerSize.width}
+              height={containerSize.height}
+              x={stagePos.x}
+              y={stagePos.y}
+              scaleX={stageScale}
+              scaleY={stageScale}
+              draggable
+              onWheel={handleWheel}
+              onDragStart={() => {
+                if (stageRef.current) {
+                  stageRef.current.container().style.cursor = "grabbing";
+                }
+              }}
+              onDragEnd={() => {
+                if (stageRef.current) {
+                  stageRef.current.container().style.cursor = "grab";
+                }
+              }}
+              ref={(node) => {
+                stageRef.current = node;
+                if (node) {
+                  node.container().style.cursor = "grab";
+                }
+              }}
+            >
+              {/* Background layer: grid, origin, hoop */}
+              <Layer>
+                {pesData && (
+                  <>
+                    <Grid
+                      gridSize={100}
+                      bounds={pesData.bounds}
+                      machineInfo={machineInfo}
+                    />
+                    <Origin />
+                    {machineInfo && <Hoop machineInfo={machineInfo} />}
+                  </>
+                )}
+              </Layer>
 
-            {/* Pattern layer: draggable stitches and bounds */}
-            <Layer>
-              {pesData && (
-                <Group
-                  name="pattern-group"
-                  draggable={!patternUploaded && !isUploading}
-                  x={localPatternOffset.x}
-                  y={localPatternOffset.y}
-                  onDragEnd={handlePatternDragEnd}
-                  onMouseEnter={(e) => {
-                    const stage = e.target.getStage();
-                    if (stage && !patternUploaded && !isUploading)
-                      stage.container().style.cursor = "move";
-                  }}
-                  onMouseLeave={(e) => {
-                    const stage = e.target.getStage();
-                    if (stage && !patternUploaded && !isUploading)
-                      stage.container().style.cursor = "grab";
-                  }}
-                >
-                  <Stitches
-                    stitches={pesData.penStitches.stitches.map(
-                      (s, i): [number, number, number, number] => {
-                        // Convert PEN stitch format {x, y, flags, isJump} to PES format [x, y, cmd, colorIndex]
-                        const cmd = s.isJump ? 0x10 : 0; // MOVE flag if jump
-                        const colorIndex =
-                          pesData.penStitches.colorBlocks.find(
-                            (b) => i >= b.startStitch && i <= b.endStitch,
-                          )?.colorIndex ?? 0;
-                        return [s.x, s.y, cmd, colorIndex];
-                      },
-                    )}
-                    pesData={pesData}
-                    currentStitchIndex={sewingProgress?.currentStitch || 0}
-                    showProgress={patternUploaded || isUploading}
-                  />
-                  <PatternBounds bounds={pesData.bounds} />
-                </Group>
-              )}
-            </Layer>
-
-            {/* Current position layer */}
-            <Layer>
-              {pesData &&
-                pesData.penStitches &&
-                sewingProgress &&
-                sewingProgress.currentStitch > 0 && (
-                  <Group x={localPatternOffset.x} y={localPatternOffset.y}>
-                    <CurrentPosition
-                      currentStitchIndex={sewingProgress.currentStitch}
+              {/* Pattern layer: draggable stitches and bounds */}
+              <Layer>
+                {pesData && (
+                  <Group
+                    name="pattern-group"
+                    draggable={!patternUploaded && !isUploading}
+                    x={localPatternOffset.x}
+                    y={localPatternOffset.y}
+                    onDragEnd={handlePatternDragEnd}
+                    onMouseEnter={(e) => {
+                      const stage = e.target.getStage();
+                      if (stage && !patternUploaded && !isUploading)
+                        stage.container().style.cursor = "move";
+                    }}
+                    onMouseLeave={(e) => {
+                      const stage = e.target.getStage();
+                      if (stage && !patternUploaded && !isUploading)
+                        stage.container().style.cursor = "grab";
+                    }}
+                  >
+                    <Stitches
                       stitches={pesData.penStitches.stitches.map(
                         (s, i): [number, number, number, number] => {
-                          const cmd = s.isJump ? 0x10 : 0;
+                          // Convert PEN stitch format {x, y, flags, isJump} to PES format [x, y, cmd, colorIndex]
+                          const cmd = s.isJump ? 0x10 : 0; // MOVE flag if jump
                           const colorIndex =
                             pesData.penStitches.colorBlocks.find(
                               (b) => i >= b.startStitch && i <= b.endStitch,
@@ -379,138 +362,175 @@ export function PatternCanvas() {
                           return [s.x, s.y, cmd, colorIndex];
                         },
                       )}
+                      pesData={pesData}
+                      currentStitchIndex={sewingProgress?.currentStitch || 0}
+                      showProgress={patternUploaded || isUploading}
                     />
+                    <PatternBounds bounds={pesData.bounds} />
                   </Group>
                 )}
-            </Layer>
-          </Stage>
-        )}
+              </Layer>
 
-        {/* Placeholder overlay when no pattern is loaded */}
-        {!pesData && (
-          <div className="flex items-center justify-center h-full text-gray-600 dark:text-gray-400 italic">
-            Load a PES file to preview the pattern
-          </div>
-        )}
+              {/* Current position layer */}
+              <Layer>
+                {pesData &&
+                  pesData.penStitches &&
+                  sewingProgress &&
+                  sewingProgress.currentStitch > 0 && (
+                    <Group x={localPatternOffset.x} y={localPatternOffset.y}>
+                      <CurrentPosition
+                        currentStitchIndex={sewingProgress.currentStitch}
+                        stitches={pesData.penStitches.stitches.map(
+                          (s, i): [number, number, number, number] => {
+                            const cmd = s.isJump ? 0x10 : 0;
+                            const colorIndex =
+                              pesData.penStitches.colorBlocks.find(
+                                (b) => i >= b.startStitch && i <= b.endStitch,
+                              )?.colorIndex ?? 0;
+                            return [s.x, s.y, cmd, colorIndex];
+                          },
+                        )}
+                      />
+                    </Group>
+                  )}
+              </Layer>
+            </Stage>
+          )}
 
-        {/* Pattern info overlays */}
-        {pesData && (
-          <>
-            {/* Thread Legend Overlay */}
-            <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-2 sm:p-2.5 rounded-lg shadow-lg z-10 max-w-[150px] sm:max-w-[180px] lg:max-w-[200px]">
-              <h4 className="m-0 mb-1.5 sm:mb-2 text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-300 dark:border-gray-600 pb-1 sm:pb-1.5">
-                Colors
-              </h4>
-              {pesData.uniqueColors.map((color, idx) => {
-                // Primary metadata: brand and catalog number
-                const primaryMetadata = [
-                  color.brand,
-                  color.catalogNumber ? `#${color.catalogNumber}` : null,
-                ]
-                  .filter(Boolean)
-                  .join(" ");
+          {/* Placeholder overlay when no pattern is loaded */}
+          {!pesData && (
+            <div className="flex items-center justify-center h-full text-gray-600 dark:text-gray-400 italic">
+              Load a PES file to preview the pattern
+            </div>
+          )}
 
-                // Secondary metadata: chart and description
-                const secondaryMetadata = [color.chart, color.description]
-                  .filter(Boolean)
-                  .join(" ");
+          {/* Pattern info overlays */}
+          {pesData && (
+            <>
+              {/* Thread Legend Overlay */}
+              <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-2 sm:p-2.5 rounded-lg shadow-lg z-10 max-w-[150px] sm:max-w-[180px] lg:max-w-[200px]">
+                <h4 className="m-0 mb-1.5 sm:mb-2 text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-300 dark:border-gray-600 pb-1 sm:pb-1.5">
+                  Colors
+                </h4>
+                {pesData.uniqueColors.map((color, idx) => {
+                  // Primary metadata: brand and catalog number
+                  const primaryMetadata = [
+                    color.brand,
+                    color.catalogNumber ? `#${color.catalogNumber}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" ");
 
-                return (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-1.5 sm:gap-2 mb-1 sm:mb-1.5 last:mb-0"
-                  >
+                  // Secondary metadata: chart and description
+                  const secondaryMetadata = [color.chart, color.description]
+                    .filter(Boolean)
+                    .join(" ");
+
+                  return (
                     <div
-                      className="w-3 h-3 sm:w-4 sm:h-4 rounded border border-black dark:border-gray-300 flex-shrink-0 mt-0.5"
-                      style={{ backgroundColor: color.hex }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">
-                        Color {idx + 1}
-                      </div>
-                      {(primaryMetadata || secondaryMetadata) && (
-                        <div className="text-xs text-gray-600 dark:text-gray-400 leading-tight mt-0.5 break-words">
-                          {primaryMetadata}
-                          {primaryMetadata && secondaryMetadata && (
-                            <span className="mx-1">•</span>
-                          )}
-                          {secondaryMetadata}
+                      key={idx}
+                      className="flex items-start gap-1.5 sm:gap-2 mb-1 sm:mb-1.5 last:mb-0"
+                    >
+                      <div
+                        className="w-3 h-3 sm:w-4 sm:h-4 rounded border border-black dark:border-gray-300 flex-shrink-0 mt-0.5"
+                        style={{ backgroundColor: color.hex }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">
+                          Color {idx + 1}
                         </div>
-                      )}
+                        {(primaryMetadata || secondaryMetadata) && (
+                          <div className="text-xs text-gray-600 dark:text-gray-400 leading-tight mt-0.5 break-words">
+                            {primaryMetadata}
+                            {primaryMetadata && secondaryMetadata && (
+                              <span className="mx-1">•</span>
+                            )}
+                            {secondaryMetadata}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
 
-            {/* Pattern Offset Indicator */}
-            <div
-              className={`absolute bottom-16 sm:bottom-20 right-2 sm:right-5 backdrop-blur-sm p-2 sm:p-2.5 px-2.5 sm:px-3.5 rounded-lg shadow-lg z-[11] min-w-[160px] sm:min-w-[180px] transition-colors ${
-                patternUploaded
-                  ? "bg-amber-50/95 dark:bg-amber-900/80 border-2 border-amber-300 dark:border-amber-600"
-                  : "bg-white/95 dark:bg-gray-800/95"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                  Pattern Position:
+              {/* Pattern Offset Indicator */}
+              <div
+                className={`absolute bottom-16 sm:bottom-20 right-2 sm:right-5 backdrop-blur-sm p-2 sm:p-2.5 px-2.5 sm:px-3.5 rounded-lg shadow-lg z-[11] min-w-[160px] sm:min-w-[180px] transition-colors ${
+                  patternUploaded
+                    ? "bg-amber-50/95 dark:bg-amber-900/80 border-2 border-amber-300 dark:border-amber-600"
+                    : "bg-white/95 dark:bg-gray-800/95"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                    Pattern Position:
+                  </div>
+                  {patternUploaded && (
+                    <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                      <LockClosedIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      <span className="text-xs font-bold">LOCKED</span>
+                    </div>
+                  )}
                 </div>
-                {patternUploaded && (
-                  <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                    <LockClosedIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                    <span className="text-xs font-bold">LOCKED</span>
-                  </div>
-                )}
+                <div className="text-sm font-semibold text-primary-600 dark:text-primary-400 mb-1">
+                  X: {(localPatternOffset.x / 10).toFixed(1)}mm, Y:{" "}
+                  {(localPatternOffset.y / 10).toFixed(1)}mm
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 italic">
+                  {patternUploaded
+                    ? "Pattern locked • Drag background to pan"
+                    : "Drag pattern to move • Drag background to pan"}
+                </div>
               </div>
-              <div className="text-sm font-semibold text-primary-600 dark:text-primary-400 mb-1">
-                X: {(localPatternOffset.x / 10).toFixed(1)}mm, Y:{" "}
-                {(localPatternOffset.y / 10).toFixed(1)}mm
-              </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400 italic">
-                {patternUploaded
-                  ? "Pattern locked • Drag background to pan"
-                  : "Drag pattern to move • Drag background to pan"}
-              </div>
-            </div>
 
-            {/* Zoom Controls Overlay */}
-            <div className="absolute bottom-2 sm:bottom-5 right-2 sm:right-5 flex gap-1.5 sm:gap-2 items-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg shadow-lg z-10">
-              <button
-                className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-primary-600 hover:text-white hover:border-primary-600 dark:hover:border-primary-600 hover:shadow-md hover:shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleCenterPattern}
-                disabled={!pesData || patternUploaded || isUploading}
-                title="Center Pattern in Hoop"
-              >
-                <ArrowsPointingInIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
-              </button>
-              <button
-                className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-primary-600 hover:text-white hover:border-primary-600 dark:hover:border-primary-600 hover:shadow-md hover:shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleZoomIn}
-                title="Zoom In"
-              >
-                <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
-              </button>
-              <span className="min-w-[40px] sm:min-w-[50px] text-center text-sm font-semibold text-gray-900 dark:text-gray-100 select-none">
-                {Math.round(stageScale * 100)}%
-              </span>
-              <button
-                className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-primary-600 hover:text-white hover:border-primary-600 dark:hover:border-primary-600 hover:shadow-md hover:shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleZoomOut}
-                title="Zoom Out"
-              >
-                <MinusIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
-              </button>
-              <button
-                className="w-7 h-7 sm:w-8 sm:h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded cursor-pointer transition-all flex items-center justify-center hover:bg-primary-600 hover:text-white hover:border-primary-600 dark:hover:border-primary-600 hover:shadow-md hover:shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed ml-1"
-                onClick={handleZoomReset}
-                title="Reset Zoom"
-              >
-                <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-200" />
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+              {/* Zoom Controls Overlay */}
+              <div className="absolute bottom-2 sm:bottom-5 right-2 sm:right-5 flex gap-1.5 sm:gap-2 items-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg shadow-lg z-10">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-7 h-7 sm:w-8 sm:h-8"
+                  onClick={handleCenterPattern}
+                  disabled={!pesData || patternUploaded || isUploading}
+                  title="Center Pattern in Hoop"
+                >
+                  <ArrowsPointingInIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-7 h-7 sm:w-8 sm:h-8"
+                  onClick={handleZoomIn}
+                  title="Zoom In"
+                >
+                  <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Button>
+                <span className="min-w-[40px] sm:min-w-[50px] text-center text-sm font-semibold text-gray-900 dark:text-gray-100 select-none">
+                  {Math.round(stageScale * 100)}%
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-7 h-7 sm:w-8 sm:h-8"
+                  onClick={handleZoomOut}
+                  title="Zoom Out"
+                >
+                  <MinusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-7 h-7 sm:w-8 sm:h-8 ml-1"
+                  onClick={handleZoomReset}
+                  title="Reset Zoom"
+                >
+                  <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -6,7 +6,7 @@ import { useUIStore } from "./stores/useUIStore";
 import { AppHeader } from "./components/AppHeader";
 import { LeftSidebar } from "./components/LeftSidebar";
 import { PatternCanvas } from "./components/PatternCanvas";
-import { PatternPreviewPlaceholder } from "./components/PatternPreviewPlaceholder";
+import { PatternCanvasPlaceholder } from "./components/PatternCanvasPlaceholder";
 import { BluetoothDevicePicker } from "./components/BluetoothDevicePicker";
 import "./App.css";
 
@@ -66,7 +66,7 @@ function App() {
   }, [resumedPattern, resumeFileName, pesData, setPattern, setPatternOffset]);
 
   return (
-    <div className="h-screen flex flex-col bg-gray-300 dark:bg-gray-900 overflow-hidden">
+    <div className="h-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
       <AppHeader />
 
       <div className="flex-1 p-4 sm:p-5 lg:p-6 w-full overflow-y-auto lg:overflow-hidden flex flex-col">
@@ -76,7 +76,7 @@ function App() {
 
           {/* Right Column - Pattern Preview */}
           <div className="flex flex-col lg:overflow-hidden lg:h-full">
-            {pesData ? <PatternCanvas /> : <PatternPreviewPlaceholder />}
+            {pesData ? <PatternCanvas /> : <PatternCanvasPlaceholder />}
           </div>
         </div>
 

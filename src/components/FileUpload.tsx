@@ -21,6 +21,12 @@ import {
 } from "@heroicons/react/24/solid";
 import { createFileService } from "../platform";
 import type { IFileService } from "../platform/interfaces/IFileService";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function FileUpload() {
   // Machine store
@@ -202,229 +208,214 @@ export function FileUpload() {
     : "text-gray-600 dark:text-gray-400";
 
   return (
-    <div
-      className={`bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4 ${borderColor}`}
-    >
-      <div className="flex items-start gap-3 mb-3">
-        <DocumentTextIcon
-          className={`w-6 h-6 ${iconColor} flex-shrink-0 mt-0.5`}
-        />
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-            Pattern File
-          </h3>
-          {pesData && displayFileName ? (
-            <p
-              className="text-xs text-gray-600 dark:text-gray-400 truncate"
-              title={displayFileName}
-            >
-              {displayFileName}
-            </p>
-          ) : (
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              No pattern loaded
-            </p>
-          )}
-        </div>
-      </div>
-
-      {resumeAvailable && resumeFileName && (
-        <div className="bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 px-3 py-2 rounded mb-3">
-          <p className="text-xs text-success-800 dark:text-success-200">
-            <strong>Cached:</strong> "{resumeFileName}"
-          </p>
-        </div>
-      )}
-
-      {isLoading && <PatternInfoSkeleton />}
-
-      {!isLoading && pesData && (
-        <div className="mb-3">
-          <PatternInfo pesData={pesData} showThreadBlocks />
-        </div>
-      )}
-
-      <div className="flex gap-2 mb-3">
-        <input
-          type="file"
-          accept=".pes"
-          onChange={handleFileChange}
-          id="file-input"
-          className="hidden"
-          disabled={isLoading || patternUploaded || isUploading}
-        />
-        <label
-          htmlFor={fileService.hasNativeDialogs() ? undefined : "file-input"}
-          onClick={
-            fileService.hasNativeDialogs()
-              ? () => handleFileChange()
-              : undefined
-          }
-          className={`flex-[2] flex items-center justify-center gap-2 px-3 py-2.5 sm:py-2 rounded font-semibold text-sm transition-all ${
-            isLoading || patternUploaded || isUploading
-              ? "opacity-50 cursor-not-allowed bg-gray-400 dark:bg-gray-600 text-white"
-              : "cursor-pointer bg-gray-600 dark:bg-gray-700 text-white hover:bg-gray-700 dark:hover:bg-gray-600"
-          }`}
-        >
-          {isLoading ? (
-            <>
-              <svg
-                className="w-3.5 h-3.5 animate-spin"
-                fill="none"
-                viewBox="0 0 24 24"
+    <Card className={cn("p-0 gap-0 border-l-4", borderColor)}>
+      <CardContent className="p-4 rounded-lg">
+        <div className="flex items-start gap-3 mb-3">
+          <DocumentTextIcon
+            className={cn("w-6 h-6 flex-shrink-0 mt-0.5", iconColor)}
+          />
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+              Pattern File
+            </h3>
+            {pesData && displayFileName ? (
+              <p
+                className="text-xs text-gray-600 dark:text-gray-400 truncate"
+                title={displayFileName}
               >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              <span>Loading...</span>
-            </>
-          ) : patternUploaded ? (
-            <>
-              <CheckCircleIcon className="w-3.5 h-3.5" />
-              <span>Locked</span>
-            </>
-          ) : (
-            <>
-              <FolderOpenIcon className="w-3.5 h-3.5" />
-              <span>Choose PES File</span>
-            </>
-          )}
-        </label>
+                {displayFileName}
+              </p>
+            ) : (
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                No pattern loaded
+              </p>
+            )}
+          </div>
+        </div>
 
-        {pesData &&
-          canUploadPattern(machineStatus) &&
-          !patternUploaded &&
-          uploadProgress < 100 && (
-            <button
-              onClick={handleUpload}
-              disabled={!isConnected || isUploading || !boundsCheck.fits}
-              className="flex-1 px-3 py-2.5 sm:py-2 bg-primary-600 dark:bg-primary-700 text-white rounded font-semibold text-sm hover:bg-primary-700 dark:hover:bg-primary-600 active:bg-primary-800 dark:active:bg-primary-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label={
-                isUploading
-                  ? `Uploading pattern: ${uploadProgress.toFixed(0)}% complete`
-                  : boundsCheck.error || "Upload pattern to machine"
-              }
-            >
-              {isUploading ? (
-                <>
-                  <svg
-                    className="w-3.5 h-3.5 animate-spin inline mr-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  {uploadProgress > 0
-                    ? uploadProgress.toFixed(0) + "%"
-                    : "Uploading"}
-                </>
-              ) : (
-                <>
-                  <ArrowUpTrayIcon className="w-3.5 h-3.5 inline mr-1" />
-                  Upload
-                </>
-              )}
-            </button>
-          )}
-      </div>
+        {resumeAvailable && resumeFileName && (
+          <div className="bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 px-3 py-2 rounded mb-3">
+            <p className="text-xs text-success-800 dark:text-success-200">
+              <strong>Cached:</strong> "{resumeFileName}"
+            </p>
+          </div>
+        )}
 
-      {/* Pyodide initialization progress indicator - shown when initializing or waiting */}
-      {!pyodideReady && pyodideProgress > 0 && (
-        <div className="mb-3">
-          <div className="flex justify-between items-center mb-1.5">
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+        {isLoading && <PatternInfoSkeleton />}
+
+        {!isLoading && pesData && (
+          <div className="mb-3">
+            <PatternInfo pesData={pesData} showThreadBlocks />
+          </div>
+        )}
+
+        <div className="flex gap-2 mb-3">
+          <input
+            type="file"
+            accept=".pes"
+            onChange={handleFileChange}
+            id="file-input"
+            className="hidden"
+            disabled={isLoading || patternUploaded || isUploading}
+          />
+          <Button
+            asChild={!fileService.hasNativeDialogs()}
+            onClick={
+              fileService.hasNativeDialogs()
+                ? () => handleFileChange()
+                : undefined
+            }
+            disabled={isLoading || patternUploaded || isUploading}
+            variant="outline"
+            className="flex-[2]"
+          >
+            {fileService.hasNativeDialogs() ? (
+              <>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Loading...</span>
+                  </>
+                ) : patternUploaded ? (
+                  <>
+                    <CheckCircleIcon className="w-3.5 h-3.5" />
+                    <span>Locked</span>
+                  </>
+                ) : (
+                  <>
+                    <FolderOpenIcon className="w-3.5 h-3.5" />
+                    <span>Choose PES File</span>
+                  </>
+                )}
+              </>
+            ) : (
+              <label htmlFor="file-input" className="flex items-center gap-2">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Loading...</span>
+                  </>
+                ) : patternUploaded ? (
+                  <>
+                    <CheckCircleIcon className="w-3.5 h-3.5" />
+                    <span>Locked</span>
+                  </>
+                ) : (
+                  <>
+                    <FolderOpenIcon className="w-3.5 h-3.5" />
+                    <span>Choose PES File</span>
+                  </>
+                )}
+              </label>
+            )}
+          </Button>
+
+          {pesData &&
+            canUploadPattern(machineStatus) &&
+            !patternUploaded &&
+            uploadProgress < 100 && (
+              <Button
+                onClick={handleUpload}
+                disabled={!isConnected || isUploading || !boundsCheck.fits}
+                className="flex-1"
+                aria-label={
+                  isUploading
+                    ? `Uploading pattern: ${uploadProgress.toFixed(0)}% complete`
+                    : boundsCheck.error || "Upload pattern to machine"
+                }
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    {uploadProgress > 0
+                      ? uploadProgress.toFixed(0) + "%"
+                      : "Uploading"}
+                  </>
+                ) : (
+                  <>
+                    <ArrowUpTrayIcon className="w-3.5 h-3.5" />
+                    Upload
+                  </>
+                )}
+              </Button>
+            )}
+        </div>
+
+        {/* Pyodide initialization progress indicator - shown when initializing or waiting */}
+        {!pyodideReady && pyodideProgress > 0 && (
+          <div className="mb-3">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                {isLoading && !pyodideReady
+                  ? "Please wait - initializing Python environment..."
+                  : pyodideLoadingStep || "Initializing Python environment..."}
+              </span>
+              <span className="text-xs font-bold text-primary-600 dark:text-primary-400">
+                {pyodideProgress.toFixed(0)}%
+              </span>
+            </div>
+            <Progress value={pyodideProgress} className="h-2.5" />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 italic">
               {isLoading && !pyodideReady
-                ? "Please wait - initializing Python environment..."
-                : pyodideLoadingStep || "Initializing Python environment..."}
-            </span>
-            <span className="text-xs font-bold text-primary-600 dark:text-primary-400">
-              {pyodideProgress.toFixed(0)}%
-            </span>
-          </div>
-          <div className="h-2.5 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden shadow-inner relative">
-            <div
-              className="h-full bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 dark:from-primary-600 dark:via-primary-700 dark:to-primary-800 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite] rounded-full"
-              style={{ width: `${pyodideProgress}%` }}
-            />
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 italic">
-            {isLoading && !pyodideReady
-              ? "File dialog will open automatically when ready"
-              : "This only happens once on first use"}
-          </p>
-        </div>
-      )}
-
-      {/* Error/warning messages with smooth transition - placed after buttons */}
-      <div
-        className="transition-all duration-200 ease-in-out overflow-hidden"
-        style={{
-          maxHeight:
-            pesData && (boundsCheck.error || !canUploadPattern(machineStatus))
-              ? "200px"
-              : "0px",
-          marginTop:
-            pesData && (boundsCheck.error || !canUploadPattern(machineStatus))
-              ? "12px"
-              : "0px",
-        }}
-      >
-        {pesData && !canUploadPattern(machineStatus) && (
-          <div className="bg-warning-100 dark:bg-warning-900/20 text-warning-800 dark:text-warning-200 px-3 py-2 rounded border border-warning-200 dark:border-warning-800 text-sm">
-            Cannot upload while {getMachineStateCategory(machineStatus)}
+                ? "File dialog will open automatically when ready"
+                : "This only happens once on first use"}
+            </p>
           </div>
         )}
 
-        {pesData && boundsCheck.error && (
-          <div className="bg-danger-100 dark:bg-danger-900/20 text-danger-800 dark:text-danger-200 px-3 py-2 rounded border border-danger-200 dark:border-danger-800 text-sm">
-            <strong>Pattern too large:</strong> {boundsCheck.error}
-          </div>
-        )}
-      </div>
+        {/* Error/warning messages with smooth transition - placed after buttons */}
+        <div
+          className="transition-all duration-200 ease-in-out overflow-hidden"
+          style={{
+            maxHeight:
+              pesData && (boundsCheck.error || !canUploadPattern(machineStatus))
+                ? "200px"
+                : "0px",
+            marginTop:
+              pesData && (boundsCheck.error || !canUploadPattern(machineStatus))
+                ? "12px"
+                : "0px",
+          }}
+        >
+          {pesData && !canUploadPattern(machineStatus) && (
+            <Alert className="bg-warning-100 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800">
+              <AlertDescription className="text-warning-800 dark:text-warning-200 text-sm">
+                Cannot upload while {getMachineStateCategory(machineStatus)}
+              </AlertDescription>
+            </Alert>
+          )}
 
-      {isUploading && uploadProgress < 100 && (
-        <div className="mt-3">
-          <div className="flex justify-between items-center mb-1.5">
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-              Uploading
-            </span>
-            <span className="text-xs font-bold text-secondary-600 dark:text-secondary-400">
-              {uploadProgress > 0
-                ? uploadProgress.toFixed(1) + "%"
-                : "Starting..."}
-            </span>
-          </div>
-          <div className="h-2.5 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden shadow-inner relative">
-            <div
-              className="h-full bg-gradient-to-r from-secondary-500 via-secondary-600 to-secondary-700 dark:from-secondary-600 dark:via-secondary-700 dark:to-secondary-800 transition-all duration-300 ease-out relative overflow-hidden after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite] rounded-full"
-              style={{ width: `${uploadProgress}%` }}
+          {pesData && boundsCheck.error && (
+            <Alert
+              variant="destructive"
+              className="bg-danger-100 dark:bg-danger-900/20 border-danger-200 dark:border-danger-800"
+            >
+              <AlertDescription className="text-danger-800 dark:text-danger-200 text-sm">
+                <strong>Pattern too large:</strong> {boundsCheck.error}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        {isUploading && uploadProgress < 100 && (
+          <div className="mt-3">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                Uploading
+              </span>
+              <span className="text-xs font-bold text-secondary-600 dark:text-secondary-400">
+                {uploadProgress > 0
+                  ? uploadProgress.toFixed(1) + "%"
+                  : "Starting..."}
+              </span>
+            </div>
+            <Progress
+              value={uploadProgress}
+              className="h-2.5 [&>div]:bg-gradient-to-r [&>div]:from-secondary-500 [&>div]:via-secondary-600 [&>div]:to-secondary-700 dark:[&>div]:from-secondary-600 dark:[&>div]:via-secondary-700 dark:[&>div]:to-secondary-800"
             />
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

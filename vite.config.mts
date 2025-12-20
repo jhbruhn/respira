@@ -2,10 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 import tailwindcss from '@tailwindcss/vite'
-import { dirname, join } from 'path'
+import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { readFileSync } from 'fs'
 import type { Plugin } from 'vite'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // Read version from package.json
 const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'))
@@ -140,6 +142,11 @@ export function downloadPyPIWheels(packages: PyPIPackage[]): Plugin {
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
+  },
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "./src"),
+    },
   },
   plugins: [
     react(),

@@ -1,9 +1,8 @@
-import { useRef, useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useMachineStore } from "../stores/useMachineStore";
 import { useUIStore } from "../stores/useUIStore";
 import { WorkflowStepper } from "./WorkflowStepper";
-import { ErrorPopover } from "./ErrorPopover";
+import { ErrorPopoverContent } from "./ErrorPopover";
 import { getStateVisualInfo } from "../utils/machineStateHelpers";
 import {
   CheckCircleIcon,
@@ -13,6 +12,16 @@ import {
   ArrowPathIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 export function AppHeader() {
   const {
@@ -39,16 +48,11 @@ export function AppHeader() {
     })),
   );
 
-  const { pyodideError, showErrorPopover, setErrorPopover } = useUIStore(
+  const { pyodideError } = useUIStore(
     useShallow((state) => ({
       pyodideError: state.pyodideError,
-      showErrorPopover: state.showErrorPopover,
-      setErrorPopover: state.setErrorPopover,
     })),
   );
-
-  const errorPopoverRef = useRef<HTMLDivElement>(null);
-  const errorButtonRef = useRef<HTMLButtonElement>(null);
 
   // Get state visual info for header status badge
   const stateVisual = getStateVisualInfo(machineStatus);
@@ -62,157 +66,172 @@ export function AppHeader() {
   };
   const StatusIcon = stateIcons[stateVisual.iconName];
 
-  // Close error popover when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        errorPopoverRef.current &&
-        !errorPopoverRef.current.contains(event.target as Node) &&
-        errorButtonRef.current &&
-        !errorButtonRef.current.contains(event.target as Node)
-      ) {
-        setErrorPopover(false);
-      }
-    };
-
-    if (showErrorPopover) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [showErrorPopover, setErrorPopover]);
-
   return (
-    <header className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 dark:from-primary-700 dark:via-primary-800 dark:to-primary-900 px-4 sm:px-6 lg:px-8 py-3 shadow-lg border-b-2 border-primary-900/20 dark:border-primary-800/30 flex-shrink-0">
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 lg:gap-8 items-center">
-        {/* Machine Connection Status - Responsive width column */}
-        <div className="flex items-center gap-3 w-full lg:w-[280px]">
-          <div
-            className="w-2.5 h-2.5 bg-success-400 rounded-full animate-pulse shadow-lg shadow-success-400/50"
-            style={{ visibility: isConnected ? "visible" : "hidden" }}
-          ></div>
-          <div
-            className="w-2.5 h-2.5 bg-gray-400 rounded-full -ml-2.5"
-            style={{ visibility: !isConnected ? "visible" : "hidden" }}
-          ></div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg lg:text-xl font-bold text-white leading-tight">
-                Respira
-              </h1>
-              {isConnected && machineInfo?.serialNumber && (
-                <span
-                  className="text-xs text-primary-200 cursor-help"
-                  title={`Serial: ${machineInfo.serialNumber}${
-                    machineInfo.macAddress
-                      ? `\nMAC: ${machineInfo.macAddress}`
-                      : ""
-                  }${
-                    machineInfo.totalCount !== undefined
-                      ? `\nTotal stitches: ${machineInfo.totalCount.toLocaleString()}`
-                      : ""
-                  }${
-                    machineInfo.serviceCount !== undefined
-                      ? `\nStitches since service: ${machineInfo.serviceCount.toLocaleString()}`
-                      : ""
-                  }`}
-                >
-                  • {machineInfo.serialNumber}
-                </span>
-              )}
-              {isPolling && (
-                <ArrowPathIcon
-                  className="w-3.5 h-3.5 text-primary-200 animate-spin"
-                  title="Auto-refreshing status"
-                />
-              )}
-            </div>
-            <div className="flex items-center gap-2 mt-1 min-h-[32px]">
-              {isConnected ? (
-                <>
-                  <button
-                    onClick={disconnect}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-white/10 hover:bg-danger-600 text-primary-100 hover:text-white border border-white/20 hover:border-danger-600 cursor-pointer transition-all flex-shrink-0"
-                    title="Disconnect from machine"
-                    aria-label="Disconnect from machine"
-                  >
-                    <XMarkIcon className="w-3 h-3" />
-                    Disconnect
-                  </button>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-semibold bg-white/20 text-white border border-white/30 flex-shrink-0">
-                    <StatusIcon className="w-3 h-3" />
-                    {machineStatusName}
-                  </span>
-                </>
-              ) : (
-                <p className="text-xs text-primary-200">Not Connected</p>
-              )}
-
-              {/* Error indicator - always render to prevent layout shift */}
-              <div className="relative">
-                <button
-                  ref={errorButtonRef}
-                  onClick={() => setErrorPopover(!showErrorPopover)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded text-sm font-medium bg-danger-500/90 hover:bg-danger-600 text-white border border-danger-400 transition-all flex-shrink-0 ${
-                    machineErrorMessage || pyodideError
-                      ? "cursor-pointer animate-pulse hover:animate-none"
-                      : "invisible pointer-events-none"
-                  }`}
-                  title="Click to view error details"
-                  aria-label="View error details"
-                  disabled={!(machineErrorMessage || pyodideError)}
-                >
-                  <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>
-                    {(() => {
-                      if (pyodideError) return "Python Error";
-                      if (isPairingError) return "Pairing Required";
-
-                      const errorMsg = machineErrorMessage || "";
-
-                      // Categorize by error message content
-                      if (
-                        errorMsg.toLowerCase().includes("bluetooth") ||
-                        errorMsg.toLowerCase().includes("connection")
-                      ) {
-                        return "Connection Error";
-                      }
-                      if (errorMsg.toLowerCase().includes("upload")) {
-                        return "Upload Error";
-                      }
-                      if (errorMsg.toLowerCase().includes("pattern")) {
-                        return "Pattern Error";
-                      }
-                      if (machineError !== undefined) {
-                        return `Machine Error`;
-                      }
-
-                      // Default fallback
-                      return "Error";
-                    })()}
-                  </span>
-                </button>
-
-                {/* Error popover */}
-                {showErrorPopover && (machineErrorMessage || pyodideError) && (
-                  <ErrorPopover
-                    ref={errorPopoverRef}
-                    machineError={machineError}
-                    isPairingError={isPairingError}
-                    errorMessage={machineErrorMessage}
-                    pyodideError={pyodideError}
-                  />
+    <TooltipProvider>
+      <header className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 dark:from-primary-700 dark:via-primary-800 dark:to-primary-900 px-4 sm:px-6 lg:px-8 py-3 shadow-lg border-b-2 border-primary-900/20 dark:border-primary-800/30 flex-shrink-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 lg:gap-8 items-center">
+          {/* Machine Connection Status - Responsive width column */}
+          <div className="flex items-center gap-3 w-full lg:w-[280px]">
+            <div
+              className="w-2.5 h-2.5 bg-success-400 rounded-full animate-pulse shadow-lg shadow-success-400/50"
+              style={{ visibility: isConnected ? "visible" : "hidden" }}
+            ></div>
+            <div
+              className="w-2.5 h-2.5 bg-gray-400 rounded-full -ml-2.5"
+              style={{ visibility: !isConnected ? "visible" : "hidden" }}
+            ></div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg lg:text-xl font-bold text-white leading-tight">
+                  Respira
+                </h1>
+                {isConnected && machineInfo?.serialNumber && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-xs text-primary-200 cursor-help">
+                        • {machineInfo.serialNumber}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <div className="text-sm space-y-1">
+                        <p className="font-semibold">
+                          Serial: {machineInfo.serialNumber}
+                        </p>
+                        {machineInfo.macAddress && (
+                          <p className="text-xs">
+                            MAC: {machineInfo.macAddress}
+                          </p>
+                        )}
+                        {machineInfo.totalCount !== undefined && (
+                          <p className="text-xs">
+                            Total stitches:{" "}
+                            {machineInfo.totalCount.toLocaleString()}
+                          </p>
+                        )}
+                        {machineInfo.serviceCount !== undefined && (
+                          <p className="text-xs">
+                            Stitches since service:{" "}
+                            {machineInfo.serviceCount.toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
+                {isPolling && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <ArrowPathIcon className="w-3.5 h-3.5 text-primary-200 animate-spin" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">Auto-refreshing machine status</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-1 min-h-[32px]">
+                {isConnected ? (
+                  <>
+                    <Button
+                      onClick={disconnect}
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 bg-white/10 hover:bg-danger-600 text-primary-100 hover:text-white border-white/20 hover:border-danger-600 flex-shrink-0"
+                      aria-label="Disconnect from machine"
+                    >
+                      <XMarkIcon className="w-3 h-3" />
+                      Disconnect
+                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant="outline"
+                          className="gap-1.5 px-2.5 py-1.5 sm:py-1 text-sm font-semibold bg-white/20 text-white border-white/30 flex-shrink-0 cursor-help"
+                        >
+                          <StatusIcon className="w-3 h-3" />
+                          {machineStatusName}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{stateVisual.description}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </>
+                ) : (
+                  <p className="text-xs text-primary-200">Not Connected</p>
+                )}
+
+                {/* Error indicator - always render to prevent layout shift */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className={cn(
+                        "gap-1.5 flex-shrink-0",
+                        machineErrorMessage || pyodideError
+                          ? "animate-pulse hover:animate-none"
+                          : "invisible pointer-events-none",
+                      )}
+                      aria-label="View error details"
+                      disabled={!(machineErrorMessage || pyodideError)}
+                    >
+                      <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span>
+                        {(() => {
+                          if (pyodideError) return "Python Error";
+                          if (isPairingError) return "Pairing Required";
+
+                          const errorMsg = machineErrorMessage || "";
+
+                          // Categorize by error message content
+                          if (
+                            errorMsg.toLowerCase().includes("bluetooth") ||
+                            errorMsg.toLowerCase().includes("connection")
+                          ) {
+                            return "Connection Error";
+                          }
+                          if (errorMsg.toLowerCase().includes("upload")) {
+                            return "Upload Error";
+                          }
+                          if (errorMsg.toLowerCase().includes("pattern")) {
+                            return "Pattern Error";
+                          }
+                          if (machineError !== undefined) {
+                            return `Machine Error`;
+                          }
+
+                          // Default fallback
+                          return "Error";
+                        })()}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+
+                  {/* Error popover content */}
+                  {(machineErrorMessage || pyodideError) && (
+                    <ErrorPopoverContent
+                      machineError={
+                        machineError != 0xdd ? machineError : undefined
+                      }
+                      isPairingError={isPairingError}
+                      errorMessage={machineErrorMessage}
+                      pyodideError={pyodideError}
+                    />
+                  )}
+                </Popover>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Workflow Stepper - Flexible width column */}
-        <div>
-          <WorkflowStepper />
+          {/* Workflow Stepper - Flexible width column */}
+          <div>
+            <WorkflowStepper />
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </TooltipProvider>
   );
 }
