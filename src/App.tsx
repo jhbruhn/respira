@@ -66,7 +66,7 @@ function App() {
   }, [resumedPattern, resumeFileName, pesData, setPattern, setPatternOffset]);
 
   return (
-    <div className="h-screen flex flex-col bg-gray-300 dark:bg-gray-900 overflow-hidden">
+    <div className="h-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
       <AppHeader />
 
       <div className="flex-1 p-4 sm:p-5 lg:p-6 w-full overflow-y-auto lg:overflow-hidden flex flex-col">

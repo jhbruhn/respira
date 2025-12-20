@@ -1,10 +1,29 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from "@/components/ui/card";
+import { PhotoIcon } from "@heroicons/react/24/solid";
 
 export function PatternCanvasPlaceholder() {
   return (
-    <Card className="p-0 gap-0 lg:h-full animate-fadeIn flex flex-col">
-      <CardHeader className="p-6 pb-4 border-b-2 border-gray-300 dark:border-gray-600">
-        <CardTitle className="text-base lg:text-lg">Pattern Preview</CardTitle>
+    <Card
+      className={`p-0 gap-0 lg:h-full flex flex-col border-l-4  border-gray-400 dark:border-gray-600`}
+    >
+      <CardHeader className="p-4 pb-3">
+        <div className="flex items-start gap-3">
+          <PhotoIcon
+            className={`w-6 h-6 text-gray-600 dark:text-gray-400 flex-shrink-0 mt-0.5`}
+          />
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-sm">Pattern Preview</CardTitle>
+            <CardDescription className="text-xs">
+              No pattern loaded
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="p-6 flex-1 flex flex-col">
         <div className="h-[400px] sm:h-[500px] lg:flex-1 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 relative overflow-hidden">
