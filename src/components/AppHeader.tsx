@@ -182,7 +182,9 @@ export function AppHeader() {
                 {/* Error popover content */}
                 {(machineErrorMessage || pyodideError) && (
                   <ErrorPopoverContent
-                    machineError={machineError}
+                    machineError={
+                      machineError != 0xdd ? machineError : undefined
+                    }
                     isPairingError={isPairingError}
                     errorMessage={machineErrorMessage}
                     pyodideError={pyodideError}
