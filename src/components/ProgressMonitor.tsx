@@ -17,7 +17,13 @@ import {
   canResumeSewing,
 } from "../utils/machineStateHelpers";
 import { calculatePatternTime } from "../utils/timeCalculation";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
@@ -170,246 +176,246 @@ export function ProgressMonitor() {
         </div>
       </CardHeader>
       <CardContent className="px-4 pt-0 pb-4 flex-1 flex flex-col lg:overflow-hidden">
-
-      {/* Pattern Info */}
-      {patternInfo && (
-        <div className="grid grid-cols-3 gap-2 text-xs mb-3">
-          <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
-            <span className="text-gray-600 dark:text-gray-400 block">
-              Total Stitches
-            </span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">
-              {totalStitches.toLocaleString()}
-            </span>
-          </div>
-          <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
-            <span className="text-gray-600 dark:text-gray-400 block">
-              Total Time
-            </span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">
-              {totalMinutes} min
-            </span>
-          </div>
-          <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
-            <span className="text-gray-600 dark:text-gray-400 block">
-              Speed
-            </span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">
-              {patternInfo.speed} spm
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Progress Bar */}
-      {sewingProgress && (
-        <div className="mb-3">
-          <Progress
-            value={progressPercent}
-            className="h-3 mb-2 [&>div]:bg-gradient-to-r [&>div]:from-accent-600 [&>div]:to-accent-700 dark:[&>div]:from-accent-600 dark:[&>div]:to-accent-800"
-          />
-
-          <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+        {/* Pattern Info */}
+        {patternInfo && (
+          <div className="grid grid-cols-3 gap-2 text-xs mb-3">
             <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
               <span className="text-gray-600 dark:text-gray-400 block">
-                Current Stitch
+                Total Stitches
               </span>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {sewingProgress.currentStitch.toLocaleString()} /{" "}
                 {totalStitches.toLocaleString()}
               </span>
             </div>
             <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
               <span className="text-gray-600 dark:text-gray-400 block">
-                Time
+                Total Time
               </span>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {elapsedMinutes} / {totalMinutes} min
+                {totalMinutes} min
+              </span>
+            </div>
+            <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
+              <span className="text-gray-600 dark:text-gray-400 block">
+                Speed
+              </span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
+                {patternInfo.speed} spm
               </span>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Color Blocks */}
-      {colorBlocks.length > 0 && (
-        <div className="mb-3 lg:flex-1 lg:min-h-0 flex flex-col">
-          <h4 className="text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300 flex-shrink-0">
-            Color Blocks
-          </h4>
-          <div className="relative lg:flex-1 lg:min-h-0">
-            <div
-              ref={colorBlocksScrollRef}
-              onScroll={handleColorBlocksScroll}
-              className="lg:absolute lg:inset-0 flex flex-col gap-2 lg:overflow-y-auto scroll-smooth pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-primary-600 dark:[&::-webkit-scrollbar-thumb]:bg-primary-500 [&::-webkit-scrollbar-thumb]:rounded-full"
-            >
-              {colorBlocks.map((block, index) => {
-                const isCompleted = currentStitch >= block.endStitch;
-                const isCurrent = index === currentBlockIndex;
+        {/* Progress Bar */}
+        {sewingProgress && (
+          <div className="mb-3">
+            <Progress
+              value={progressPercent}
+              className="h-3 mb-2 [&>div]:bg-gradient-to-r [&>div]:from-accent-600 [&>div]:to-accent-700 dark:[&>div]:from-accent-600 dark:[&>div]:to-accent-800"
+            />
 
-                // Calculate progress within current block
-                let blockProgress = 0;
-                if (isCurrent) {
-                  blockProgress =
-                    ((currentStitch - block.startStitch) / block.stitchCount) *
-                    100;
-                } else if (isCompleted) {
-                  blockProgress = 100;
-                }
+            <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+              <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
+                <span className="text-gray-600 dark:text-gray-400 block">
+                  Current Stitch
+                </span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                  {sewingProgress.currentStitch.toLocaleString()} /{" "}
+                  {totalStitches.toLocaleString()}
+                </span>
+              </div>
+              <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded">
+                <span className="text-gray-600 dark:text-gray-400 block">
+                  Time
+                </span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                  {elapsedMinutes} / {totalMinutes} min
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
-                return (
-                  <div
-                    key={index}
-                    ref={isCurrent ? currentBlockRef : null}
-                    className={`p-2.5 rounded-lg border-2 transition-all duration-300 ${
-                      isCompleted
-                        ? "border-success-600 bg-success-50 dark:bg-success-900/20"
-                        : isCurrent
-                          ? "border-gray-400 dark:border-gray-500 bg-white dark:bg-gray-700"
-                          : "border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/50 opacity-70"
-                    }`}
-                    role="listitem"
-                    aria-label={`Thread ${block.colorIndex + 1}, ${block.stitchCount} stitches, ${isCompleted ? "completed" : isCurrent ? "in progress" : "pending"}`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      {/* Color swatch */}
-                      <div
-                        className="w-7 h-7 rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-md flex-shrink-0"
-                        style={{
-                          backgroundColor: block.threadHex,
-                        }}
-                        title={`Thread color: ${block.threadHex}`}
-                        aria-label={`Thread color ${block.threadHex}`}
-                      />
+        {/* Color Blocks */}
+        {colorBlocks.length > 0 && (
+          <div className="mb-3 lg:flex-1 lg:min-h-0 flex flex-col">
+            <h4 className="text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300 flex-shrink-0">
+              Color Blocks
+            </h4>
+            <div className="relative lg:flex-1 lg:min-h-0">
+              <div
+                ref={colorBlocksScrollRef}
+                onScroll={handleColorBlocksScroll}
+                className="lg:absolute lg:inset-0 flex flex-col gap-2 lg:overflow-y-auto scroll-smooth pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-primary-600 dark:[&::-webkit-scrollbar-thumb]:bg-primary-500 [&::-webkit-scrollbar-thumb]:rounded-full"
+              >
+                {colorBlocks.map((block, index) => {
+                  const isCompleted = currentStitch >= block.endStitch;
+                  const isCurrent = index === currentBlockIndex;
 
-                      {/* Thread info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-xs text-gray-900 dark:text-gray-100">
-                          Thread {block.colorIndex + 1}
-                          {(block.threadBrand ||
-                            block.threadChart ||
-                            block.threadDescription ||
-                            block.threadCatalogNumber) && (
-                            <span className="font-normal text-gray-600 dark:text-gray-400">
-                              {" "}
-                              (
-                              {(() => {
-                                // Primary metadata: brand and catalog number
-                                const primaryMetadata = [
-                                  block.threadBrand,
-                                  block.threadCatalogNumber
-                                    ? `#${block.threadCatalogNumber}`
-                                    : null,
-                                ]
-                                  .filter(Boolean)
-                                  .join(" ");
+                  // Calculate progress within current block
+                  let blockProgress = 0;
+                  if (isCurrent) {
+                    blockProgress =
+                      ((currentStitch - block.startStitch) /
+                        block.stitchCount) *
+                      100;
+                  } else if (isCompleted) {
+                    blockProgress = 100;
+                  }
 
-                                // Secondary metadata: chart and description
-                                const secondaryMetadata = [
-                                  block.threadChart,
-                                  block.threadDescription,
-                                ]
-                                  .filter(Boolean)
-                                  .join(" ");
+                  return (
+                    <div
+                      key={index}
+                      ref={isCurrent ? currentBlockRef : null}
+                      className={`p-2.5 rounded-lg border-2 transition-all duration-300 ${
+                        isCompleted
+                          ? "border-success-600 bg-success-50 dark:bg-success-900/20"
+                          : isCurrent
+                            ? "border-gray-400 dark:border-gray-500 bg-white dark:bg-gray-700"
+                            : "border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/50 opacity-70"
+                      }`}
+                      role="listitem"
+                      aria-label={`Thread ${block.colorIndex + 1}, ${block.stitchCount} stitches, ${isCompleted ? "completed" : isCurrent ? "in progress" : "pending"}`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        {/* Color swatch */}
+                        <div
+                          className="w-7 h-7 rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-md flex-shrink-0"
+                          style={{
+                            backgroundColor: block.threadHex,
+                          }}
+                          title={`Thread color: ${block.threadHex}`}
+                          aria-label={`Thread color ${block.threadHex}`}
+                        />
 
-                                return [primaryMetadata, secondaryMetadata]
-                                  .filter(Boolean)
-                                  .join(" • ");
-                              })()}
-                              )
-                            </span>
-                          )}
+                        {/* Thread info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-xs text-gray-900 dark:text-gray-100">
+                            Thread {block.colorIndex + 1}
+                            {(block.threadBrand ||
+                              block.threadChart ||
+                              block.threadDescription ||
+                              block.threadCatalogNumber) && (
+                              <span className="font-normal text-gray-600 dark:text-gray-400">
+                                {" "}
+                                (
+                                {(() => {
+                                  // Primary metadata: brand and catalog number
+                                  const primaryMetadata = [
+                                    block.threadBrand,
+                                    block.threadCatalogNumber
+                                      ? `#${block.threadCatalogNumber}`
+                                      : null,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" ");
+
+                                  // Secondary metadata: chart and description
+                                  const secondaryMetadata = [
+                                    block.threadChart,
+                                    block.threadDescription,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" ");
+
+                                  return [primaryMetadata, secondaryMetadata]
+                                    .filter(Boolean)
+                                    .join(" • ");
+                                })()}
+                                )
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            {block.stitchCount.toLocaleString()} stitches
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                          {block.stitchCount.toLocaleString()} stitches
-                        </div>
+
+                        {/* Status icon */}
+                        {isCompleted ? (
+                          <CheckCircleIcon
+                            className="w-5 h-5 text-success-600 flex-shrink-0"
+                            aria-label="Completed"
+                          />
+                        ) : isCurrent ? (
+                          <ArrowRightIcon
+                            className="w-5 h-5 text-gray-600 dark:text-gray-400 flex-shrink-0 animate-pulse"
+                            aria-label="In progress"
+                          />
+                        ) : (
+                          <CircleStackIcon
+                            className="w-5 h-5 text-gray-400 flex-shrink-0"
+                            aria-label="Pending"
+                          />
+                        )}
                       </div>
 
-                      {/* Status icon */}
-                      {isCompleted ? (
-                        <CheckCircleIcon
-                          className="w-5 h-5 text-success-600 flex-shrink-0"
-                          aria-label="Completed"
-                        />
-                      ) : isCurrent ? (
-                        <ArrowRightIcon
-                          className="w-5 h-5 text-gray-600 dark:text-gray-400 flex-shrink-0 animate-pulse"
-                          aria-label="In progress"
-                        />
-                      ) : (
-                        <CircleStackIcon
-                          className="w-5 h-5 text-gray-400 flex-shrink-0"
-                          aria-label="Pending"
+                      {/* Progress bar for current block */}
+                      {isCurrent && (
+                        <Progress
+                          value={blockProgress}
+                          className="mt-2 h-1.5 [&>div]:bg-gray-600 dark:[&>div]:bg-gray-500"
+                          aria-label={`${Math.round(blockProgress)}% complete`}
                         />
                       )}
                     </div>
-
-                    {/* Progress bar for current block */}
-                    {isCurrent && (
-                      <Progress
-                        value={blockProgress}
-                        className="mt-2 h-1.5 [&>div]:bg-gray-600 dark:[&>div]:bg-gray-500"
-                        aria-label={`${Math.round(blockProgress)}% complete`}
-                      />
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+              {/* Gradient overlay to indicate more content below - only on desktop and when not at bottom */}
+              {showGradient && (
+                <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white dark:from-gray-800 to-transparent pointer-events-none" />
+              )}
             </div>
-            {/* Gradient overlay to indicate more content below - only on desktop and when not at bottom */}
-            {showGradient && (
-              <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white dark:from-gray-800 to-transparent pointer-events-none" />
-            )}
           </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="flex gap-2 flex-shrink-0">
+          {/* Resume has highest priority when available */}
+          {canResumeSewing(machineStatus) && (
+            <Button
+              onClick={resumeSewing}
+              disabled={isDeleting}
+              className="flex-1"
+              aria-label="Resume sewing the current pattern"
+            >
+              <PlayIcon className="w-3.5 h-3.5" />
+              Resume Sewing
+            </Button>
+          )}
+
+          {/* Start Sewing - primary action, takes more space */}
+          {canStartSewing(machineStatus) && !canResumeSewing(machineStatus) && (
+            <Button
+              onClick={startSewing}
+              disabled={isDeleting}
+              className="flex-[2]"
+              aria-label="Start sewing the pattern"
+            >
+              <PlayIcon className="w-3.5 h-3.5" />
+              Start Sewing
+            </Button>
+          )}
+
+          {/* Start Mask Trace - secondary action */}
+          {canStartMaskTrace(machineStatus) && (
+            <Button
+              onClick={startMaskTrace}
+              disabled={isDeleting}
+              variant="outline"
+              className="flex-1"
+              aria-label={
+                isMaskTraceComplete
+                  ? "Start mask trace again"
+                  : "Start mask trace"
+              }
+            >
+              <ArrowPathIcon className="w-3.5 h-3.5" />
+              {isMaskTraceComplete ? "Trace Again" : "Start Mask Trace"}
+            </Button>
+          )}
         </div>
-      )}
-
-      {/* Action buttons */}
-      <div className="flex gap-2 flex-shrink-0">
-        {/* Resume has highest priority when available */}
-        {canResumeSewing(machineStatus) && (
-          <Button
-            onClick={resumeSewing}
-            disabled={isDeleting}
-            className="flex-1"
-            aria-label="Resume sewing the current pattern"
-          >
-            <PlayIcon className="w-3.5 h-3.5" />
-            Resume Sewing
-          </Button>
-        )}
-
-        {/* Start Sewing - primary action, takes more space */}
-        {canStartSewing(machineStatus) && !canResumeSewing(machineStatus) && (
-          <Button
-            onClick={startSewing}
-            disabled={isDeleting}
-            className="flex-[2]"
-            aria-label="Start sewing the pattern"
-          >
-            <PlayIcon className="w-3.5 h-3.5" />
-            Start Sewing
-          </Button>
-        )}
-
-        {/* Start Mask Trace - secondary action */}
-        {canStartMaskTrace(machineStatus) && (
-          <Button
-            onClick={startMaskTrace}
-            disabled={isDeleting}
-            variant="outline"
-            className="flex-1"
-            aria-label={
-              isMaskTraceComplete
-                ? "Start mask trace again"
-                : "Start mask trace"
-            }
-          >
-            <ArrowPathIcon className="w-3.5 h-3.5" />
-            {isMaskTraceComplete ? "Trace Again" : "Start Mask Trace"}
-          </Button>
-        )}
-      </div>
       </CardContent>
     </Card>
   );

@@ -23,10 +23,18 @@ export function PatternInfo({
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded cursor-help">
-                <span className="text-gray-600 dark:text-gray-400 block">Size</span>
+                <span className="text-gray-600 dark:text-gray-400 block">
+                  Size
+                </span>
                 <span className="font-semibold text-gray-900 dark:text-gray-100">
-                  {((pesData.bounds.maxX - pesData.bounds.minX) / 10).toFixed(1)} x{" "}
-                  {((pesData.bounds.maxY - pesData.bounds.minY) / 10).toFixed(1)} mm
+                  {((pesData.bounds.maxX - pesData.bounds.minX) / 10).toFixed(
+                    1,
+                  )}{" "}
+                  x{" "}
+                  {((pesData.bounds.maxY - pesData.bounds.minY) / 10).toFixed(
+                    1,
+                  )}{" "}
+                  mm
                 </span>
               </div>
             </TooltipTrigger>
@@ -45,7 +53,8 @@ export function PatternInfo({
                   {pesData.penStitches?.stitches.length.toLocaleString() ||
                     pesData.stitchCount.toLocaleString()}
                   {pesData.penStitches &&
-                    pesData.penStitches.stitches.length !== pesData.stitchCount && (
+                    pesData.penStitches.stitches.length !==
+                      pesData.stitchCount && (
                       <span
                         className="text-gray-500 dark:text-gray-500 font-normal ml-1"
                         title="Input stitch count from PES file (lock stitches were added for machine compatibility)"
@@ -99,64 +108,64 @@ export function PatternInfo({
         <TooltipProvider>
           <div className="flex gap-1">
             {pesData.uniqueColors.slice(0, 8).map((color, idx) => {
-            // Primary metadata: brand and catalog number
-            const primaryMetadata = [
-              color.brand,
-              color.catalogNumber ? `#${color.catalogNumber}` : null,
-            ]
-              .filter(Boolean)
-              .join(" ");
+              // Primary metadata: brand and catalog number
+              const primaryMetadata = [
+                color.brand,
+                color.catalogNumber ? `#${color.catalogNumber}` : null,
+              ]
+                .filter(Boolean)
+                .join(" ");
 
-            // Secondary metadata: chart and description
-            const secondaryMetadata = [color.chart, color.description]
-              .filter(Boolean)
-              .join(" ");
+              // Secondary metadata: chart and description
+              const secondaryMetadata = [color.chart, color.description]
+                .filter(Boolean)
+                .join(" ");
 
-            const metadata = [primaryMetadata, secondaryMetadata]
-              .filter(Boolean)
-              .join(" • ");
+              const metadata = [primaryMetadata, secondaryMetadata]
+                .filter(Boolean)
+                .join(" • ");
 
-            // Show which thread blocks use this color in PatternSummaryCard
-            const threadNumbers = color.threadIndices
-              .map((i) => i + 1)
-              .join(", ");
-            const tooltipText = showThreadBlocks
-              ? metadata
-                ? `Color ${idx + 1}: ${color.hex} - ${metadata}`
-                : `Color ${idx + 1}: ${color.hex}`
-              : metadata
-                ? `Color ${idx + 1}: ${color.hex}\n${metadata}\nUsed in thread blocks: ${threadNumbers}`
-                : `Color ${idx + 1}: ${color.hex}\nUsed in thread blocks: ${threadNumbers}`;
+              // Show which thread blocks use this color in PatternSummaryCard
+              const threadNumbers = color.threadIndices
+                .map((i) => i + 1)
+                .join(", ");
+              const tooltipText = showThreadBlocks
+                ? metadata
+                  ? `Color ${idx + 1}: ${color.hex} - ${metadata}`
+                  : `Color ${idx + 1}: ${color.hex}`
+                : metadata
+                  ? `Color ${idx + 1}: ${color.hex}\n${metadata}\nUsed in thread blocks: ${threadNumbers}`
+                  : `Color ${idx + 1}: ${color.hex}\nUsed in thread blocks: ${threadNumbers}`;
 
-            return (
-              <Tooltip key={idx}>
+              return (
+                <Tooltip key={idx}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600 cursor-help"
+                      style={{ backgroundColor: color.hex }}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-xs whitespace-pre-line">{tooltipText}</p>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+            {pesData.uniqueColors.length > 8 && (
+              <Tooltip>
                 <TooltipTrigger asChild>
-                  <div
-                    className="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600 cursor-help"
-                    style={{ backgroundColor: color.hex }}
-                  />
+                  <div className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 border border-gray-400 dark:border-gray-500 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300 leading-none cursor-help">
+                    +{pesData.uniqueColors.length - 8}
+                  </div>
                 </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <p className="text-xs whitespace-pre-line">{tooltipText}</p>
+                <TooltipContent>
+                  <p className="text-xs">
+                    {pesData.uniqueColors.length - 8} more{" "}
+                    {pesData.uniqueColors.length - 8 === 1 ? "color" : "colors"}
+                  </p>
                 </TooltipContent>
               </Tooltip>
-            );
-          })}
-          {pesData.uniqueColors.length > 8 && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600 border border-gray-400 dark:border-gray-500 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300 leading-none cursor-help">
-                  +{pesData.uniqueColors.length - 8}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">
-                  {pesData.uniqueColors.length - 8} more{" "}
-                  {pesData.uniqueColors.length - 8 === 1 ? "color" : "colors"}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          )}
+            )}
           </div>
         </TooltipProvider>
       </div>

@@ -167,7 +167,7 @@ export function AppHeader() {
                     "gap-1.5 flex-shrink-0",
                     machineErrorMessage || pyodideError
                       ? "animate-pulse hover:animate-none"
-                      : "invisible pointer-events-none"
+                      : "invisible pointer-events-none",
                   )}
                   title="Click to view error details"
                   aria-label="View error details"

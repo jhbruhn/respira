@@ -16,9 +16,7 @@ export function SkeletonLoader({
     circle: "rounded-full",
   };
 
-  return (
-    <Skeleton className={cn(variantClasses[variant], className)} />
-  );
+  return <Skeleton className={cn(variantClasses[variant], className)} />;
 }
 
 export function PatternCanvasSkeleton() {
