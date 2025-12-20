@@ -1,9 +1,8 @@
-import { useRef, useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useMachineStore } from "../stores/useMachineStore";
 import { useUIStore } from "../stores/useUIStore";
 import { WorkflowStepper } from "./WorkflowStepper";
-import { ErrorPopover } from "./ErrorPopover";
+import { ErrorPopoverContent } from "./ErrorPopover";
 import { getStateVisualInfo } from "../utils/machineStateHelpers";
 import {
   CheckCircleIcon,
@@ -15,6 +14,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 export function AppHeader() {
@@ -42,16 +42,11 @@ export function AppHeader() {
     })),
   );
 
-  const { pyodideError, showErrorPopover, setErrorPopover } = useUIStore(
+  const { pyodideError } = useUIStore(
     useShallow((state) => ({
       pyodideError: state.pyodideError,
-      showErrorPopover: state.showErrorPopover,
-      setErrorPopover: state.setErrorPopover,
     })),
   );
-
-  const errorPopoverRef = useRef<HTMLDivElement>(null);
-  const errorButtonRef = useRef<HTMLButtonElement>(null);
 
   // Get state visual info for header status badge
   const stateVisual = getStateVisualInfo(machineStatus);
@@ -64,26 +59,6 @@ export function AppHeader() {
     error: ExclamationTriangleIcon,
   };
   const StatusIcon = stateIcons[stateVisual.iconName];
-
-  // Close error popover when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        errorPopoverRef.current &&
-        !errorPopoverRef.current.contains(event.target as Node) &&
-        errorButtonRef.current &&
-        !errorButtonRef.current.contains(event.target as Node)
-      ) {
-        setErrorPopover(false);
-      }
-    };
-
-    if (showErrorPopover) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [showErrorPopover, setErrorPopover]);
 
   return (
     <header className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 dark:from-primary-700 dark:via-primary-800 dark:to-primary-900 px-4 sm:px-6 lg:px-8 py-3 shadow-lg border-b-2 border-primary-900/20 dark:border-primary-800/30 flex-shrink-0">
@@ -157,64 +132,63 @@ export function AppHeader() {
               )}
 
               {/* Error indicator - always render to prevent layout shift */}
-              <div className="relative">
-                <Button
-                  ref={errorButtonRef}
-                  onClick={() => setErrorPopover(!showErrorPopover)}
-                  size="sm"
-                  variant="destructive"
-                  className={cn(
-                    "gap-1.5 flex-shrink-0",
-                    machineErrorMessage || pyodideError
-                      ? "animate-pulse hover:animate-none"
-                      : "invisible pointer-events-none",
-                  )}
-                  title="Click to view error details"
-                  aria-label="View error details"
-                  disabled={!(machineErrorMessage || pyodideError)}
-                >
-                  <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>
-                    {(() => {
-                      if (pyodideError) return "Python Error";
-                      if (isPairingError) return "Pairing Required";
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className={cn(
+                      "gap-1.5 flex-shrink-0",
+                      machineErrorMessage || pyodideError
+                        ? "animate-pulse hover:animate-none"
+                        : "invisible pointer-events-none",
+                    )}
+                    title="Click to view error details"
+                    aria-label="View error details"
+                    disabled={!(machineErrorMessage || pyodideError)}
+                  >
+                    <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>
+                      {(() => {
+                        if (pyodideError) return "Python Error";
+                        if (isPairingError) return "Pairing Required";
 
-                      const errorMsg = machineErrorMessage || "";
+                        const errorMsg = machineErrorMessage || "";
 
-                      // Categorize by error message content
-                      if (
-                        errorMsg.toLowerCase().includes("bluetooth") ||
-                        errorMsg.toLowerCase().includes("connection")
-                      ) {
-                        return "Connection Error";
-                      }
-                      if (errorMsg.toLowerCase().includes("upload")) {
-                        return "Upload Error";
-                      }
-                      if (errorMsg.toLowerCase().includes("pattern")) {
-                        return "Pattern Error";
-                      }
-                      if (machineError !== undefined) {
-                        return `Machine Error`;
-                      }
+                        // Categorize by error message content
+                        if (
+                          errorMsg.toLowerCase().includes("bluetooth") ||
+                          errorMsg.toLowerCase().includes("connection")
+                        ) {
+                          return "Connection Error";
+                        }
+                        if (errorMsg.toLowerCase().includes("upload")) {
+                          return "Upload Error";
+                        }
+                        if (errorMsg.toLowerCase().includes("pattern")) {
+                          return "Pattern Error";
+                        }
+                        if (machineError !== undefined) {
+                          return `Machine Error`;
+                        }
 
-                      // Default fallback
-                      return "Error";
-                    })()}
-                  </span>
-                </Button>
+                        // Default fallback
+                        return "Error";
+                      })()}
+                    </span>
+                  </Button>
+                </PopoverTrigger>
 
-                {/* Error popover */}
-                {showErrorPopover && (machineErrorMessage || pyodideError) && (
-                  <ErrorPopover
-                    ref={errorPopoverRef}
+                {/* Error popover content */}
+                {(machineErrorMessage || pyodideError) && (
+                  <ErrorPopoverContent
                     machineError={machineError}
                     isPairingError={isPairingError}
                     errorMessage={machineErrorMessage}
                     pyodideError={pyodideError}
                   />
                 )}
-              </div>
+              </Popover>
             </div>
           </div>
         </div>
