@@ -205,3 +205,30 @@ export function getStateVisualInfo(status: MachineStatus): StateVisualInfo {
 
   return visualMap[category];
 }
+
+/**
+ * Map machine state category to status indicator state.
+ * Returns the appropriate state for the StatusIndicator component.
+ */
+export function getStatusIndicatorState(
+  status: MachineStatus,
+): "active" | "down" | "fixing" | "idle" {
+  const category = getMachineStateCategory(status);
+
+  switch (category) {
+    case MachineStateCategory.IDLE:
+      return "active"; // Gray, no animation
+    case MachineStateCategory.ACTIVE:
+      return "active"; // Green with animation
+    case MachineStateCategory.WAITING:
+      return "fixing"; // Yellow with animation
+    case MachineStateCategory.COMPLETE:
+      return "active"; // Green with animation
+    case MachineStateCategory.INTERRUPTED:
+      return "down"; // Red with animation
+    case MachineStateCategory.ERROR:
+      return "down"; // Red with animation
+    default:
+      return "idle";
+  }
+}
