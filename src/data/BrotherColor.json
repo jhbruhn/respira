@@ -1,0 +1,546 @@
+[
+  {
+    "ColorCode": "001",
+    "BrandCode": 13,
+    "R": 240,
+    "G": 240,
+    "B": 240,
+    "brandName": "Brother Embroidery",
+    "ColorName": "WHITE"
+  },
+  {
+    "ColorCode": "843",
+    "BrandCode": 13,
+    "R": 239,
+    "G": 227,
+    "B": 185,
+    "brandName": "Brother Embroidery",
+    "ColorName": "BEIGE"
+  },
+  {
+    "ColorCode": "010",
+    "BrandCode": 13,
+    "R": 255,
+    "G": 255,
+    "B": 179,
+    "brandName": "Brother Embroidery",
+    "ColorName": "CREAM BROWN"
+  },
+  {
+    "ColorCode": "027",
+    "BrandCode": 13,
+    "R": 227,
+    "G": 243,
+    "B": 91,
+    "brandName": "Brother Embroidery",
+    "ColorName": "FRESH GREEN"
+  },
+  {
+    "ColorCode": "542",
+    "BrandCode": 13,
+    "R": 168,
+    "G": 221,
+    "B": 196,
+    "brandName": "Brother Embroidery",
+    "ColorName": "SEACREST"
+  },
+  {
+    "ColorCode": "017",
+    "BrandCode": 13,
+    "R": 168,
+    "G": 222,
+    "B": 235,
+    "brandName": "Brother Embroidery",
+    "ColorName": "LIGHT BLUE"
+  },
+  {
+    "ColorCode": "804",
+    "BrandCode": 13,
+    "R": 178,
+    "G": 175,
+    "B": 212,
+    "brandName": "Brother Embroidery",
+    "ColorName": "LAVENDER"
+  },
+  {
+    "ColorCode": "124",
+    "BrandCode": 13,
+    "R": 253,
+    "G": 217,
+    "B": 222,
+    "brandName": "Brother Embroidery",
+    "ColorName": "FLESH PINK"
+  },
+  {
+    "ColorCode": "079",
+    "BrandCode": 13,
+    "R": 252,
+    "G": 187,
+    "B": 196,
+    "brandName": "Brother Embroidery",
+    "ColorName": "SALMON PINK"
+  },
+  {
+    "ColorCode": "399",
+    "BrandCode": 13,
+    "R": 216,
+    "G": 204,
+    "B": 198,
+    "brandName": "Brother Embroidery",
+    "ColorName": "WARM GRAY"
+  },
+  {
+    "ColorCode": "307",
+    "BrandCode": 13,
+    "R": 254,
+    "G": 227,
+    "B": 197,
+    "brandName": "Brother Embroidery",
+    "ColorName": "LINEN"
+  },
+  {
+    "ColorCode": "005",
+    "BrandCode": 13,
+    "R": 168,
+    "G": 168,
+    "B": 168,
+    "ColorName": "SILVER"
+  },
+  {
+    "ColorCode": "812",
+    "BrandCode": 13,
+    "R": 255,
+    "G": 240,
+    "B": 141,
+    "brandName": "Brother Embroidery",
+    "ColorName": "CREAM YELLOW"
+  },
+  {
+    "ColorCode": "202",
+    "BrandCode": 13,
+    "R": 240,
+    "G": 249,
+    "B": 112,
+    "brandName": "Brother Embroidery",
+    "ColorName": "LEMON YELLOW"
+  },
+  {
+    "ColorCode": "502",
+    "BrandCode": 13,
+    "R": 158,
+    "G": 214,
+    "B": 125,
+    "ColorName": "MINT GREEN"
+  },
+  {
+    "ColorCode": "509",
+    "BrandCode": 13,
+    "R": 102,
+    "G": 186,
+    "B": 73,
+    "brandName": "Brother Embroidery",
+    "ColorName": "LEAF GREEN"
+  },
+  {
+    "ColorCode": "019",
+    "BrandCode": 13,
+    "R": 37,
+    "G": 132,
+    "B": 187,
+    "brandName": "Brother Embroidery",
+    "ColorName": "SKY BLUE"
+  },
+  {
+    "ColorCode": "612",
+    "BrandCode": 13,
+    "R": 145,
+    "G": 95,
+    "B": 172,
+    "ColorName": "LILAC"
+  },
+  {
+    "ColorCode": "810",
+    "BrandCode": 13,
+    "R": 228,
+    "G": 154,
+    "B": 203,
+    "brandName": "Brother Embroidery",
+    "ColorName": "LIGHT LILAC"
+  },
+  {
+    "ColorCode": "085",
+    "BrandCode": 13,
+    "R": 249,
+    "G": 147,
+    "B": 188,
+    "brandName": "Brother Embroidery",
+    "ColorName": "PINK"
+  },
+  {
+    "ColorCode": "086",
+    "BrandCode": 13,
+    "R": 246,
+    "G": 74,
+    "B": 138,
+    "brandName": "Brother Embroidery",
+    "ColorName": "DEEP ROSE"
+  },
+  {
+    "ColorCode": "348",
+    "BrandCode": 13,
+    "R": 208,
+    "G": 166,
+    "B": 96,
+    "brandName": "Brother Embroidery",
+    "ColorName": "KHAKI"
+  },
+  {
+    "ColorCode": "817",
+    "BrandCode": 13,
+    "R": 135,
+    "G": 135,
+    "B": 135,
+    "brandName": "Brother Embroidery",
+    "ColorName": "GRAY"
+  },
+  {
+    "ColorCode": "126",
+    "BrandCode": 13,
+    "R": 254,
+    "G": 179,
+    "B": 67,
+    "brandName": "Brother Embroidery",
+    "ColorName": "PUMPKIN"
+  },
+  {
+    "ColorCode": "205",
+    "BrandCode": 13,
+    "R": 255,
+    "G": 255,
+    "B": 0,
+    "brandName": "Brother Embroidery",
+    "ColorName": "YELLOW"
+  },
+  {
+    "ColorCode": "513",
+    "BrandCode": 13,
+    "R": 112,
+    "G": 188,
+    "B": 31,
+    "brandName": "Brother Embroidery",
+    "ColorName": "LIME GREEN"
+  },
+  {
+    "ColorCode": "534",
+    "BrandCode": 13,
+    "R": 0,
+    "G": 135,
+    "B": 119,
+    "brandName": "Brother Embroidery",
+    "ColorName": "TEAL GREEN"
+  },
+  {
+    "ColorCode": "420",
+    "BrandCode": 13,
+    "R": 9,
+    "G": 91,
+    "B": 166,
+    "brandName": "Brother Embroidery",
+    "ColorName": "ELECTRIC BLUE"
+  },
+  {
+    "ColorCode": "607",
+    "BrandCode": 13,
+    "R": 104,
+    "G": 106,
+    "B": 176,
+    "brandName": "Brother Embroidery",
+    "ColorName": "WISTERIA VIOLET"
+  },
+  {
+    "ColorCode": "620",
+    "BrandCode": 13,
+    "R": 145,
+    "G": 54,
+    "B": 151,
+    "brandName": "Brother Embroidery",
+    "ColorName": "MAGENTA"
+  },
+  {
+    "ColorCode": "807",
+    "BrandCode": 13,
+    "R": 247,
+    "G": 56,
+    "B": 102,
+    "brandName": "Brother Embroidery",
+    "ColorName": "CARMINE"
+  },
+  {
+    "ColorCode": "339",
+    "BrandCode": 13,
+    "R": 209,
+    "G": 84,
+    "B": 0,
+    "brandName": "Brother Embroidery",
+    "ColorName": "CLAY BROWN"
+  },
+  {
+    "ColorCode": "328",
+    "BrandCode": 13,
+    "R": 186,
+    "G": 152,
+    "B": 0,
+    "brandName": "Brother Embroidery",
+    "ColorName": "BRASS"
+  },
+  {
+    "ColorCode": "704",
+    "BrandCode": 13,
+    "R": 79,
+    "G": 85,
+    "B": 86,
+    "brandName": "Brother Embroidery",
+    "ColorName": "PEWTER"
+  },
+  {
+    "ColorCode": "209",
+    "BrandCode": 13,
+    "R": 254,
+    "G": 158,
+    "B": 50,
+    "brandName": "Brother Embroidery",
+    "ColorName": "TANGERINE"
+  },
+  {
+    "ColorCode": "206",
+    "BrandCode": 13,
+    "R": 255,
+    "G": 217,
+    "B": 17,
+    "brandName": "Brother Embroidery",
+    "ColorName": "HARVEST GOLD"
+  },
+  {
+    "ColorCode": "515",
+    "BrandCode": 13,
+    "R": 47,
+    "G": 126,
+    "B": 32,
+    "brandName": "Brother Embroidery",
+    "ColorName": "MOSS GREEN"
+  },
+  {
+    "ColorCode": "507",
+    "BrandCode": 13,
+    "R": 0,
+    "G": 103,
+    "B": 62,
+    "brandName": "Brother Embroidery",
+    "ColorName": "EMERALD GREEN"
+  },
+  {
+    "ColorCode": "405",
+    "BrandCode": 13,
+    "R": 10,
+    "G": 85,
+    "B": 163,
+    "brandName": "Brother Embroidery",
+    "ColorName": "BLUE"
+  },
+  {
+    "ColorCode": "070",
+    "BrandCode": 13,
+    "R": 75,
+    "G": 107,
+    "B": 175,
+    "ColorName": "CORNFLOWER BLUE"
+  },
+  {
+    "ColorCode": "869",
+    "BrandCode": 13,
+    "R": 119,
+    "G": 1,
+    "B": 118,
+    "brandName": "Brother Embroidery",
+    "ColorName": "ROYAL PURPLE"
+  },
+  {
+    "ColorCode": "107",
+    "BrandCode": 13,
+    "R": 199,
+    "G": 1,
+    "B": 86,
+    "brandName": "Brother Embroidery",
+    "ColorName": "DARK FUCHSIA"
+  },
+  {
+    "ColorCode": "030",
+    "BrandCode": 13,
+    "R": 254,
+    "G": 55,
+    "B": 15,
+    "brandName": "Brother Embroidery",
+    "ColorName": "VERMILLION"
+  },
+  {
+    "ColorCode": "330",
+    "BrandCode": 13,
+    "R": 125,
+    "G": 111,
+    "B": 0,
+    "brandName": "Brother Embroidery",
+    "ColorName": "RUSSET BROWN"
+  },
+  {
+    "ColorCode": "707",
+    "BrandCode": 13,
+    "R": 41,
+    "G": 49,
+    "B": 51,
+    "brandName": "Brother Embroidery",
+    "ColorName": "DARK GRAY"
+  },
+  {
+    "ColorCode": "214",
+    "BrandCode": 13,
+    "R": 232,
+    "G": 169,
+    "B": 0,
+    "brandName": "Brother Embroidery",
+    "ColorName": "DEEP GOLD"
+  },
+  {
+    "ColorCode": "208",
+    "BrandCode": 13,
+    "R": 254,
+    "G": 186,
+    "B": 53,
+    "brandName": "Brother Embroidery",
+    "ColorName": "ORANGE"
+  },
+  {
+    "ColorCode": "517",
+    "BrandCode": 13,
+    "R": 67,
+    "G": 86,
+    "B": 7,
+    "brandName": "Brother Embroidery",
+    "ColorName": "DARK OLIVE"
+  },
+  {
+    "ColorCode": "415",
+    "BrandCode": 13,
+    "R": 19,
+    "G": 74,
+    "B": 70,
+    "brandName": "Brother Embroidery",
+    "ColorName": "PEACOCK BLUE"
+  },
+  {
+    "ColorCode": "406",
+    "BrandCode": 13,
+    "R": 11,
+    "G": 61,
+    "B": 145,
+    "brandName": "Brother Embroidery",
+    "ColorName": "ULTRA MARINE"
+  },
+  {
+    "ColorCode": "614",
+    "BrandCode": 13,
+    "R": 78,
+    "G": 41,
+    "B": 144,
+    "brandName": "Brother Embroidery",
+    "ColorName": "PURPLE"
+  },
+  {
+    "ColorCode": "613",
+    "BrandCode": 13,
+    "R": 106,
+    "G": 28,
+    "B": 138,
+    "brandName": "Brother Embroidery",
+    "ColorName": "VIOLET"
+  },
+  {
+    "ColorCode": "333",
+    "BrandCode": 13,
+    "R": 181,
+    "G": 76,
+    "B": 100,
+    "brandName": "Brother Embroidery",
+    "ColorName": "AMBER RED"
+  },
+  {
+    "ColorCode": "800",
+    "BrandCode": 13,
+    "R": 237,
+    "G": 23,
+    "B": 31,
+    "brandName": "Brother Embroidery",
+    "ColorName": "RED"
+  },
+  {
+    "ColorCode": "337",
+    "BrandCode": 13,
+    "R": 209,
+    "G": 92,
+    "B": 0,
+    "brandName": "Brother Embroidery",
+    "ColorName": "REDDISH BROWN"
+  },
+  {
+    "ColorCode": "900",
+    "BrandCode": 13,
+    "R": 0,
+    "G": 0,
+    "B": 0,
+    "ColorName": "BLACK"
+  },
+  {
+    "ColorCode": "058",
+    "BrandCode": 13,
+    "R": 42,
+    "G": 19,
+    "B": 1,
+    "brandName": "Brother Embroidery",
+    "ColorName": "DARK BROWN"
+  },
+  {
+    "ColorCode": "323",
+    "BrandCode": 13,
+    "R": 178,
+    "G": 118,
+    "B": 36,
+    "brandName": "Brother Embroidery",
+    "ColorName": "LIGHT BROWN"
+  },
+  {
+    "ColorCode": "519",
+    "BrandCode": 13,
+    "R": 19,
+    "G": 43,
+    "B": 26,
+    "brandName": "Brother Embroidery",
+    "ColorName": "OLIVE GREEN"
+  },
+  {
+    "ColorCode": "808",
+    "BrandCode": 13,
+    "R": 0,
+    "G": 56,
+    "B": 34,
+    "brandName": "Brother Embroidery",
+    "ColorName": "DEEP GREEN"
+  },
+  {
+    "ColorCode": "007",
+    "BrandCode": 13,
+    "R": 14,
+    "G": 31,
+    "B": 124,
+    "brandName": "Brother Embroidery",
+    "ColorName": "PRUSSIAN BLUE"
+  }
+]

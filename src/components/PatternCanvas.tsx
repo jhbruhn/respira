@@ -422,7 +422,13 @@ export function PatternCanvas() {
                     .join(" ");
 
                   // Secondary metadata: chart and description
-                  const secondaryMetadata = [color.chart, color.description]
+                  // Only show chart if it's different from catalogNumber
+                  const secondaryMetadata = [
+                    color.chart && color.chart !== color.catalogNumber
+                      ? color.chart
+                      : null,
+                    color.description,
+                  ]
                     .filter(Boolean)
                     .join(" ");
 
