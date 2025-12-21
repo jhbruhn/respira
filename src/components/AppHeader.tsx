@@ -3,7 +3,10 @@ import { useMachineStore } from "../stores/useMachineStore";
 import { useUIStore } from "../stores/useUIStore";
 import { WorkflowStepper } from "./WorkflowStepper";
 import { ErrorPopoverContent } from "./ErrorPopover";
-import { getStateVisualInfo } from "../utils/machineStateHelpers";
+import {
+  getStateVisualInfo,
+  getStatusIndicatorState,
+} from "../utils/machineStateHelpers";
 import {
   CheckCircleIcon,
   BoltIcon,
@@ -14,6 +17,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import StatusIndicator from "@/components/ui/status-indicator";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import {
   Tooltip,
@@ -66,20 +70,18 @@ export function AppHeader() {
   };
   const StatusIcon = stateIcons[stateVisual.iconName];
 
+  // Get connection indicator state (idle when disconnected, state-dependent when connected)
+  const connectionIndicatorState = isConnected
+    ? getStatusIndicatorState(machineStatus)
+    : "idle";
+
   return (
     <TooltipProvider>
       <header className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 dark:from-primary-700 dark:via-primary-800 dark:to-primary-900 px-4 sm:px-6 lg:px-8 py-3 shadow-lg border-b-2 border-primary-900/20 dark:border-primary-800/30 flex-shrink-0">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 lg:gap-8 items-center">
           {/* Machine Connection Status - Responsive width column */}
           <div className="flex items-center gap-3 w-full lg:w-[280px]">
-            <div
-              className="w-2.5 h-2.5 bg-success-400 rounded-full animate-pulse shadow-lg shadow-success-400/50"
-              style={{ visibility: isConnected ? "visible" : "hidden" }}
-            ></div>
-            <div
-              className="w-2.5 h-2.5 bg-gray-400 rounded-full -ml-2.5"
-              style={{ visibility: !isConnected ? "visible" : "hidden" }}
-            ></div>
+            <StatusIndicator state={connectionIndicatorState} size="sm" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="text-lg lg:text-xl font-bold text-white leading-tight">

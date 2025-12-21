@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useMachineStore } from "../stores/useMachineStore";
 import { usePatternStore } from "../stores/usePatternStore";
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function ProgressMonitor() {
   // Machine store
@@ -52,8 +53,6 @@ export function ProgressMonitor() {
   // Pattern store
   const pesData = usePatternStore((state) => state.pesData);
   const currentBlockRef = useRef<HTMLDivElement>(null);
-  const colorBlocksScrollRef = useRef<HTMLDivElement>(null);
-  const [showGradient, setShowGradient] = useState(true);
 
   // State indicators
   const isMaskTraceComplete =
@@ -134,31 +133,6 @@ export function ProgressMonitor() {
       });
     }
   }, [currentBlockIndex]);
-
-  // Handle scroll to detect if at bottom
-  const handleColorBlocksScroll = () => {
-    if (colorBlocksScrollRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } =
-        colorBlocksScrollRef.current;
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5; // 5px threshold
-      setShowGradient(!isAtBottom);
-    }
-  };
-
-  // Check initial scroll state and update on resize
-  useEffect(() => {
-    const checkScrollable = () => {
-      if (colorBlocksScrollRef.current) {
-        const { scrollHeight, clientHeight } = colorBlocksScrollRef.current;
-        const isScrollable = scrollHeight > clientHeight;
-        setShowGradient(isScrollable);
-      }
-    };
-
-    checkScrollable();
-    window.addEventListener("resize", checkScrollable);
-    return () => window.removeEventListener("resize", checkScrollable);
-  }, [colorBlocks]);
 
   return (
     <Card className="p-0 gap-0 lg:h-full border-l-4 border-accent-600 dark:border-accent-500 flex flex-col lg:overflow-hidden">
@@ -242,12 +216,8 @@ export function ProgressMonitor() {
             <h4 className="text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300 flex-shrink-0">
               Color Blocks
             </h4>
-            <div className="relative lg:flex-1 lg:min-h-0">
-              <div
-                ref={colorBlocksScrollRef}
-                onScroll={handleColorBlocksScroll}
-                className="lg:absolute lg:inset-0 flex flex-col gap-2 lg:overflow-y-auto scroll-smooth pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-primary-600 dark:[&::-webkit-scrollbar-thumb]:bg-primary-500 [&::-webkit-scrollbar-thumb]:rounded-full"
-              >
+            <ScrollArea className="lg:flex-1 lg:h-0">
+              <div className="flex flex-col gap-2 pr-4">
                 {colorBlocks.map((block, index) => {
                   const isCompleted = currentStitch >= block.endStitch;
                   const isCurrent = index === currentBlockIndex;
@@ -362,11 +332,7 @@ export function ProgressMonitor() {
                   );
                 })}
               </div>
-              {/* Gradient overlay to indicate more content below - only on desktop and when not at bottom */}
-              {showGradient && (
-                <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white dark:from-gray-800 to-transparent pointer-events-none" />
-              )}
-            </div>
+            </ScrollArea>
           </div>
         )}
 
