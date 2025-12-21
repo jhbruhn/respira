@@ -283,9 +283,9 @@ export function PatternCanvas() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-4 pt-0 pb-4 flex-1 flex flex-col">
+      <CardContent className="px-4 pt-0 pb-4 flex-1 flex flex-col min-h-0">
         <div
-          className="relative w-full h-[400px] sm:h-[500px] lg:flex-1 lg:min-h-0 border border-gray-300 dark:border-gray-600 rounded bg-gray-200 dark:bg-gray-900 overflow-hidden"
+          className="relative w-full flex-1 min-h-0 border border-gray-300 dark:border-gray-600 rounded bg-gray-200 dark:bg-gray-900 overflow-hidden"
           ref={containerRef}
         >
           {containerSize.width > 0 && (
