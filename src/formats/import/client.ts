@@ -2,6 +2,7 @@ import type { WorkerMessage, WorkerResponse } from "./worker";
 import PatternConverterWorker from "./worker?worker";
 import { decodePenData } from "../pen/decoder";
 import type { DecodedPenData } from "../pen/types";
+import { enhanceThreadWithBrotherColor } from "../../utils/brotherColors";
 
 export type PyodideState = "not_loaded" | "loading" | "ready" | "error";
 
@@ -203,8 +204,68 @@ class PatternConverterClient {
               "colors",
             );
 
+            // Enhance thread data with Brother color mapping (with RGB matching enabled)
+            let catalogMatches = 0;
+            let rgbMatches = 0;
+
+            const enhancedThreads = message.data.threads.map((thread) => {
+              const hadCatalog = !!thread.catalogNumber;
+              const hadBrotherBrand = thread.brand === "Brother Embroidery";
+
+              const enhanced = enhanceThreadWithBrotherColor(thread, {
+                matchByRGB: true,
+              });
+
+              // Track what type of match occurred
+              const isBrother = enhanced.brand === "Brother Embroidery";
+              if (isBrother && !hadBrotherBrand) {
+                if (hadCatalog) {
+                  catalogMatches++;
+                } else {
+                  rgbMatches++;
+                }
+              }
+
+              return {
+                color: thread.color,
+                hex: enhanced.hex,
+                brand: enhanced.brand,
+                catalogNumber: enhanced.catalogNumber,
+                description: enhanced.description,
+                chart: enhanced.chart,
+              };
+            });
+
+            // Also enhance unique colors
+            const enhancedUniqueColors = message.data.uniqueColors.map(
+              (color) => {
+                const enhanced = enhanceThreadWithBrotherColor(color, {
+                  matchByRGB: true,
+                });
+                return {
+                  color: color.color,
+                  hex: enhanced.hex,
+                  brand: enhanced.brand,
+                  catalogNumber: enhanced.catalogNumber,
+                  description: enhanced.description,
+                  chart: enhanced.chart,
+                  threadIndices: color.threadIndices,
+                };
+              },
+            );
+
+            console.log(
+              "[PatternConverter] Enhanced threads with Brother color mapping:",
+              enhancedThreads.filter((t) => t.brand === "Brother Embroidery")
+                .length,
+              "Brother colors found",
+              `(${catalogMatches} by catalog, ${rgbMatches} by RGB)`,
+            );
+
             const result: PesPatternData = {
               ...message.data,
+              threads: enhancedThreads,
+              uniqueColors: enhancedUniqueColors,
               penData,
               penStitches,
             };
