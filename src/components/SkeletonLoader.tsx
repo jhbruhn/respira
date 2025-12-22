@@ -65,15 +65,35 @@ export function PatternCanvasSkeleton() {
 
 export function PatternInfoSkeleton() {
   return (
-    <div className="mt-4">
-      <SkeletonLoader className="h-6 w-40 mb-4" variant="text" />
-      <div className="bg-gray-200 dark:bg-gray-900 p-4 rounded-lg space-y-3">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="flex justify-between">
-            <SkeletonLoader className="h-4 w-24" variant="text" />
-            <SkeletonLoader className="h-4 w-32" variant="text" />
+    <div className="mb-3">
+      {/* Three column grid matching PatternInfo stats */}
+      <div className="grid grid-cols-3 gap-2 text-xs mb-2">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="bg-gray-200 dark:bg-gray-700/50 p-2 rounded"
+          >
+            <SkeletonLoader className="h-3 w-12 mb-1" variant="text" />
+            <SkeletonLoader className="h-4 w-16" variant="text" />
           </div>
         ))}
+      </div>
+
+      {/* Separator */}
+      <div className="h-px bg-gray-200 dark:bg-gray-700 mb-3" />
+
+      {/* Color swatches row */}
+      <div className="flex items-center gap-2 mb-2">
+        <SkeletonLoader className="h-3 w-12" variant="text" />
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <SkeletonLoader
+              key={i}
+              className="w-3 h-3 rounded-full"
+              variant="circle"
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
