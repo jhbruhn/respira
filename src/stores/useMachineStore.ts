@@ -14,6 +14,7 @@ import { uuidToString } from "../services/PatternCacheService";
 import { createStorageService } from "../platform";
 import type { IStorageService } from "../platform/interfaces/IStorageService";
 import type { PesPatternData } from "../formats/import/pesImporter";
+import { usePatternStore } from "./usePatternStore";
 
 interface MachineState {
   // Service instances
@@ -440,6 +441,9 @@ export const useMachineStore = create<MachineState>((set, get) => ({
         resumeAvailable: false,
         resumeFileName: null,
       });
+
+      // Clear uploaded pattern data in pattern store
+      usePatternStore.getState().clearUploadedPattern();
 
       await refreshStatus();
     } catch (err) {

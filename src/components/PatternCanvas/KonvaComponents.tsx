@@ -1,10 +1,10 @@
 import { memo, useMemo } from "react";
 import { Group, Line, Rect, Text, Circle } from "react-konva";
-import type { PesPatternData } from "../formats/import/pesImporter";
-import { getThreadColor } from "../formats/import/pesImporter";
-import type { MachineInfo } from "../types/machine";
-import { MOVE } from "../formats/import/constants";
-import { canvasColors } from "../utils/cssVariables";
+import type { PesPatternData } from "../../formats/import/pesImporter";
+import { getThreadColor } from "../../formats/import/pesImporter";
+import type { MachineInfo } from "../../types/machine";
+import { MOVE } from "../../formats/import/constants";
+import { canvasColors } from "../../utils/cssVariables";
 
 interface GridProps {
   gridSize: number;

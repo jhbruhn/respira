@@ -11,6 +11,16 @@ import {
   canUploadPattern,
   getMachineStateCategory,
 } from "../utils/machineStateHelpers";
+import {
+  transformStitchesRotation,
+  calculateRotatedBounds,
+} from "../utils/rotationUtils";
+import { encodeStitchesToPen } from "../formats/pen/encoder";
+import { decodePenData } from "../formats/pen/decoder";
+import {
+  calculatePatternCenter,
+  calculateBoundsFromDecodedStitches,
+} from "./PatternCanvas/patternCanvasHelpers";
 import { PatternInfoSkeleton } from "./SkeletonLoader";
 import { PatternInfo } from "./PatternInfo";
 import {
@@ -57,13 +67,17 @@ export function FileUpload() {
     pesData: pesDataProp,
     currentFileName,
     patternOffset,
+    patternRotation,
     setPattern,
+    setUploadedPattern,
   } = usePatternStore(
     useShallow((state) => ({
       pesData: state.pesData,
       currentFileName: state.currentFileName,
       patternOffset: state.patternOffset,
+      patternRotation: state.patternRotation,
       setPattern: state.setPattern,
+      setUploadedPattern: state.setUploadedPattern,
     })),
   );
 
@@ -137,26 +151,115 @@ export function FileUpload() {
     [fileService, setPattern, pyodideReady, initializePyodide],
   );
 
-  const handleUpload = useCallback(() => {
+  const handleUpload = useCallback(async () => {
     if (pesData && displayFileName) {
-      uploadPattern(pesData.penData, pesData, displayFileName, patternOffset);
-    }
-  }, [pesData, displayFileName, uploadPattern, patternOffset]);
+      let penDataToUpload = pesData.penData;
+      let pesDataForUpload = pesData;
 
-  // Check if pattern (with offset) fits within hoop bounds
+      // Apply rotation if needed
+      if (patternRotation && patternRotation !== 0) {
+        // Transform stitches
+        const rotatedStitches = transformStitchesRotation(
+          pesData.stitches,
+          patternRotation,
+          pesData.bounds,
+        );
+
+        // Encode to PEN (this will round coordinates)
+        const penResult = encodeStitchesToPen(rotatedStitches);
+        penDataToUpload = new Uint8Array(penResult.penBytes);
+
+        // Decode back to get the ACTUAL pattern (after PEN rounding)
+        const decoded = decodePenData(penDataToUpload);
+
+        // Calculate bounds from the DECODED stitches (the actual data that will be rendered)
+        const rotatedBounds = calculateBoundsFromDecodedStitches(decoded);
+
+        // Calculate the center of the rotated pattern
+        const originalCenter = calculatePatternCenter(pesData.bounds);
+        const rotatedCenter = calculatePatternCenter(rotatedBounds);
+        const centerShiftX = rotatedCenter.x - originalCenter.x;
+        const centerShiftY = rotatedCenter.y - originalCenter.y;
+
+        // CRITICAL: Adjust position to compensate for the center shift!
+        // In Konva, visual position = (x - offsetX, y - offsetY).
+        // Original visual pos: (x - originalCenter.x, y - originalCenter.y)
+        // New visual pos: (newX - rotatedCenter.x, newY - rotatedCenter.y)
+        // For same visual position: newX = x + (rotatedCenter.x - originalCenter.x)
+        // So we need to add (rotatedCenter - originalCenter) to the position.
+        const adjustedOffset = {
+          x: patternOffset.x + centerShiftX,
+          y: patternOffset.y + centerShiftY,
+        };
+
+        // Create rotated PesPatternData for upload
+        pesDataForUpload = {
+          ...pesData,
+          stitches: rotatedStitches,
+          penData: penDataToUpload,
+          penStitches: decoded,
+          bounds: rotatedBounds,
+        };
+
+        // Save uploaded pattern to store for preview BEFORE starting upload
+        // This allows the preview to show immediately when isUploading becomes true
+        setUploadedPattern(pesDataForUpload, adjustedOffset);
+
+        // Upload the pattern with offset
+        uploadPattern(
+          penDataToUpload,
+          pesDataForUpload,
+          displayFileName,
+          adjustedOffset,
+        );
+
+        return; // Early return to skip the upload below
+      }
+
+      // Save uploaded pattern to store BEFORE starting upload
+      // (same as original since no rotation)
+      setUploadedPattern(pesDataForUpload, patternOffset);
+
+      // Upload the pattern (no rotation case)
+      uploadPattern(
+        penDataToUpload,
+        pesDataForUpload,
+        displayFileName,
+        patternOffset,
+      );
+    }
+  }, [
+    pesData,
+    displayFileName,
+    uploadPattern,
+    patternOffset,
+    patternRotation,
+    setUploadedPattern,
+  ]);
+
+  // Check if pattern (with offset and rotation) fits within hoop bounds
   const checkPatternFitsInHoop = useCallback(() => {
     if (!pesData || !machineInfo) {
       return { fits: true, error: null };
     }
 
-    const { bounds } = pesData;
+    // Calculate rotated bounds if rotation is applied
+    let bounds = pesData.bounds;
+    if (patternRotation && patternRotation !== 0) {
+      bounds = calculateRotatedBounds(pesData.bounds, patternRotation);
+    }
+
     const { maxWidth, maxHeight } = machineInfo;
 
-    // Calculate pattern bounds with offset applied
-    const patternMinX = bounds.minX + patternOffset.x;
-    const patternMaxX = bounds.maxX + patternOffset.x;
-    const patternMinY = bounds.minY + patternOffset.y;
-    const patternMaxY = bounds.maxY + patternOffset.y;
+    // The patternOffset represents the pattern's CENTER position (due to offsetX/offsetY in canvas)
+    // So we need to calculate bounds relative to the center
+    const center = calculatePatternCenter(bounds);
+
+    // Calculate actual bounds in world coordinates
+    const patternMinX = patternOffset.x - center.x + bounds.minX;
+    const patternMaxX = patternOffset.x - center.x + bounds.maxX;
+    const patternMinY = patternOffset.y - center.y + bounds.minY;
+    const patternMaxY = patternOffset.y - center.y + bounds.maxY;
 
     // Hoop bounds (centered at origin)
     const hoopMinX = -maxWidth / 2;
@@ -196,7 +299,7 @@ export function FileUpload() {
     }
 
     return { fits: true, error: null };
-  }, [pesData, machineInfo, patternOffset]);
+  }, [pesData, machineInfo, patternOffset, patternRotation]);
 
   const boundsCheck = checkPatternFitsInHoop();
 
