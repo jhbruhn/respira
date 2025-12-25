@@ -8,7 +8,6 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/solid";
 import { MachineStatus } from "../types/machine";
-import { getErrorDetails, hasError } from "../utils/errorCodeHelpers";
 
 interface Step {
   id: number;
@@ -28,38 +27,7 @@ const steps: Step[] = [
 ];
 
 // Helper function to get guide content for a step
-function getGuideContent(
-  stepId: number,
-  machineStatus: MachineStatus,
-  hasError: boolean,
-  errorCode?: number,
-  errorMessage?: string,
-) {
-  // Check for errors first
-  if (hasError) {
-    const errorDetails = getErrorDetails(errorCode);
-
-    if (errorDetails?.isInformational) {
-      return {
-        type: "info" as const,
-        title: errorDetails.title,
-        description: errorDetails.description,
-        items: errorDetails.solutions || [],
-      };
-    }
-
-    return {
-      type: "error" as const,
-      title: errorDetails?.title || "Error Occurred",
-      description:
-        errorDetails?.description ||
-        errorMessage ||
-        "An error occurred. Please check the machine and try again.",
-      items: errorDetails?.solutions || [],
-      errorCode,
-    };
-  }
-
+function getGuideContent(stepId: number, machineStatus: MachineStatus) {
   // Return content based on step
   switch (stepId) {
     case 1:
@@ -273,17 +241,10 @@ function getCurrentStep(
 
 export function WorkflowStepper() {
   // Machine store
-  const {
-    machineStatus,
-    isConnected,
-    machineError,
-    error: errorMessage,
-  } = useMachineStore(
+  const { machineStatus, isConnected } = useMachineStore(
     useShallow((state) => ({
       machineStatus: state.machineStatus,
       isConnected: state.isConnected,
-      machineError: state.machineError,
-      error: state.error,
     })),
   );
 
@@ -297,7 +258,6 @@ export function WorkflowStepper() {
   // Derived state: pattern is uploaded if machine has pattern info
   const patternUploaded = usePatternUploaded();
   const hasPattern = pesData !== null;
-  const hasErrorFlag = hasError(machineError);
   const currentStep = getCurrentStep(
     machineStatus,
     isConnected,
@@ -443,13 +403,7 @@ export function WorkflowStepper() {
           aria-label="Step guidance"
         >
           {(() => {
-            const content = getGuideContent(
-              popoverStep,
-              machineStatus,
-              hasErrorFlag,
-              machineError,
-              errorMessage || undefined,
-            );
+            const content = getGuideContent(popoverStep, machineStatus);
             if (!content) return null;
 
             const colorClasses = {

@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useMachineStore } from "../stores/useMachineStore";
 import { useUIStore } from "../stores/useUIStore";
@@ -7,6 +8,7 @@ import {
   getStateVisualInfo,
   getStatusIndicatorState,
 } from "../utils/machineStateHelpers";
+import { hasError, getErrorDetails } from "../utils/errorCodeHelpers";
 import {
   CheckCircleIcon,
   BoltIcon,
@@ -58,6 +60,15 @@ export function AppHeader() {
     })),
   );
 
+  // State management for error popover auto-open/close
+  const [errorPopoverOpen, setErrorPopoverOpen] = useState(false);
+  const [dismissedErrorCode, setDismissedErrorCode] = useState<number | null>(
+    null,
+  );
+  const prevMachineErrorRef = useRef<number | undefined>(undefined);
+  const prevErrorMessageRef = useRef<string | null>(null);
+  const prevPyodideErrorRef = useRef<string | null>(null);
+
   // Get state visual info for header status badge
   const stateVisual = getStateVisualInfo(machineStatus);
   const stateIcons = {
@@ -74,6 +85,66 @@ export function AppHeader() {
   const connectionIndicatorState = isConnected
     ? getStatusIndicatorState(machineStatus)
     : "idle";
+
+  // Auto-open/close error popover based on error state changes
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const currentError = machineError;
+    const prevError = prevMachineErrorRef.current;
+    const currentErrorMessage = machineErrorMessage;
+    const prevErrorMessage = prevErrorMessageRef.current;
+    const currentPyodideError = pyodideError;
+    const prevPyodideError = prevPyodideErrorRef.current;
+
+    // Check if there's any error now
+    const hasAnyError =
+      machineErrorMessage || pyodideError || hasError(currentError);
+    // Check if there was any error before
+    const hadAnyError =
+      prevErrorMessage || prevPyodideError || hasError(prevError);
+
+    // Auto-open popover when new error appears
+    const isNewMachineError =
+      hasError(currentError) &&
+      currentError !== prevError &&
+      currentError !== dismissedErrorCode;
+    const isNewErrorMessage =
+      currentErrorMessage && currentErrorMessage !== prevErrorMessage;
+    const isNewPyodideError =
+      currentPyodideError && currentPyodideError !== prevPyodideError;
+
+    if (isNewMachineError || isNewErrorMessage || isNewPyodideError) {
+      setErrorPopoverOpen(true);
+    }
+
+    // Auto-close popover when all errors are cleared
+    if (!hasAnyError && hadAnyError) {
+      setErrorPopoverOpen(false);
+      setDismissedErrorCode(null); // Reset dismissed tracking
+    }
+
+    // Update refs for next comparison
+    prevMachineErrorRef.current = currentError;
+    prevErrorMessageRef.current = currentErrorMessage;
+    prevPyodideErrorRef.current = currentPyodideError;
+  }, [machineError, machineErrorMessage, pyodideError, dismissedErrorCode]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Handle manual popover dismiss
+  const handlePopoverOpenChange = (open: boolean) => {
+    setErrorPopoverOpen(open);
+
+    // If user manually closes it, remember the current error state to prevent reopening
+    if (!open) {
+      // For machine errors, track the error code
+      if (hasError(machineError)) {
+        setDismissedErrorCode(machineError);
+      }
+      // Update refs so we don't reopen for the same error message/pyodide error
+      prevErrorMessageRef.current = machineErrorMessage;
+      prevPyodideErrorRef.current = pyodideError;
+    }
+  };
 
   return (
     <TooltipProvider>
@@ -166,22 +237,22 @@ export function AppHeader() {
                 )}
 
                 {/* Error indicator - always render to prevent layout shift */}
-                <Popover>
+                <Popover
+                  open={errorPopoverOpen}
+                  onOpenChange={handlePopoverOpenChange}
+                >
                   <PopoverTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="destructive"
+                    <button
                       className={cn(
-                        "gap-1.5 flex-shrink-0",
+                        "inline-flex items-center rounded-full border border-transparent bg-destructive text-white px-2.5 py-1.5 text-xs font-semibold gap-1.5 cursor-pointer hover:bg-destructive/90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2",
                         machineErrorMessage || pyodideError
                           ? "animate-pulse hover:animate-none"
                           : "invisible pointer-events-none",
                       )}
                       aria-label="View error details"
-                      disabled={!(machineErrorMessage || pyodideError)}
                     >
                       <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span>
+                      <span className="font-semibold">
                         {(() => {
                           if (pyodideError) return "Python Error";
                           if (isPairingError) return "Pairing Required";
@@ -202,17 +273,19 @@ export function AppHeader() {
                             return "Pattern Error";
                           }
                           if (machineError !== undefined) {
-                            return `Machine Error`;
+                            // Get short name from error details
+                            const errorDetails = getErrorDetails(machineError);
+                            return errorDetails?.shortName || "Machine Error";
                           }
 
                           // Default fallback
                           return "Error";
                         })()}
                       </span>
-                    </Button>
+                    </button>
                   </PopoverTrigger>
 
-                  {/* Error popover content */}
+                  {/* Error popover content - unchanged */}
                   {(machineErrorMessage || pyodideError) && (
                     <ErrorPopoverContent
                       machineError={

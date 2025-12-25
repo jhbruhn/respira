@@ -42,6 +42,8 @@ export const SewingMachineError = {
  */
 interface ErrorInfo {
   title: string;
+  /** Short name for badge display (max 15 characters) */
+  shortName: string;
   description: string;
   solutions: string[];
   /** If true, this "error" is really just an informational step, not a real error */
@@ -55,12 +57,14 @@ interface ErrorInfo {
 const ERROR_DETAILS: Record<number, ErrorInfo> = {
   [SewingMachineError.NeedlePositionError]: {
     title: "The Needle is Down",
+    shortName: "Needle Down",
     description:
       "The needle is in the down position and needs to be raised before continuing.",
     solutions: ["Press the needle position switch to raise the needle"],
   },
   [SewingMachineError.SafetyError]: {
     title: "Safety Error",
+    shortName: "Safety Error",
     description: "The machine is sensing an operational issue.",
     solutions: [
       "Remove the thread on the top of the fabric and then remove the needle",
@@ -72,21 +76,25 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.LowerThreadSafetyError]: {
     title: "Lower Thread Safety Error",
+    shortName: "Lower Thread",
     description: "The bobbin winder safety device is activated.",
     solutions: ["Check if the thread is tangled"],
   },
   [SewingMachineError.LowerThreadFreeError]: {
     title: "Lower Thread Free Error",
+    shortName: "Lower Thread",
     description: "Problem with lower thread.",
     solutions: ["Slide the bobbin winder shaft toward the front"],
   },
   [SewingMachineError.RestartError10]: {
     title: "Restart Required",
+    shortName: "Restart Needed",
     description: "A malfunction occurred.",
     solutions: ["Turn the machine off, then on again"],
   },
   [SewingMachineError.RestartError11]: {
     title: "Restart Required (M519411)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M519411",
     solutions: [
       "Turn the machine off, then on again",
@@ -95,6 +103,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RestartError12]: {
     title: "Restart Required (M519412)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M519412",
     solutions: [
       "Turn the machine off, then on again",
@@ -103,6 +112,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RestartError13]: {
     title: "Restart Required (M519413)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M519413",
     solutions: [
       "Turn the machine off, then on again",
@@ -111,6 +121,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RestartError14]: {
     title: "Restart Required (M519414)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M519414",
     solutions: [
       "Turn the machine off, then on again",
@@ -119,6 +130,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RestartError15]: {
     title: "Restart Required (M519415)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M519415",
     solutions: [
       "Turn the machine off, then on again",
@@ -127,6 +139,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RestartError16]: {
     title: "Restart Required (M519416)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M519416",
     solutions: [
       "Turn the machine off, then on again",
@@ -135,6 +148,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RestartError17]: {
     title: "Restart Required (M519417)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M519417",
     solutions: [
       "Turn the machine off, then on again",
@@ -143,6 +157,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RestartError18]: {
     title: "Restart Required (M519418)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M519418",
     solutions: [
       "Turn the machine off, then on again",
@@ -151,6 +166,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RestartError19]: {
     title: "Restart Required (M519419)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M519419",
     solutions: [
       "Turn the machine off, then on again",
@@ -159,6 +175,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RestartError1A]: {
     title: "Restart Required (M51941A)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M51941A",
     solutions: [
       "Turn the machine off, then on again",
@@ -167,6 +184,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RestartError1B]: {
     title: "Restart Required (M51941B)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M51941B",
     solutions: [
       "Turn the machine off, then on again",
@@ -175,6 +193,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RestartError1C]: {
     title: "Restart Required (M51941C)",
+    shortName: "Restart Needed",
     description: "A malfunction occurred. Error code: M51941C",
     solutions: [
       "Turn the machine off, then on again",
@@ -183,6 +202,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.NeedlePlateError]: {
     title: "Needle Plate Error",
+    shortName: "Needle Plate",
     description: "Check the needle plate cover.",
     solutions: [
       "Reattach the needle plate cover",
@@ -191,11 +211,13 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.ThreadLeverError]: {
     title: "Thread Lever Error",
+    shortName: "Thread Lever",
     description: "The needle threading lever is not in its original position.",
     solutions: ["Return the needle threading lever to its original position"],
   },
   [SewingMachineError.UpperThreadError]: {
     title: "Upper Thread Error",
+    shortName: "Upper Thread",
     description: "Check and rethread the upper thread.",
     solutions: [
       "Check the upper thread and rethread it",
@@ -204,6 +226,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.LowerThreadError]: {
     title: "Lower Thread Error",
+    shortName: "Lower Thread",
     description: "The bobbin thread is almost empty.",
     solutions: [
       "Replace the bobbin thread",
@@ -212,6 +235,7 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.UpperThreadSewingStartError]: {
     title: "Upper Thread Error at Sewing Start",
+    shortName: "Upper Thread",
     description: "Check and rethread the upper thread.",
     solutions: [
       "Press the Accept button to resolve the error",
@@ -221,21 +245,25 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.PRWiperError]: {
     title: "PR Wiper Error",
+    shortName: "PR Wiper",
     description: "PR Wiper Error.",
     solutions: ["Press the Accept button to resolve the error"],
   },
   [SewingMachineError.HoopError]: {
     title: "Hoop Error",
+    shortName: "Hoop Error",
     description: "This embroidery frame cannot be used.",
     solutions: ["Use another frame that fits the pattern"],
   },
   [SewingMachineError.NoHoopError]: {
     title: "No Hoop Detected",
+    shortName: "No Hoop",
     description: "No hoop attached.",
     solutions: ["Attach the embroidery hoop"],
   },
   [SewingMachineError.InitialHoopError]: {
     title: "Machine Initialization Required",
+    shortName: "Init Required",
     description: "An initial homing procedure must be performed.",
     solutions: [
       "Remove the embroidery hoop from the machine completely",
@@ -248,12 +276,14 @@ const ERROR_DETAILS: Record<number, ErrorInfo> = {
   },
   [SewingMachineError.RegularInspectionError]: {
     title: "Regular Inspection Required",
+    shortName: "Inspection Due",
     description:
       "Preventive maintenance is recommended. This message is displayed when maintenance is due.",
     solutions: ["Please contact the service center"],
   },
   [SewingMachineError.Setting]: {
     title: "Settings Error",
+    shortName: "Settings Error",
     description: "Stitch count cannot be changed.",
     solutions: ["This setting cannot be modified at this time"],
   },
