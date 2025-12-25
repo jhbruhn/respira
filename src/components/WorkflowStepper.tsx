@@ -451,7 +451,7 @@ export function WorkflowStepper() {
             };
 
             const Icon =
-              content.type === "error"
+              content.type === "warning"
                 ? ExclamationTriangleIcon
                 : InformationCircleIcon;
 
@@ -492,18 +492,6 @@ export function WorkflowStepper() {
                         ))}
                       </ul>
                     )}
-                    {content.type === "error" &&
-                      content.errorCode !== undefined && (
-                        <p
-                          className={`text-xs ${descColorClasses[content.type]} mt-3 font-mono`}
-                        >
-                          Error Code: 0x
-                          {content.errorCode
-                            .toString(16)
-                            .toUpperCase()
-                            .padStart(2, "0")}
-                        </p>
-                      )}
                   </div>
                 </div>
               </div>

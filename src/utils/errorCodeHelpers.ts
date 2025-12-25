@@ -388,6 +388,7 @@ export function getErrorDetails(
   if (errorTitle) {
     return {
       title: errorTitle,
+      shortName: errorTitle.length > 15 ? "Machine Error" : errorTitle,
       description: "Please check the machine display for more information.",
       solutions: [
         "Consult your machine manual for specific troubleshooting steps",
@@ -400,6 +401,7 @@ export function getErrorDetails(
   // Unknown error code
   return {
     title: `Machine Error 0x${errorCode.toString(16).toUpperCase().padStart(2, "0")}`,
+    shortName: "Machine Error",
     description:
       "The machine has reported an error code that is not recognized.",
     solutions: [
