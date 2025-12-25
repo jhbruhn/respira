@@ -8,14 +8,7 @@ import { usePatternStore } from "../../stores/usePatternStore";
 import { Stage, Layer, Group, Transformer } from "react-konva";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
-import {
-  PlusIcon,
-  MinusIcon,
-  ArrowPathIcon,
-  LockClosedIcon,
-  PhotoIcon,
-  ArrowsPointingInIcon,
-} from "@heroicons/react/24/solid";
+import { PhotoIcon } from "@heroicons/react/24/solid";
 import type { PesPatternData } from "../../formats/import/pesImporter";
 import { calculateInitialScale } from "../../utils/konvaRenderers";
 import {
@@ -33,12 +26,14 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   calculatePatternCenter,
   convertPenStitchesToPesFormat,
   calculateZoomToPoint,
 } from "./patternCanvasHelpers";
+import { ThreadLegend } from "./ThreadLegend";
+import { PatternPositionIndicator } from "./PatternPositionIndicator";
+import { ZoomControls } from "./ZoomControls";
 
 export function PatternCanvas() {
   // Machine store
@@ -579,156 +574,29 @@ export function PatternCanvas() {
               return (
                 displayPattern && (
                   <>
-                    {/* Thread Legend Overlay */}
-                    <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-2 sm:p-2.5 rounded-lg shadow-lg z-10 max-w-[150px] sm:max-w-[180px] lg:max-w-[200px]">
-                      <h4 className="m-0 mb-1.5 sm:mb-2 text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-300 dark:border-gray-600 pb-1 sm:pb-1.5">
-                        Colors
-                      </h4>
-                      {displayPattern.uniqueColors.map((color, idx) => {
-                        // Primary metadata: brand and catalog number
-                        const primaryMetadata = [
-                          color.brand,
-                          color.catalogNumber
-                            ? `#${color.catalogNumber}`
-                            : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" ");
+                    <ThreadLegend colors={displayPattern.uniqueColors} />
 
-                        // Secondary metadata: chart and description
-                        // Only show chart if it's different from catalogNumber
-                        const secondaryMetadata = [
-                          color.chart && color.chart !== color.catalogNumber
-                            ? color.chart
-                            : null,
-                          color.description,
-                        ]
-                          .filter(Boolean)
-                          .join(" ");
-
-                        return (
-                          <div
-                            key={idx}
-                            className="flex items-start gap-1.5 sm:gap-2 mb-1 sm:mb-1.5 last:mb-0"
-                          >
-                            <div
-                              className="w-3 h-3 sm:w-4 sm:h-4 rounded border border-black dark:border-gray-300 flex-shrink-0 mt-0.5"
-                              style={{ backgroundColor: color.hex }}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">
-                                Color {idx + 1}
-                              </div>
-                              {(primaryMetadata || secondaryMetadata) && (
-                                <div className="text-xs text-gray-600 dark:text-gray-400 leading-tight mt-0.5 break-words">
-                                  {primaryMetadata}
-                                  {primaryMetadata && secondaryMetadata && (
-                                    <span className="mx-1">•</span>
-                                  )}
-                                  {secondaryMetadata}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Pattern Offset Indicator */}
-                    <div
-                      className={`absolute bottom-16 sm:bottom-20 right-2 sm:right-5 backdrop-blur-sm p-2 sm:p-2.5 px-2.5 sm:px-3.5 rounded-lg shadow-lg z-[11] min-w-[160px] sm:min-w-[180px] transition-colors ${
+                    <PatternPositionIndicator
+                      offset={
                         isUploading || patternUploaded
-                          ? "bg-amber-50/95 dark:bg-amber-900/80 border-2 border-amber-300 dark:border-amber-600"
-                          : "bg-white/95 dark:bg-gray-800/95"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                          Pattern Position:
-                        </div>
-                        {(isUploading || patternUploaded) && (
-                          <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                            <LockClosedIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                            <span className="text-xs font-bold">
-                              {isUploading ? "UPLOADING" : "LOCKED"}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-sm font-semibold text-primary-600 dark:text-primary-400 mb-1">
-                        {isUploading || patternUploaded ? (
-                          <>
-                            X:{" "}
-                            {(initialUploadedPatternOffset.x / 10).toFixed(1)}
-                            mm, Y:{" "}
-                            {(initialUploadedPatternOffset.y / 10).toFixed(1)}mm
-                          </>
-                        ) : (
-                          <>
-                            X: {(localPatternOffset.x / 10).toFixed(1)}mm, Y:{" "}
-                            {(localPatternOffset.y / 10).toFixed(1)}mm
-                          </>
-                        )}
-                      </div>
-                      {!isUploading &&
-                        !patternUploaded &&
-                        localPatternRotation !== 0 && (
-                          <div className="text-sm font-semibold text-primary-600 dark:text-primary-400 mb-1">
-                            Rotation: {localPatternRotation.toFixed(1)}°
-                          </div>
-                        )}
-                      <div className="text-xs text-gray-600 dark:text-gray-400 italic">
-                        {isUploading
-                          ? "Uploading pattern..."
-                          : patternUploaded
-                            ? "Pattern locked • Drag background to pan"
-                            : "Drag pattern to move • Drag background to pan"}
-                      </div>
-                    </div>
+                          ? initialUploadedPatternOffset
+                          : localPatternOffset
+                      }
+                      rotation={localPatternRotation}
+                      isLocked={patternUploaded}
+                      isUploading={isUploading}
+                    />
 
-                    {/* Zoom Controls Overlay */}
-                    <div className="absolute bottom-2 sm:bottom-5 right-2 sm:right-5 flex gap-1.5 sm:gap-2 items-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg shadow-lg z-10">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="w-7 h-7 sm:w-8 sm:h-8"
-                        onClick={handleCenterPattern}
-                        disabled={!pesData || patternUploaded || isUploading}
-                        title="Center Pattern in Hoop"
-                      >
-                        <ArrowsPointingInIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="w-7 h-7 sm:w-8 sm:h-8"
-                        onClick={handleZoomIn}
-                        title="Zoom In"
-                      >
-                        <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </Button>
-                      <span className="min-w-[40px] sm:min-w-[50px] text-center text-sm font-semibold text-gray-900 dark:text-gray-100 select-none">
-                        {Math.round(stageScale * 100)}%
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="w-7 h-7 sm:w-8 sm:h-8"
-                        onClick={handleZoomOut}
-                        title="Zoom Out"
-                      >
-                        <MinusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="w-7 h-7 sm:w-8 sm:h-8 ml-1"
-                        onClick={handleZoomReset}
-                        title="Reset Zoom"
-                      >
-                        <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </Button>
-                    </div>
+                    <ZoomControls
+                      scale={stageScale}
+                      onZoomIn={handleZoomIn}
+                      onZoomOut={handleZoomOut}
+                      onZoomReset={handleZoomReset}
+                      onCenterPattern={handleCenterPattern}
+                      canCenterPattern={
+                        !!pesData && !patternUploaded && !isUploading
+                      }
+                    />
                   </>
                 )
               );
