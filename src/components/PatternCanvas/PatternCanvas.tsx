@@ -5,17 +5,10 @@ import {
   usePatternUploaded,
 } from "../../stores/useMachineStore";
 import { usePatternStore } from "../../stores/usePatternStore";
-import { Stage, Layer, Group, Transformer } from "react-konva";
+import { Stage, Layer } from "react-konva";
 import Konva from "konva";
 import { PhotoIcon } from "@heroicons/react/24/solid";
-import {
-  Grid,
-  Origin,
-  Hoop,
-  Stitches,
-  PatternBounds,
-  CurrentPosition,
-} from "../KonvaComponents";
+import { Grid, Origin, Hoop } from "../KonvaComponents";
 import {
   Card,
   CardHeader,
@@ -23,13 +16,10 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import {
-  calculatePatternCenter,
-  convertPenStitchesToPesFormat,
-} from "./patternCanvasHelpers";
 import { ThreadLegend } from "./ThreadLegend";
 import { PatternPositionIndicator } from "./PatternPositionIndicator";
 import { ZoomControls } from "./ZoomControls";
+import { PatternLayer } from "./PatternLayer";
 import { useCanvasViewport } from "../../hooks/useCanvasViewport";
 import { usePatternTransform } from "../../hooks/usePatternTransform";
 
@@ -201,141 +191,34 @@ export function PatternCanvas() {
 
               {/* Original pattern layer: draggable with transformer (shown before upload starts) */}
               <Layer visible={!isUploading && !patternUploaded}>
-                {pesData &&
-                  (() => {
-                    const originalCenter = calculatePatternCenter(
-                      pesData.bounds,
-                    );
-                    console.log("[Canvas] Rendering original pattern:", {
-                      position: localPatternOffset,
-                      rotation: localPatternRotation,
-                      center: originalCenter,
-                      bounds: pesData.bounds,
-                    });
-                    return (
-                      <>
-                        <Group
-                          name="pattern-group"
-                          ref={(node) => {
-                            patternGroupRef.current = node;
-                            // Set initial rotation from state
-                            if (node) {
-                              node.rotation(localPatternRotation);
-                              // Try to attach transformer when group is mounted
-                              attachTransformer();
-                            }
-                          }}
-                          draggable={!isUploading}
-                          x={localPatternOffset.x}
-                          y={localPatternOffset.y}
-                          offsetX={originalCenter.x}
-                          offsetY={originalCenter.y}
-                          onDragEnd={handlePatternDragEnd}
-                          onTransformEnd={handleTransformEnd}
-                          onMouseEnter={(e) => {
-                            const stage = e.target.getStage();
-                            if (stage && !isUploading)
-                              stage.container().style.cursor = "move";
-                          }}
-                          onMouseLeave={(e) => {
-                            const stage = e.target.getStage();
-                            if (stage && !isUploading)
-                              stage.container().style.cursor = "grab";
-                          }}
-                        >
-                          <Stitches
-                            stitches={convertPenStitchesToPesFormat(
-                              pesData.penStitches,
-                            )}
-                            pesData={pesData}
-                            currentStitchIndex={0}
-                            showProgress={false}
-                          />
-                          <PatternBounds bounds={pesData.bounds} />
-                        </Group>
-                        <Transformer
-                          ref={(node) => {
-                            transformerRef.current = node;
-                            // Try to attach transformer when transformer is mounted
-                            if (node) {
-                              attachTransformer();
-                            }
-                          }}
-                          enabledAnchors={[]}
-                          rotateEnabled={true}
-                          borderEnabled={true}
-                          borderStroke="#FF6B6B"
-                          borderStrokeWidth={2}
-                          rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
-                          ignoreStroke={true}
-                          rotateAnchorOffset={20}
-                        />
-                      </>
-                    );
-                  })()}
+                {pesData && (
+                  <PatternLayer
+                    pesData={pesData}
+                    offset={localPatternOffset}
+                    rotation={localPatternRotation}
+                    isInteractive={true}
+                    showProgress={false}
+                    currentStitchIndex={0}
+                    patternGroupRef={patternGroupRef}
+                    transformerRef={transformerRef}
+                    onDragEnd={handlePatternDragEnd}
+                    onTransformEnd={handleTransformEnd}
+                    attachTransformer={attachTransformer}
+                  />
+                )}
               </Layer>
 
               {/* Uploaded pattern layer: locked, rotation baked in (shown during and after upload) */}
               <Layer visible={isUploading || patternUploaded}>
-                {uploadedPesData &&
-                  (() => {
-                    const uploadedCenter = calculatePatternCenter(
-                      uploadedPesData.bounds,
-                    );
-                    console.log("[Canvas] Rendering uploaded pattern:", {
-                      position: initialUploadedPatternOffset,
-                      center: uploadedCenter,
-                      bounds: uploadedPesData.bounds,
-                    });
-                    return (
-                      <Group
-                        name="uploaded-pattern-group"
-                        x={initialUploadedPatternOffset.x}
-                        y={initialUploadedPatternOffset.y}
-                        offsetX={uploadedCenter.x}
-                        offsetY={uploadedCenter.y}
-                      >
-                        <Stitches
-                          stitches={convertPenStitchesToPesFormat(
-                            uploadedPesData.penStitches,
-                          )}
-                          pesData={uploadedPesData}
-                          currentStitchIndex={
-                            sewingProgress?.currentStitch || 0
-                          }
-                          showProgress={true}
-                        />
-                        <PatternBounds bounds={uploadedPesData.bounds} />
-                      </Group>
-                    );
-                  })()}
-              </Layer>
-
-              {/* Current position layer (for uploaded pattern during sewing) */}
-              <Layer visible={isUploading || patternUploaded}>
-                {uploadedPesData &&
-                  sewingProgress &&
-                  sewingProgress.currentStitch > 0 &&
-                  (() => {
-                    const center = calculatePatternCenter(
-                      uploadedPesData.bounds,
-                    );
-                    return (
-                      <Group
-                        x={initialUploadedPatternOffset.x}
-                        y={initialUploadedPatternOffset.y}
-                        offsetX={center.x}
-                        offsetY={center.y}
-                      >
-                        <CurrentPosition
-                          currentStitchIndex={sewingProgress.currentStitch}
-                          stitches={convertPenStitchesToPesFormat(
-                            uploadedPesData.penStitches,
-                          )}
-                        />
-                      </Group>
-                    );
-                  })()}
+                {uploadedPesData && (
+                  <PatternLayer
+                    pesData={uploadedPesData}
+                    offset={initialUploadedPatternOffset}
+                    isInteractive={false}
+                    showProgress={true}
+                    currentStitchIndex={sewingProgress?.currentStitch || 0}
+                  />
+                )}
               </Layer>
             </Stage>
           )}
