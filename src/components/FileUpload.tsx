@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useMachineStore, usePatternUploaded } from "../stores/useMachineStore";
+import { useMachineUploadStore } from "../stores/useMachineUploadStore";
+import { useMachineCacheStore } from "../stores/useMachineCacheStore";
 import { usePatternStore } from "../stores/usePatternStore";
 import { useUIStore } from "../stores/useUIStore";
 import {
@@ -40,25 +42,28 @@ import { cn } from "@/lib/utils";
 
 export function FileUpload() {
   // Machine store
-  const {
-    isConnected,
-    machineStatus,
-    uploadProgress,
-    isUploading,
-    machineInfo,
-    resumeAvailable,
-    resumeFileName,
-    uploadPattern,
-  } = useMachineStore(
+  const { isConnected, machineStatus, machineInfo } = useMachineStore(
     useShallow((state) => ({
       isConnected: state.isConnected,
       machineStatus: state.machineStatus,
+      machineInfo: state.machineInfo,
+    })),
+  );
+
+  // Machine upload store
+  const { uploadProgress, isUploading, uploadPattern } = useMachineUploadStore(
+    useShallow((state) => ({
       uploadProgress: state.uploadProgress,
       isUploading: state.isUploading,
-      machineInfo: state.machineInfo,
+      uploadPattern: state.uploadPattern,
+    })),
+  );
+
+  // Machine cache store
+  const { resumeAvailable, resumeFileName } = useMachineCacheStore(
+    useShallow((state) => ({
       resumeAvailable: state.resumeAvailable,
       resumeFileName: state.resumeFileName,
-      uploadPattern: state.uploadPattern,
     })),
   );
 

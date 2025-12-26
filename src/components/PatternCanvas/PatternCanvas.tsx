@@ -4,6 +4,7 @@ import {
   useMachineStore,
   usePatternUploaded,
 } from "../../stores/useMachineStore";
+import { useMachineUploadStore } from "../../stores/useMachineUploadStore";
 import { usePatternStore } from "../../stores/usePatternStore";
 import { Stage, Layer } from "react-konva";
 import Konva from "konva";
@@ -25,10 +26,16 @@ import { usePatternTransform } from "../../hooks/usePatternTransform";
 
 export function PatternCanvas() {
   // Machine store
-  const { sewingProgress, machineInfo, isUploading } = useMachineStore(
+  const { sewingProgress, machineInfo } = useMachineStore(
     useShallow((state) => ({
       sewingProgress: state.sewingProgress,
       machineInfo: state.machineInfo,
+    })),
+  );
+
+  // Machine upload store
+  const { isUploading } = useMachineUploadStore(
+    useShallow((state) => ({
       isUploading: state.isUploading,
     })),
   );

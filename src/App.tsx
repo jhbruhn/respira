@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useMachineStore } from "./stores/useMachineStore";
+import { useMachineCacheStore } from "./stores/useMachineCacheStore";
 import { usePatternStore } from "./stores/usePatternStore";
 import { useUIStore } from "./stores/useUIStore";
 import { AppHeader } from "./components/AppHeader";
@@ -23,8 +23,8 @@ function App() {
     document.title = `Respira v${__APP_VERSION__}`;
   }, []);
 
-  // Machine store - for auto-loading cached pattern
-  const { resumedPattern, resumeFileName } = useMachineStore(
+  // Machine cache store - for auto-loading cached pattern
+  const { resumedPattern, resumeFileName } = useMachineCacheStore(
     useShallow((state) => ({
       resumedPattern: state.resumedPattern,
       resumeFileName: state.resumeFileName,
