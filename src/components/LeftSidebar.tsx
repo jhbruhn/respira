@@ -13,14 +13,16 @@ export function LeftSidebar() {
     })),
   );
 
-  const { pesData } = usePatternStore(
+  const { pesData, uploadedPesData } = usePatternStore(
     useShallow((state) => ({
       pesData: state.pesData,
+      uploadedPesData: state.uploadedPesData,
     })),
   );
 
   // Derived state: pattern is uploaded if machine has pattern info
   const patternUploaded = usePatternUploaded();
+  const hasPattern = pesData || uploadedPesData;
 
   return (
     <div className="flex flex-col gap-4 md:gap-5 lg:gap-6 lg:overflow-hidden">
@@ -31,7 +33,7 @@ export function LeftSidebar() {
       {isConnected && !patternUploaded && <FileUpload />}
 
       {/* Compact Pattern Summary - Show after upload (during sewing stages) */}
-      {isConnected && patternUploaded && pesData && <PatternSummaryCard />}
+      {isConnected && patternUploaded && hasPattern && <PatternSummaryCard />}
 
       {/* Progress Monitor - Show when pattern is uploaded */}
       {isConnected && patternUploaded && (

@@ -21,6 +21,7 @@ interface PatternState {
   setUploadedPattern: (
     uploadedData: PesPatternData,
     uploadedOffset: { x: number; y: number },
+    fileName?: string,
   ) => void;
   clearUploadedPattern: () => void;
   resetPatternOffset: () => void;
@@ -69,23 +70,32 @@ export const usePatternStore = create<PatternState>((set) => ({
   setUploadedPattern: (
     uploadedData: PesPatternData,
     uploadedOffset: { x: number; y: number },
+    fileName?: string,
   ) => {
     set({
       uploadedPesData: uploadedData,
       uploadedPatternOffset: uploadedOffset,
       patternUploaded: true,
+      // Optionally set filename if provided (for resume/reconnect scenarios)
+      ...(fileName && { currentFileName: fileName }),
     });
     console.log("[PatternStore] Uploaded pattern set");
   },
 
   // Clear uploaded pattern (called when deleting from machine)
+  // This reverts to pre-upload state, keeping pesData so user can re-adjust and re-upload
   clearUploadedPattern: () => {
+    console.log("[PatternStore] CLEARING uploaded pattern...");
     set({
       uploadedPesData: null,
       uploadedPatternOffset: { x: 0, y: 0 },
       patternUploaded: false,
+      // Keep pesData, currentFileName, patternOffset, patternRotation
+      // so user can adjust and re-upload
     });
-    console.log("[PatternStore] Uploaded pattern cleared");
+    console.log(
+      "[PatternStore] Uploaded pattern cleared - back to editable mode",
+    );
   },
 
   // Reset pattern offset to default

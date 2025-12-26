@@ -2,10 +2,12 @@ import type { PesPatternData } from "../../formats/import/pesImporter";
 
 export interface ICachedPattern {
   uuid: string;
-  pesData: PesPatternData;
+  pesData: PesPatternData; // Original unrotated pattern data
+  uploadedPesData?: PesPatternData; // Pattern with rotation applied (what was uploaded to machine)
   fileName: string;
   timestamp: number;
   patternOffset?: { x: number; y: number };
+  patternRotation?: number; // Rotation angle in degrees
 }
 
 export interface IStorageService {
@@ -14,6 +16,8 @@ export interface IStorageService {
     pesData: PesPatternData,
     fileName: string,
     patternOffset?: { x: number; y: number },
+    patternRotation?: number,
+    uploadedPesData?: PesPatternData,
   ): Promise<void>;
 
   getPatternByUUID(uuid: string): Promise<ICachedPattern | null>;

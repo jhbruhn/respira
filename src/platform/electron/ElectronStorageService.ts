@@ -20,6 +20,8 @@ export class ElectronStorageService implements IStorageService {
     pesData: PesPatternData,
     fileName: string,
     patternOffset?: { x: number; y: number },
+    patternRotation?: number,
+    uploadedPesData?: PesPatternData,
   ): Promise<void> {
     // Convert Uint8Array to array for JSON serialization over IPC
     const serializable = {
@@ -28,9 +30,16 @@ export class ElectronStorageService implements IStorageService {
         ...pesData,
         penData: Array.from(pesData.penData),
       },
+      uploadedPesData: uploadedPesData
+        ? {
+            ...uploadedPesData,
+            penData: Array.from(uploadedPesData.penData),
+          }
+        : undefined,
       fileName,
       timestamp: Date.now(),
       patternOffset,
+      patternRotation,
     };
 
     // Fire and forget (sync-like behavior to match interface)
@@ -51,6 +60,17 @@ export class ElectronStorageService implements IStorageService {
         pattern.pesData.penData = new Uint8Array(pattern.pesData.penData);
       }
 
+      if (
+        pattern &&
+        pattern.uploadedPesData &&
+        Array.isArray(pattern.uploadedPesData.penData)
+      ) {
+        // Restore Uint8Array from array for uploadedPesData
+        pattern.uploadedPesData.penData = new Uint8Array(
+          pattern.uploadedPesData.penData,
+        );
+      }
+
       return pattern;
     } catch (err) {
       console.error("[ElectronStorage] Failed to get pattern:", err);
@@ -67,6 +87,17 @@ export class ElectronStorageService implements IStorageService {
       if (pattern && Array.isArray(pattern.pesData.penData)) {
         // Restore Uint8Array from array
         pattern.pesData.penData = new Uint8Array(pattern.pesData.penData);
+      }
+
+      if (
+        pattern &&
+        pattern.uploadedPesData &&
+        Array.isArray(pattern.uploadedPesData.penData)
+      ) {
+        // Restore Uint8Array from array for uploadedPesData
+        pattern.uploadedPesData.penData = new Uint8Array(
+          pattern.uploadedPesData.penData,
+        );
       }
 
       return pattern;

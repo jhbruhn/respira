@@ -190,7 +190,9 @@ export function PatternCanvas() {
               </Layer>
 
               {/* Original pattern layer: draggable with transformer (shown before upload starts) */}
-              <Layer visible={!isUploading && !patternUploaded}>
+              <Layer
+                visible={!isUploading && !patternUploaded && !uploadedPesData}
+              >
                 {pesData && (
                   <PatternLayer
                     pesData={pesData}
@@ -209,7 +211,9 @@ export function PatternCanvas() {
               </Layer>
 
               {/* Uploaded pattern layer: locked, rotation baked in (shown during and after upload) */}
-              <Layer visible={isUploading || patternUploaded}>
+              <Layer
+                visible={isUploading || patternUploaded || !!uploadedPesData}
+              >
                 {uploadedPesData && (
                   <PatternLayer
                     pesData={uploadedPesData}
@@ -241,12 +245,12 @@ export function PatternCanvas() {
 
                     <PatternPositionIndicator
                       offset={
-                        isUploading || patternUploaded
+                        isUploading || patternUploaded || uploadedPesData
                           ? initialUploadedPatternOffset
                           : localPatternOffset
                       }
                       rotation={localPatternRotation}
-                      isLocked={patternUploaded}
+                      isLocked={patternUploaded || !!uploadedPesData}
                       isUploading={isUploading}
                     />
 
@@ -257,7 +261,10 @@ export function PatternCanvas() {
                       onZoomReset={handleZoomReset}
                       onCenterPattern={handleCenterPattern}
                       canCenterPattern={
-                        !!pesData && !patternUploaded && !isUploading
+                        !!pesData &&
+                        !patternUploaded &&
+                        !isUploading &&
+                        !uploadedPesData
                       }
                     />
                   </>

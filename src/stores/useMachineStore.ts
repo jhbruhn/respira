@@ -43,7 +43,9 @@ interface MachineState {
   resumeFileName: string | null;
   resumedPattern: {
     pesData: PesPatternData;
+    uploadedPesData?: PesPatternData;
     patternOffset?: { x: number; y: number };
+    patternRotation?: number;
   } | null;
 
   // Error state
@@ -67,9 +69,11 @@ interface MachineState {
   refreshServiceCount: () => Promise<void>;
   uploadPattern: (
     penData: Uint8Array,
-    pesData: PesPatternData,
+    uploadedPesData: PesPatternData, // Pattern with rotation applied (for machine upload)
     fileName: string,
     patternOffset?: { x: number; y: number },
+    patternRotation?: number,
+    originalPesData?: PesPatternData, // Original unrotated pattern (for caching)
   ) => Promise<void>;
   startMaskTrace: () => Promise<void>;
   startSewing: () => Promise<void>;
@@ -78,7 +82,9 @@ interface MachineState {
   checkResume: () => Promise<PesPatternData | null>;
   loadCachedPattern: () => Promise<{
     pesData: PesPatternData;
+    uploadedPesData?: PesPatternData;
     patternOffset?: { x: number; y: number };
+    patternRotation?: number;
   } | null>;
 
   // Internal methods
@@ -137,6 +143,10 @@ export const useMachineStore = create<MachineState>((set, get) => ({
           cached.fileName,
           "Offset:",
           cached.patternOffset,
+          "Rotation:",
+          cached.patternRotation,
+          "Has uploaded data:",
+          !!cached.uploadedPesData,
         );
         console.log("[Resume] Auto-loading cached pattern...");
         set({
@@ -144,7 +154,9 @@ export const useMachineStore = create<MachineState>((set, get) => ({
           resumeFileName: cached.fileName,
           resumedPattern: {
             pesData: cached.pesData,
+            uploadedPesData: cached.uploadedPesData,
             patternOffset: cached.patternOffset,
+            patternRotation: cached.patternRotation,
           },
         });
 
@@ -302,9 +314,11 @@ export const useMachineStore = create<MachineState>((set, get) => ({
   // Upload pattern to machine
   uploadPattern: async (
     penData: Uint8Array,
-    pesData: PesPatternData,
+    uploadedPesData: PesPatternData, // Pattern with rotation applied (for machine upload)
     fileName: string,
     patternOffset?: { x: number; y: number },
+    patternRotation?: number,
+    originalPesData?: PesPatternData, // Original unrotated pattern (for caching)
   ) => {
     const {
       isConnected,
@@ -321,20 +335,31 @@ export const useMachineStore = create<MachineState>((set, get) => ({
     try {
       set({ error: null, uploadProgress: 0, isUploading: true });
 
+      // Upload to machine using the rotated bounds
       const uuid = await service.uploadPattern(
         penData,
         (progress) => {
           set({ uploadProgress: progress });
         },
-        pesData.bounds,
+        uploadedPesData.bounds,
         patternOffset,
       );
 
       set({ uploadProgress: 100 });
 
-      // Cache the pattern with its UUID and offset
+      // Cache the ORIGINAL unrotated pattern with rotation angle AND the uploaded data
+      // This allows us to restore the editable state correctly and ensures the exact
+      // uploaded data is used on resume (prevents inconsistencies from version updates)
+      const pesDataToCache = originalPesData || uploadedPesData;
       const uuidStr = uuidToString(uuid);
-      storageService.savePattern(uuidStr, pesData, fileName, patternOffset);
+      storageService.savePattern(
+        uuidStr,
+        pesDataToCache,
+        fileName,
+        patternOffset,
+        patternRotation,
+        uploadedPesData, // Cache the exact uploaded data
+      );
       console.log(
         "[Cache] Saved pattern:",
         fileName,
@@ -342,6 +367,9 @@ export const useMachineStore = create<MachineState>((set, get) => ({
         uuidStr,
         "Offset:",
         patternOffset,
+        "Rotation:",
+        patternRotation,
+        "(cached original unrotated data + uploaded data)",
       );
 
       // Clear resume state since we just uploaded
@@ -440,6 +468,7 @@ export const useMachineStore = create<MachineState>((set, get) => ({
         uploadProgress: 0,
         resumeAvailable: false,
         resumeFileName: null,
+        resumedPattern: null, // Clear this to prevent auto-reload
       });
 
       // Clear uploaded pattern data in pattern store
@@ -458,7 +487,9 @@ export const useMachineStore = create<MachineState>((set, get) => ({
   // Load cached pattern
   loadCachedPattern: async (): Promise<{
     pesData: PesPatternData;
+    uploadedPesData?: PesPatternData;
     patternOffset?: { x: number; y: number };
+    patternRotation?: number;
   } | null> => {
     const { resumeAvailable, service, storageService, refreshPatternInfo } =
       get();
@@ -477,9 +508,18 @@ export const useMachineStore = create<MachineState>((set, get) => ({
           cached.fileName,
           "Offset:",
           cached.patternOffset,
+          "Rotation:",
+          cached.patternRotation,
+          "Has uploaded data:",
+          !!cached.uploadedPesData,
         );
         await refreshPatternInfo();
-        return { pesData: cached.pesData, patternOffset: cached.patternOffset };
+        return {
+          pesData: cached.pesData,
+          uploadedPesData: cached.uploadedPesData,
+          patternOffset: cached.patternOffset,
+          patternRotation: cached.patternRotation,
+        };
       }
 
       return null;

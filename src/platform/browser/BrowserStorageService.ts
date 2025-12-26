@@ -15,8 +15,17 @@ export class BrowserStorageService implements IStorageService {
     pesData: PesPatternData,
     fileName: string,
     patternOffset?: { x: number; y: number },
+    patternRotation?: number,
+    uploadedPesData?: PesPatternData,
   ): Promise<void> {
-    PatternCacheService.savePattern(uuid, pesData, fileName, patternOffset);
+    PatternCacheService.savePattern(
+      uuid,
+      pesData,
+      fileName,
+      patternOffset,
+      patternRotation,
+      uploadedPesData,
+    );
   }
 
   async getPatternByUUID(uuid: string): Promise<ICachedPattern | null> {

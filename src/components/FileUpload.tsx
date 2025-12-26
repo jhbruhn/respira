@@ -206,11 +206,14 @@ export function FileUpload() {
         setUploadedPattern(pesDataForUpload, adjustedOffset);
 
         // Upload the pattern with offset
+        // IMPORTANT: Pass original unrotated pesData for caching, rotated pesData for upload
         uploadPattern(
           penDataToUpload,
           pesDataForUpload,
           displayFileName,
           adjustedOffset,
+          patternRotation,
+          pesData, // Original unrotated pattern for caching
         );
 
         return; // Early return to skip the upload below
@@ -226,6 +229,8 @@ export function FileUpload() {
         pesDataForUpload,
         displayFileName,
         patternOffset,
+        0, // No rotation
+        // No need to pass originalPesData since it's the same as pesDataForUpload
       );
     }
   }, [

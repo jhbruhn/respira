@@ -8,6 +8,13 @@ import { LeftSidebar } from "./components/LeftSidebar";
 import { PatternCanvas } from "./components/PatternCanvas";
 import { PatternCanvasPlaceholder } from "./components/PatternCanvasPlaceholder";
 import { BluetoothDevicePicker } from "./components/BluetoothDevicePicker";
+import { transformStitchesRotation } from "./utils/rotationUtils";
+import { encodeStitchesToPen } from "./formats/pen/encoder";
+import { decodePenData } from "./formats/pen/decoder";
+import {
+  calculatePatternCenter,
+  calculateBoundsFromDecodedStitches,
+} from "./components/PatternCanvas/patternCanvasHelpers";
 import "./App.css";
 
 function App() {
@@ -25,10 +32,20 @@ function App() {
   );
 
   // Pattern store - for auto-loading cached pattern
-  const { pesData, setPattern, setPatternOffset } = usePatternStore(
+  const {
+    pesData,
+    uploadedPesData,
+    setPattern,
+    setUploadedPattern,
+    setPatternRotation,
+    setPatternOffset,
+  } = usePatternStore(
     useShallow((state) => ({
       pesData: state.pesData,
+      uploadedPesData: state.uploadedPesData,
       setPattern: state.setPattern,
+      setUploadedPattern: state.setUploadedPattern,
+      setPatternRotation: state.setPatternRotation,
       setPatternOffset: state.setPatternOffset,
     })),
   );
@@ -47,23 +64,130 @@ function App() {
 
   // Auto-load cached pattern when available
   useEffect(() => {
-    if (resumedPattern && !pesData) {
+    // Only auto-load if we have a resumed pattern and haven't already loaded it
+    if (resumedPattern && !uploadedPesData && !pesData) {
+      if (!resumedPattern.pesData) {
+        console.error(
+          "[App] ERROR: resumedPattern has no pesData!",
+          resumedPattern,
+        );
+        return;
+      }
+
       console.log(
         "[App] Loading resumed pattern:",
         resumeFileName,
         "Offset:",
         resumedPattern.patternOffset,
+        "Rotation:",
+        resumedPattern.patternRotation,
+        "Has stitches:",
+        resumedPattern.pesData.stitches?.length || 0,
+        "Has cached uploaded data:",
+        !!resumedPattern.uploadedPesData,
       );
-      setPattern(resumedPattern.pesData, resumeFileName || "");
-      // Restore the cached pattern offset
-      if (resumedPattern.patternOffset) {
-        setPatternOffset(
-          resumedPattern.patternOffset.x,
-          resumedPattern.patternOffset.y,
+
+      const originalPesData = resumedPattern.pesData;
+      const cachedUploadedPesData = resumedPattern.uploadedPesData;
+      const rotation = resumedPattern.patternRotation || 0;
+      const originalOffset = resumedPattern.patternOffset || { x: 0, y: 0 };
+
+      // Set the original pattern data for editing
+      setPattern(originalPesData, resumeFileName || "");
+
+      // Restore the original offset (setPattern resets it to 0,0)
+      setPatternOffset(originalOffset.x, originalOffset.y);
+
+      // Set rotation if present
+      if (rotation !== 0) {
+        setPatternRotation(rotation);
+      }
+
+      // Use cached uploadedPesData if available, otherwise recalculate
+      if (cachedUploadedPesData) {
+        // Use the exact uploaded data from cache
+        // Calculate the adjusted offset (same logic as upload)
+        if (rotation !== 0) {
+          const originalCenter = calculatePatternCenter(originalPesData.bounds);
+          const rotatedCenter = calculatePatternCenter(
+            cachedUploadedPesData.bounds,
+          );
+          const centerShiftX = rotatedCenter.x - originalCenter.x;
+          const centerShiftY = rotatedCenter.y - originalCenter.y;
+
+          const adjustedOffset = {
+            x: originalOffset.x + centerShiftX,
+            y: originalOffset.y + centerShiftY,
+          };
+
+          setUploadedPattern(
+            cachedUploadedPesData,
+            adjustedOffset,
+            resumeFileName || undefined,
+          );
+        } else {
+          setUploadedPattern(
+            cachedUploadedPesData,
+            originalOffset,
+            resumeFileName || undefined,
+          );
+        }
+      } else if (rotation !== 0) {
+        // Fallback: recalculate if no cached uploaded data (shouldn't happen for new uploads)
+        console.warn("[App] No cached uploaded data, recalculating rotation");
+        const rotatedStitches = transformStitchesRotation(
+          originalPesData.stitches,
+          rotation,
+          originalPesData.bounds,
+        );
+
+        const penResult = encodeStitchesToPen(rotatedStitches);
+        const penData = new Uint8Array(penResult.penBytes);
+        const decoded = decodePenData(penData);
+        const rotatedBounds = calculateBoundsFromDecodedStitches(decoded);
+
+        const originalCenter = calculatePatternCenter(originalPesData.bounds);
+        const rotatedCenter = calculatePatternCenter(rotatedBounds);
+        const centerShiftX = rotatedCenter.x - originalCenter.x;
+        const centerShiftY = rotatedCenter.y - originalCenter.y;
+
+        const adjustedOffset = {
+          x: originalOffset.x + centerShiftX,
+          y: originalOffset.y + centerShiftY,
+        };
+
+        const rotatedPesData = {
+          ...originalPesData,
+          stitches: rotatedStitches,
+          penData,
+          penStitches: decoded,
+          bounds: rotatedBounds,
+        };
+
+        setUploadedPattern(
+          rotatedPesData,
+          adjustedOffset,
+          resumeFileName || undefined,
+        );
+      } else {
+        // No rotation - uploaded pattern is same as original
+        setUploadedPattern(
+          originalPesData,
+          originalOffset,
+          resumeFileName || undefined,
         );
       }
     }
-  }, [resumedPattern, resumeFileName, pesData, setPattern, setPatternOffset]);
+  }, [
+    resumedPattern,
+    resumeFileName,
+    uploadedPesData,
+    pesData,
+    setPattern,
+    setUploadedPattern,
+    setPatternRotation,
+    setPatternOffset,
+  ]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
@@ -76,7 +200,11 @@ function App() {
 
           {/* Right Column - Pattern Preview */}
           <div className="flex flex-col lg:overflow-hidden lg:h-full">
-            {pesData ? <PatternCanvas /> : <PatternCanvasPlaceholder />}
+            {pesData || uploadedPesData ? (
+              <PatternCanvas />
+            ) : (
+              <PatternCanvasPlaceholder />
+            )}
           </div>
         </div>
 

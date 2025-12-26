@@ -25,14 +25,16 @@ export function PatternSummaryCard() {
   );
 
   // Pattern store
-  const { pesData, currentFileName } = usePatternStore(
+  const { pesData, uploadedPesData, currentFileName } = usePatternStore(
     useShallow((state) => ({
       pesData: state.pesData,
+      uploadedPesData: state.uploadedPesData,
       currentFileName: state.currentFileName,
     })),
   );
 
-  if (!pesData) return null;
+  const displayPattern = uploadedPesData || pesData;
+  if (!displayPattern) return null;
 
   const canDelete = canDeletePattern(machineStatus);
   return (
@@ -52,7 +54,7 @@ export function PatternSummaryCard() {
         </div>
       </CardHeader>
       <CardContent className="px-4 pt-0 pb-4">
-        <PatternInfo pesData={pesData} />
+        <PatternInfo pesData={displayPattern} />
 
         {canDelete && (
           <Button

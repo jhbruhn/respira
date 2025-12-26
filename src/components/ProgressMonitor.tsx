@@ -52,6 +52,8 @@ export function ProgressMonitor() {
 
   // Pattern store
   const pesData = usePatternStore((state) => state.pesData);
+  const uploadedPesData = usePatternStore((state) => state.uploadedPesData);
+  const displayPattern = uploadedPesData || pesData;
   const currentBlockRef = useRef<HTMLDivElement>(null);
 
   // State indicators
@@ -60,8 +62,8 @@ export function ProgressMonitor() {
 
   // Use PEN stitch count as fallback when machine reports 0 total stitches
   const totalStitches = patternInfo
-    ? patternInfo.totalStitches === 0 && pesData?.penStitches
-      ? pesData.penStitches.stitches.length
+    ? patternInfo.totalStitches === 0 && displayPattern?.penStitches
+      ? displayPattern.penStitches.stitches.length
       : patternInfo.totalStitches
     : 0;
 
@@ -72,7 +74,7 @@ export function ProgressMonitor() {
 
   // Calculate color block information from decoded penStitches
   const colorBlocks = useMemo(() => {
-    if (!pesData || !pesData.penStitches) return [];
+    if (!displayPattern || !displayPattern.penStitches) return [];
 
     const blocks: Array<{
       colorIndex: number;
@@ -87,8 +89,8 @@ export function ProgressMonitor() {
     }> = [];
 
     // Use the pre-computed color blocks from decoded PEN data
-    for (const penBlock of pesData.penStitches.colorBlocks) {
-      const thread = pesData.threads[penBlock.colorIndex];
+    for (const penBlock of displayPattern.penStitches.colorBlocks) {
+      const thread = displayPattern.threads[penBlock.colorIndex];
       blocks.push({
         colorIndex: penBlock.colorIndex,
         threadHex: thread?.hex || "#000000",
@@ -103,7 +105,7 @@ export function ProgressMonitor() {
     }
 
     return blocks;
-  }, [pesData]);
+  }, [displayPattern]);
 
   // Determine current color block based on current stitch
   const currentStitch = sewingProgress?.currentStitch || 0;

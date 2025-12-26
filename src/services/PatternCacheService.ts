@@ -2,10 +2,12 @@ import type { PesPatternData } from "../formats/import/pesImporter";
 
 interface CachedPattern {
   uuid: string;
-  pesData: PesPatternData;
+  pesData: PesPatternData; // Original unrotated pattern data
+  uploadedPesData?: PesPatternData; // Pattern with rotation applied (what was uploaded to machine)
   fileName: string;
   timestamp: number;
   patternOffset?: { x: number; y: number };
+  patternRotation?: number; // Rotation angle in degrees
 }
 
 const CACHE_KEY = "brother_pattern_cache";
@@ -39,6 +41,8 @@ export class PatternCacheService {
     pesData: PesPatternData,
     fileName: string,
     patternOffset?: { x: number; y: number },
+    patternRotation?: number,
+    uploadedPesData?: PesPatternData,
   ): void {
     try {
       // Convert penData Uint8Array to array for JSON serialization
@@ -47,12 +51,24 @@ export class PatternCacheService {
         penData: Array.from(pesData.penData) as unknown as Uint8Array,
       };
 
+      // Also convert uploadedPesData if present
+      const uploadedPesDataWithArrayPenData = uploadedPesData
+        ? {
+            ...uploadedPesData,
+            penData: Array.from(
+              uploadedPesData.penData,
+            ) as unknown as Uint8Array,
+          }
+        : undefined;
+
       const cached: CachedPattern = {
         uuid,
         pesData: pesDataWithArrayPenData,
+        uploadedPesData: uploadedPesDataWithArrayPenData,
         fileName,
         timestamp: Date.now(),
         patternOffset,
+        patternRotation,
       };
 
       localStorage.setItem(CACHE_KEY, JSON.stringify(cached));
@@ -63,6 +79,10 @@ export class PatternCacheService {
         uuid,
         "Offset:",
         patternOffset,
+        "Rotation:",
+        patternRotation,
+        "Has uploaded data:",
+        !!uploadedPesData,
       );
     } catch (err) {
       console.error("[PatternCache] Failed to save pattern:", err);
@@ -101,11 +121,23 @@ export class PatternCacheService {
         pattern.pesData.penData = new Uint8Array(pattern.pesData.penData);
       }
 
+      // Restore Uint8Array from array inside uploadedPesData if present
+      if (
+        pattern.uploadedPesData &&
+        Array.isArray(pattern.uploadedPesData.penData)
+      ) {
+        pattern.uploadedPesData.penData = new Uint8Array(
+          pattern.uploadedPesData.penData,
+        );
+      }
+
       console.log(
         "[PatternCache] Found cached pattern:",
         pattern.fileName,
         "UUID:",
         uuid,
+        "Has uploaded data:",
+        !!pattern.uploadedPesData,
       );
       return pattern;
     } catch (err) {
@@ -129,6 +161,16 @@ export class PatternCacheService {
       // Restore Uint8Array from array inside pesData
       if (Array.isArray(pattern.pesData.penData)) {
         pattern.pesData.penData = new Uint8Array(pattern.pesData.penData);
+      }
+
+      // Restore Uint8Array from array inside uploadedPesData if present
+      if (
+        pattern.uploadedPesData &&
+        Array.isArray(pattern.uploadedPesData.penData)
+      ) {
+        pattern.uploadedPesData.penData = new Uint8Array(
+          pattern.uploadedPesData.penData,
+        );
       }
 
       return pattern;
