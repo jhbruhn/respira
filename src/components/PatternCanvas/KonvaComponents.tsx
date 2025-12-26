@@ -157,6 +157,77 @@ export const Stitches = memo(
     currentStitchIndex,
     showProgress = false,
   }: StitchesProps) => {
+    // PERFORMANCE OPTIMIZATION:
+    // Separate static group structure (doesn't change during sewing)
+    // from dynamic completion status (changes with currentStitchIndex).
+    // This prevents recalculating all groups on every progress update.
+    //
+    // For very large patterns (>100k stitches), consider:
+    // - Virtualization: render only visible stitches based on viewport
+    // - LOD (Level of Detail): reduce stitch density when zoomed out
+    // - Web Workers: offload grouping calculations to background thread
+
+    interface StaticStitchGroup {
+      color: string;
+      points: number[];
+      isJump: boolean;
+      startIndex: number; // First stitch index in this group
+      endIndex: number; // Last stitch index in this group
+    }
+
+    // Static grouping - only recalculates when stitches or colors change
+    const staticGroups = useMemo(() => {
+      const groups: StaticStitchGroup[] = [];
+      let currentGroup: StaticStitchGroup | null = null;
+
+      let prevX = 0;
+      let prevY = 0;
+
+      for (let i = 0; i < stitches.length; i++) {
+        const stitch = stitches[i];
+        const [x, y, cmd, colorIndex] = stitch;
+        const isJump = (cmd & MOVE) !== 0;
+        const color = getThreadColor(pesData, colorIndex);
+
+        // Start new group if color or type changes (NOT completion status)
+        if (
+          !currentGroup ||
+          currentGroup.color !== color ||
+          currentGroup.isJump !== isJump
+        ) {
+          // For jump stitches, include previous position
+          if (isJump && i > 0) {
+            currentGroup = {
+              color,
+              points: [prevX, prevY, x, y],
+              isJump,
+              startIndex: i,
+              endIndex: i,
+            };
+          } else {
+            currentGroup = {
+              color,
+              points: [x, y],
+              isJump,
+              startIndex: i,
+              endIndex: i,
+            };
+          }
+          groups.push(currentGroup);
+        } else {
+          currentGroup.points.push(x, y);
+          currentGroup.endIndex = i;
+        }
+
+        prevX = x;
+        prevY = y;
+      }
+
+      return groups;
+    }, [stitches, pesData]);
+
+    // Dynamic grouping - adds completion status based on currentStitchIndex
+    // Only needs to check group boundaries, not rebuild everything
     const stitchGroups = useMemo(() => {
       interface StitchGroup {
         color: string;
@@ -166,53 +237,75 @@ export const Stitches = memo(
       }
 
       const groups: StitchGroup[] = [];
-      let currentGroup: StitchGroup | null = null;
 
-      let prevX = 0;
-      let prevY = 0;
-
-      for (let i = 0; i < stitches.length; i++) {
-        const stitch = stitches[i];
-        const [x, y, cmd, colorIndex] = stitch;
-        const isCompleted = i < currentStitchIndex;
-        const isJump = (cmd & MOVE) !== 0;
-        const color = getThreadColor(pesData, colorIndex);
-
-        // Start new group if color/status/type changes
+      for (const staticGroup of staticGroups) {
+        // Check if this group needs to be split based on completion
         if (
-          !currentGroup ||
-          currentGroup.color !== color ||
-          currentGroup.completed !== isCompleted ||
-          currentGroup.isJump !== isJump
+          currentStitchIndex > staticGroup.startIndex &&
+          currentStitchIndex <= staticGroup.endIndex
         ) {
-          // For jump stitches, we need to create a line from previous position to current position
-          // So we include both the previous point and current point
-          if (isJump && i > 0) {
-            currentGroup = {
-              color,
-              points: [prevX, prevY, x, y],
-              completed: isCompleted,
-              isJump,
-            };
-          } else {
-            currentGroup = {
-              color,
-              points: [x, y],
-              completed: isCompleted,
-              isJump,
-            };
-          }
-          groups.push(currentGroup);
-        } else {
-          currentGroup.points.push(x, y);
-        }
+          // Group is partially completed - need to split
+          // This is rare during sewing (only happens when crossing group boundaries)
 
-        prevX = x;
-        prevY = y;
+          // Rebuild this group with completion split
+          let currentSubGroup: StitchGroup | null = null;
+          const groupStitches = stitches.slice(
+            staticGroup.startIndex,
+            staticGroup.endIndex + 1,
+          );
+
+          let prevX =
+            staticGroup.startIndex > 0
+              ? stitches[staticGroup.startIndex - 1][0]
+              : 0;
+          let prevY =
+            staticGroup.startIndex > 0
+              ? stitches[staticGroup.startIndex - 1][1]
+              : 0;
+
+          for (let i = 0; i < groupStitches.length; i++) {
+            const absoluteIndex = staticGroup.startIndex + i;
+            const stitch = groupStitches[i];
+            const [x, y] = stitch;
+            const isCompleted = absoluteIndex < currentStitchIndex;
+
+            if (!currentSubGroup || currentSubGroup.completed !== isCompleted) {
+              if (staticGroup.isJump && i > 0) {
+                currentSubGroup = {
+                  color: staticGroup.color,
+                  points: [prevX, prevY, x, y],
+                  completed: isCompleted,
+                  isJump: staticGroup.isJump,
+                };
+              } else {
+                currentSubGroup = {
+                  color: staticGroup.color,
+                  points: [x, y],
+                  completed: isCompleted,
+                  isJump: staticGroup.isJump,
+                };
+              }
+              groups.push(currentSubGroup);
+            } else {
+              currentSubGroup.points.push(x, y);
+            }
+
+            prevX = x;
+            prevY = y;
+          }
+        } else {
+          // Group is fully completed or fully incomplete
+          groups.push({
+            color: staticGroup.color,
+            points: staticGroup.points,
+            completed: currentStitchIndex > staticGroup.endIndex,
+            isJump: staticGroup.isJump,
+          });
+        }
       }
 
       return groups;
-    }, [stitches, pesData, currentStitchIndex]);
+    }, [staticGroups, currentStitchIndex, stitches]);
 
     return (
       <Group name="stitches">
@@ -237,6 +330,16 @@ export const Stitches = memo(
           />
         ))}
       </Group>
+    );
+  },
+  // Custom comparison to prevent unnecessary re-renders
+  (prevProps, nextProps) => {
+    // Re-render only if these values actually changed
+    return (
+      prevProps.stitches === nextProps.stitches &&
+      prevProps.pesData === nextProps.pesData &&
+      prevProps.currentStitchIndex === nextProps.currentStitchIndex &&
+      prevProps.showProgress === nextProps.showProgress
     );
   },
 );
