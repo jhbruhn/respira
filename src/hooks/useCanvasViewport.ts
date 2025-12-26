@@ -5,13 +5,7 @@
  * Handles wheel zoom and button zoom operations
  */
 
-import {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  type RefObject,
-} from "react";
+import { useState, useEffect, useCallback, type RefObject } from "react";
 import type Konva from "konva";
 import type { PesPatternData } from "../formats/import/pesImporter";
 import type { MachineInfo } from "../types/machine";
@@ -34,8 +28,11 @@ export function useCanvasViewport({
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
   const [stageScale, setStageScale] = useState(1);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const initialScaleRef = useRef<number>(1);
-  const prevPesDataRef = useRef<PesPatternData | null>(null);
+  const [initialScale, setInitialScale] = useState(1);
+
+  // Track the last processed pattern to detect changes during render
+  const [lastProcessedPattern, setLastProcessedPattern] =
+    useState<PesPatternData | null>(null);
 
   // Track container size with ResizeObserver
   useEffect(() => {
@@ -59,41 +56,36 @@ export function useCanvasViewport({
     return () => resizeObserver.disconnect();
   }, [containerRef]);
 
-  // Calculate and store initial scale when pattern or hoop changes
-  useEffect(() => {
-    // Use whichever pattern is available (uploaded or original)
-    const currentPattern = uploadedPesData || pesData;
-    if (!currentPattern || containerSize.width === 0) {
-      prevPesDataRef.current = null;
-      return;
-    }
+  // Reset viewport when pattern changes (during render, not in effect)
+  // This follows the React-recommended pattern for deriving state from props
+  const currentPattern = uploadedPesData || pesData;
+  if (
+    currentPattern &&
+    currentPattern !== lastProcessedPattern &&
+    containerSize.width > 0
+  ) {
+    const { bounds } = currentPattern;
+    const viewWidth = machineInfo
+      ? machineInfo.maxWidth
+      : bounds.maxX - bounds.minX;
+    const viewHeight = machineInfo
+      ? machineInfo.maxHeight
+      : bounds.maxY - bounds.minY;
 
-    // Only recalculate if pattern changed
-    if (prevPesDataRef.current !== currentPattern) {
-      prevPesDataRef.current = currentPattern;
+    const newInitialScale = calculateInitialScale(
+      containerSize.width,
+      containerSize.height,
+      viewWidth,
+      viewHeight,
+    );
 
-      const { bounds } = currentPattern;
-      const viewWidth = machineInfo
-        ? machineInfo.maxWidth
-        : bounds.maxX - bounds.minX;
-      const viewHeight = machineInfo
-        ? machineInfo.maxHeight
-        : bounds.maxY - bounds.minY;
-
-      const initialScale = calculateInitialScale(
-        containerSize.width,
-        containerSize.height,
-        viewWidth,
-        viewHeight,
-      );
-      initialScaleRef.current = initialScale;
-
-      // Reset view when pattern changes
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStageScale(initialScale);
-      setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
-    }
-  }, [pesData, uploadedPesData, machineInfo, containerSize]);
+    // Update state during render when pattern changes
+    // This is the recommended React pattern for resetting state based on props
+    setLastProcessedPattern(currentPattern);
+    setInitialScale(newInitialScale);
+    setStageScale(newInitialScale);
+    setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
+  }
 
   // Wheel zoom handler
   const handleWheel = useCallback((e: Konva.KonvaEventObject<WheelEvent>) => {
@@ -159,10 +151,9 @@ export function useCanvasViewport({
   }, [containerSize]);
 
   const handleZoomReset = useCallback(() => {
-    const initialScale = initialScaleRef.current;
     setStageScale(initialScale);
     setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
-  }, [containerSize]);
+  }, [initialScale, containerSize]);
 
   return {
     // State
