@@ -39,22 +39,41 @@ export function usePatternTransform({
   const patternGroupRef = useRef<Konva.Group | null>(null);
   const transformerRef = useRef<Konva.Transformer | null>(null);
 
-  // Update pattern offset when initialPatternOffset changes
-  if (
-    initialPatternOffset &&
-    (localPatternOffset.x !== initialPatternOffset.x ||
-      localPatternOffset.y !== initialPatternOffset.y)
-  ) {
-    setLocalPatternOffset(initialPatternOffset);
-  }
+  // Track previous prop values to detect external changes
+  const prevOffsetRef = useRef(initialPatternOffset);
+  const prevRotationRef = useRef(initialPatternRotation);
 
-  // Update pattern rotation when initialPatternRotation changes
-  if (
-    initialPatternRotation !== undefined &&
-    localPatternRotation !== initialPatternRotation
-  ) {
-    setLocalPatternRotation(initialPatternRotation);
-  }
+  // Sync local state with parent props when they change externally
+  // This implements a "partially controlled" pattern needed for Konva drag interactions:
+  // - Local state enables optimistic updates during drag/transform (immediate visual feedback)
+  // - Parent props sync when external changes occur (e.g., pattern upload resets position)
+  // - Previous value refs prevent sync loops by only updating when props genuinely change
+  useEffect(() => {
+    if (
+      initialPatternOffset &&
+      (prevOffsetRef.current.x !== initialPatternOffset.x ||
+        prevOffsetRef.current.y !== initialPatternOffset.y)
+    ) {
+      // This setState in effect is intentional and safe: it only runs when the parent
+      // prop changes, not in response to our own local updates
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLocalPatternOffset(initialPatternOffset);
+      prevOffsetRef.current = initialPatternOffset;
+    }
+  }, [initialPatternOffset]);
+
+  useEffect(() => {
+    if (
+      initialPatternRotation !== undefined &&
+      prevRotationRef.current !== initialPatternRotation
+    ) {
+      // This setState in effect is intentional and safe: it only runs when the parent
+      // prop changes, not in response to our own local updates
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLocalPatternRotation(initialPatternRotation);
+      prevRotationRef.current = initialPatternRotation;
+    }
+  }, [initialPatternRotation]);
 
   // Attach/detach transformer based on state
   const attachTransformer = useCallback(() => {
