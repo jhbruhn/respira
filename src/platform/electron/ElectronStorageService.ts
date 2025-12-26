@@ -60,9 +60,15 @@ export class ElectronStorageService implements IStorageService {
         pattern.pesData.penData = new Uint8Array(pattern.pesData.penData);
       }
 
-      if (pattern && pattern.uploadedPesData && Array.isArray(pattern.uploadedPesData.penData)) {
+      if (
+        pattern &&
+        pattern.uploadedPesData &&
+        Array.isArray(pattern.uploadedPesData.penData)
+      ) {
         // Restore Uint8Array from array for uploadedPesData
-        pattern.uploadedPesData.penData = new Uint8Array(pattern.uploadedPesData.penData);
+        pattern.uploadedPesData.penData = new Uint8Array(
+          pattern.uploadedPesData.penData,
+        );
       }
 
       return pattern;
@@ -83,9 +89,15 @@ export class ElectronStorageService implements IStorageService {
         pattern.pesData.penData = new Uint8Array(pattern.pesData.penData);
       }
 
-      if (pattern && pattern.uploadedPesData && Array.isArray(pattern.uploadedPesData.penData)) {
+      if (
+        pattern &&
+        pattern.uploadedPesData &&
+        Array.isArray(pattern.uploadedPesData.penData)
+      ) {
         // Restore Uint8Array from array for uploadedPesData
-        pattern.uploadedPesData.penData = new Uint8Array(pattern.uploadedPesData.penData);
+        pattern.uploadedPesData.penData = new Uint8Array(
+          pattern.uploadedPesData.penData,
+        );
       }
 
       return pattern;

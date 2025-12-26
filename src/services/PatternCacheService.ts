@@ -55,7 +55,9 @@ export class PatternCacheService {
       const uploadedPesDataWithArrayPenData = uploadedPesData
         ? {
             ...uploadedPesData,
-            penData: Array.from(uploadedPesData.penData) as unknown as Uint8Array,
+            penData: Array.from(
+              uploadedPesData.penData,
+            ) as unknown as Uint8Array,
           }
         : undefined;
 
@@ -120,8 +122,13 @@ export class PatternCacheService {
       }
 
       // Restore Uint8Array from array inside uploadedPesData if present
-      if (pattern.uploadedPesData && Array.isArray(pattern.uploadedPesData.penData)) {
-        pattern.uploadedPesData.penData = new Uint8Array(pattern.uploadedPesData.penData);
+      if (
+        pattern.uploadedPesData &&
+        Array.isArray(pattern.uploadedPesData.penData)
+      ) {
+        pattern.uploadedPesData.penData = new Uint8Array(
+          pattern.uploadedPesData.penData,
+        );
       }
 
       console.log(
@@ -157,8 +164,13 @@ export class PatternCacheService {
       }
 
       // Restore Uint8Array from array inside uploadedPesData if present
-      if (pattern.uploadedPesData && Array.isArray(pattern.uploadedPesData.penData)) {
-        pattern.uploadedPesData.penData = new Uint8Array(pattern.uploadedPesData.penData);
+      if (
+        pattern.uploadedPesData &&
+        Array.isArray(pattern.uploadedPesData.penData)
+      ) {
+        pattern.uploadedPesData.penData = new Uint8Array(
+          pattern.uploadedPesData.penData,
+        );
       }
 
       return pattern;
