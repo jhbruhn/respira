@@ -2,8 +2,8 @@ import { useState, useCallback } from "react";
 import {
   convertPesToPen,
   type PesPatternData,
-} from "../formats/import/pesImporter";
-import type { IFileService } from "../platform/interfaces/IFileService";
+} from "../../formats/import/pesImporter";
+import type { IFileService } from "../../platform/interfaces/IFileService";
 
 export interface UseFileUploadParams {
   fileService: IFileService;

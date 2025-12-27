@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
+import { useClickOutside } from "@/hooks";
 import { useShallow } from "zustand/react/shallow";
 import { useMachineStore, usePatternUploaded } from "../stores/useMachineStore";
 import { usePatternStore } from "../stores/usePatternStore";
@@ -269,29 +270,11 @@ export function WorkflowStepper() {
   const popoverRef = useRef<HTMLDivElement>(null);
   const stepRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
-  // Close popover when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(event.target as Node)
-      ) {
-        // Check if click was on a step circle
-        const clickedStep = Object.values(stepRefs.current).find((ref) =>
-          ref?.contains(event.target as Node),
-        );
-        if (!clickedStep) {
-          setShowPopover(false);
-        }
-      }
-    };
-
-    if (showPopover) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [showPopover]);
+  // Close popover when clicking outside (exclude step circles)
+  useClickOutside<HTMLDivElement>(popoverRef, () => setShowPopover(false), {
+    enabled: showPopover,
+    excludeRefs: [stepRefs],
+  });
 
   const handleStepClick = (stepId: number) => {
     // Only allow clicking on current step or earlier completed steps

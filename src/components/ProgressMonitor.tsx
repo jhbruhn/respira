@@ -127,7 +127,7 @@ export function ProgressMonitor() {
   }, [colorBlocks, currentStitch]);
 
   // Auto-scroll to current block
-  const currentBlockRef = useAutoScroll(currentBlockIndex);
+  const currentBlockRef = useAutoScroll<HTMLDivElement>(currentBlockIndex);
 
   return (
     <Card className="p-0 gap-0 lg:h-full border-l-4 border-accent-600 dark:border-accent-500 flex flex-col lg:overflow-hidden">

@@ -1,12 +1,12 @@
 import { useCallback } from "react";
-import type { PesPatternData } from "../formats/import/pesImporter";
-import { transformStitchesRotation } from "../utils/rotationUtils";
-import { encodeStitchesToPen } from "../formats/pen/encoder";
-import { decodePenData } from "../formats/pen/decoder";
+import type { PesPatternData } from "../../formats/import/pesImporter";
+import { transformStitchesRotation } from "../../utils/rotationUtils";
+import { encodeStitchesToPen } from "../../formats/pen/encoder";
+import { decodePenData } from "../../formats/pen/decoder";
 import {
   calculatePatternCenter,
   calculateBoundsFromDecodedStitches,
-} from "../components/PatternCanvas/patternCanvasHelpers";
+} from "../../components/PatternCanvas/patternCanvasHelpers";
 
 export interface UsePatternRotationUploadParams {
   uploadPattern: (

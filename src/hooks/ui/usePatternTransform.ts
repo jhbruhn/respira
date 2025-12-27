@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
-import type { PesPatternData } from "../formats/import/pesImporter";
+import type { PesPatternData } from "../../formats/import/pesImporter";
 
 interface UsePatternTransformOptions {
   pesData: PesPatternData | null;

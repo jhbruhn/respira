@@ -43,8 +43,8 @@ export interface UseClickOutsideOptions {
   )[];
 }
 
-export function useClickOutside<T extends HTMLElement>(
-  ref: RefObject<T>,
+export function useClickOutside<T extends HTMLElement = HTMLElement>(
+  ref: RefObject<T | null>,
   handler: (event: MouseEvent) => void,
   options?: UseClickOutsideOptions,
 ): void {

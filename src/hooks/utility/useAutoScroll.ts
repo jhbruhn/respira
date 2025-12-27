@@ -31,10 +31,10 @@ export interface UseAutoScrollOptions {
   inline?: ScrollLogicalPosition;
 }
 
-export function useAutoScroll<T extends HTMLElement>(
+export function useAutoScroll<T extends HTMLElement = HTMLElement>(
   dependency: unknown,
   options?: UseAutoScrollOptions,
-): RefObject<T> {
+): RefObject<T | null> {
   const ref = useRef<T>(null);
 
   useEffect(() => {

@@ -122,7 +122,7 @@ export function useErrorPopoverState(
     ) {
       setWasManuallyDismissed(true);
       // Also track the specific machine error code if present
-      if (hasError(machineError)) {
+      if (hasError(machineError) && machineError !== undefined) {
         setDismissedErrorCode(machineError);
       }
     }

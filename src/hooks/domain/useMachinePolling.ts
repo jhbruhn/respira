@@ -76,7 +76,7 @@ export function useMachinePolling(
   const [isPolling, setIsPolling] = useState(false);
   const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const serviceCountIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const pollFunctionRef = useRef<() => Promise<void>>();
+  const pollFunctionRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
   // Function to determine polling interval based on machine status
   const getPollInterval = useCallback((status: MachineStatus) => {

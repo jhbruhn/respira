@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import type { PesPatternData } from "../formats/import/pesImporter";
-import type { MachineInfo } from "../types/machine";
-import { calculateRotatedBounds } from "../utils/rotationUtils";
-import { calculatePatternCenter } from "../components/PatternCanvas/patternCanvasHelpers";
+import type { PesPatternData } from "../../formats/import/pesImporter";
+import type { MachineInfo } from "../../types/machine";
+import { calculateRotatedBounds } from "../../utils/rotationUtils";
+import { calculatePatternCenter } from "../../components/PatternCanvas/patternCanvasHelpers";
 
 export interface PatternBoundsCheckResult {
   fits: boolean;

@@ -7,10 +7,10 @@
 
 import { useState, useEffect, useCallback, type RefObject } from "react";
 import type Konva from "konva";
-import type { PesPatternData } from "../formats/import/pesImporter";
-import type { MachineInfo } from "../types/machine";
-import { calculateInitialScale } from "../utils/konvaRenderers";
-import { calculateZoomToPoint } from "../components/PatternCanvas/patternCanvasHelpers";
+import type { PesPatternData } from "../../formats/import/pesImporter";
+import type { MachineInfo } from "../../types/machine";
+import { calculateInitialScale } from "../../utils/konvaRenderers";
+import { calculateZoomToPoint } from "../../components/PatternCanvas/patternCanvasHelpers";
 
 interface UseCanvasViewportOptions {
   containerRef: RefObject<HTMLDivElement | null>;
