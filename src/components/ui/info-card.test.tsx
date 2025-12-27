@@ -31,7 +31,8 @@ describe("InfoCard", () => {
         );
 
         expect(screen.getByText(`${variant} Card`)).toBeTruthy();
-        expect(container.firstChild?.classList.contains("border-l-4")).toBe(true);
+        const firstChild = container.firstChild as HTMLElement | null;
+        expect(firstChild?.classList.contains("border-l-4")).toBe(true);
       });
     });
 
@@ -77,9 +78,7 @@ describe("InfoCard", () => {
 
   describe("InfoCardDescription", () => {
     it("should render description text", () => {
-      render(
-        <InfoCardDescription>This is a description</InfoCardDescription>,
-      );
+      render(<InfoCardDescription>This is a description</InfoCardDescription>);
       expect(screen.getByText("This is a description")).toBeTruthy();
     });
 
@@ -150,9 +149,7 @@ describe("InfoCard", () => {
       );
 
       expect(screen.getByText("Success!")).toBeTruthy();
-      expect(
-        screen.getByText("Operation completed successfully"),
-      ).toBeTruthy();
+      expect(screen.getByText("Operation completed successfully")).toBeTruthy();
       expect(screen.getByText("First step completed")).toBeTruthy();
       expect(screen.getByText("Second step completed")).toBeTruthy();
     });

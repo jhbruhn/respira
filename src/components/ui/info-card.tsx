@@ -8,25 +8,22 @@ import {
 
 import { cn } from "@/lib/utils";
 
-const infoCardVariants = cva(
-  "border-l-4 p-4 rounded-lg backdrop-blur-sm",
-  {
-    variants: {
-      variant: {
-        info: "bg-info-50 dark:bg-info-900/95 border-info-600 dark:border-info-500",
-        warning:
-          "bg-warning-50 dark:bg-warning-900/95 border-warning-600 dark:border-warning-500",
-        error:
-          "bg-danger-50 dark:bg-danger-900/95 border-danger-600 dark:border-danger-500",
-        success:
-          "bg-success-50 dark:bg-success-900/95 border-success-600 dark:border-success-500",
-      },
-    },
-    defaultVariants: {
-      variant: "info",
+const infoCardVariants = cva("border-l-4 p-4 rounded-lg backdrop-blur-sm", {
+  variants: {
+    variant: {
+      info: "bg-info-50 dark:bg-info-900/95 border-info-600 dark:border-info-500",
+      warning:
+        "bg-warning-50 dark:bg-warning-900/95 border-warning-600 dark:border-warning-500",
+      error:
+        "bg-danger-50 dark:bg-danger-900/95 border-danger-600 dark:border-danger-500",
+      success:
+        "bg-success-50 dark:bg-success-900/95 border-success-600 dark:border-success-500",
     },
   },
-);
+  defaultVariants: {
+    variant: "info",
+  },
+});
 
 const iconColorVariants = cva("w-6 h-6 flex-shrink-0 mt-0.5", {
   variants: {
@@ -85,7 +82,8 @@ const listColorVariants = cva("text-sm", {
 });
 
 interface InfoCardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof infoCardVariants> {
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   showDefaultIcon?: boolean;
@@ -145,7 +143,8 @@ function InfoCardDescription({
 }
 
 interface InfoCardListProps
-  extends React.HTMLAttributes<HTMLOListElement | HTMLUListElement>,
+  extends
+    React.HTMLAttributes<HTMLOListElement | HTMLUListElement>,
     VariantProps<typeof listColorVariants> {
   ordered?: boolean;
 }
