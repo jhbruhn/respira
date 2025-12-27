@@ -119,7 +119,7 @@ export function usePatternRotationUpload({
           pesData, // Original unrotated pattern for caching
         );
 
-        return; // Early return
+        return;
       }
 
       // No rotation case

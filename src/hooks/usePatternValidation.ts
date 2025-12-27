@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import type { PesPatternData } from "../formats/import/pesImporter";
 import type { MachineInfo } from "../types/machine";
 import { calculateRotatedBounds } from "../utils/rotationUtils";
@@ -31,8 +31,8 @@ export function usePatternValidation({
   patternOffset,
   patternRotation,
 }: UsePatternValidationParams): PatternBoundsCheckResult {
-  // Check if pattern (with offset and rotation) fits within hoop bounds
-  const checkPatternFitsInHoop = useCallback((): PatternBoundsCheckResult => {
+  // Memoize the bounds check calculation to avoid unnecessary recalculations
+  return useMemo((): PatternBoundsCheckResult => {
     if (!pesData || !machineInfo) {
       return { fits: true, error: null };
     }
@@ -94,12 +94,4 @@ export function usePatternValidation({
 
     return { fits: true, error: null };
   }, [pesData, machineInfo, patternOffset, patternRotation]);
-
-  // Memoize the result to avoid unnecessary recalculations
-  const boundsCheck = useMemo(
-    () => checkPatternFitsInHoop(),
-    [checkPatternFitsInHoop],
-  );
-
-  return boundsCheck;
 }
