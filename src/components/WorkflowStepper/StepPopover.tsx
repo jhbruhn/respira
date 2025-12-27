@@ -13,7 +13,7 @@ import {
   InfoCardDescription,
   InfoCardList,
   InfoCardListItem,
-} from "@/components/ui/info-card";
+} from "../InfoCard";
 
 export interface StepPopoverProps {
   stepId: number;

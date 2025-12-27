@@ -7,7 +7,7 @@ import {
   InfoCardDescription,
   InfoCardList,
   InfoCardListItem,
-} from "@/components/ui/info-card";
+} from "./InfoCard";
 
 interface ErrorPopoverContentProps {
   machineError?: number;
