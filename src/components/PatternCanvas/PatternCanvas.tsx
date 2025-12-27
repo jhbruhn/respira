@@ -1,4 +1,4 @@
-import { useRef, useMemo, memo } from "react";
+import { useRef, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
   useMachineStore,
@@ -23,7 +23,7 @@ import { ZoomControls } from "./ZoomControls";
 import { PatternLayer } from "./PatternLayer";
 import { useCanvasViewport, usePatternTransform } from "@/hooks";
 
-export const PatternCanvas = memo(function PatternCanvas() {
+export function PatternCanvas() {
   // Machine store
   const { sewingProgress, machineInfo } = useMachineStore(
     useShallow((state) => ({
@@ -277,4 +277,4 @@ export const PatternCanvas = memo(function PatternCanvas() {
       </CardContent>
     </Card>
   );
-});
+}
