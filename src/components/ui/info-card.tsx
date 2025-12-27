@@ -71,9 +71,9 @@ const listColorVariants = cva("text-sm", {
   variants: {
     variant: {
       info: "text-info-700 dark:text-info-300",
-      warning: "text-yellow-700 dark:text-yellow-300",
-      error: "text-red-700 dark:text-red-300",
-      success: "text-green-700 dark:text-green-300",
+      warning: "text-warning-700 dark:text-warning-300",
+      error: "text-danger-700 dark:text-danger-300",
+      success: "text-success-700 dark:text-success-300",
     },
   },
   defaultVariants: {
@@ -105,7 +105,7 @@ function InfoCard({
     success: CheckCircleIcon,
   };
 
-  const Icon = CustomIcon || (showDefaultIcon ? defaultIcons[variant!] : null);
+  const Icon = CustomIcon || (showDefaultIcon ? defaultIcons[variant] : null);
 
   return (
     <div className={cn(infoCardVariants({ variant }), className)} {...props}>
