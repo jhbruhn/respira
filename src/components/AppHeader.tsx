@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useMachineStore } from "../stores/useMachineStore";
 import { useUIStore } from "../stores/useUIStore";
+import { usePrevious } from "../hooks/usePrevious";
 import { WorkflowStepper } from "./WorkflowStepper";
 import { ErrorPopoverContent } from "./ErrorPopover";
 import {
@@ -65,9 +66,11 @@ export function AppHeader() {
   const [dismissedErrorCode, setDismissedErrorCode] = useState<number | null>(
     null,
   );
-  const prevMachineErrorRef = useRef<number | undefined>(undefined);
-  const prevErrorMessageRef = useRef<string | null>(null);
-  const prevPyodideErrorRef = useRef<string | null>(null);
+
+  // Track previous values for comparison
+  const prevMachineError = usePrevious(machineError);
+  const prevErrorMessage = usePrevious(machineErrorMessage);
+  const prevPyodideError = usePrevious(pyodideError);
 
   // Get state visual info for header status badge
   const stateVisual = getStateVisualInfo(machineStatus);
@@ -89,29 +92,21 @@ export function AppHeader() {
   // Auto-open/close error popover based on error state changes
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    const currentError = machineError;
-    const prevError = prevMachineErrorRef.current;
-    const currentErrorMessage = machineErrorMessage;
-    const prevErrorMessage = prevErrorMessageRef.current;
-    const currentPyodideError = pyodideError;
-    const prevPyodideError = prevPyodideErrorRef.current;
-
     // Check if there's any error now
     const hasAnyError =
-      machineErrorMessage || pyodideError || hasError(currentError);
+      machineErrorMessage || pyodideError || hasError(machineError);
     // Check if there was any error before
     const hadAnyError =
-      prevErrorMessage || prevPyodideError || hasError(prevError);
+      prevErrorMessage || prevPyodideError || hasError(prevMachineError);
 
     // Auto-open popover when new error appears
     const isNewMachineError =
-      hasError(currentError) &&
-      currentError !== prevError &&
-      currentError !== dismissedErrorCode;
+      hasError(machineError) &&
+      machineError !== prevMachineError &&
+      machineError !== dismissedErrorCode;
     const isNewErrorMessage =
-      currentErrorMessage && currentErrorMessage !== prevErrorMessage;
-    const isNewPyodideError =
-      currentPyodideError && currentPyodideError !== prevPyodideError;
+      machineErrorMessage && machineErrorMessage !== prevErrorMessage;
+    const isNewPyodideError = pyodideError && pyodideError !== prevPyodideError;
 
     if (isNewMachineError || isNewErrorMessage || isNewPyodideError) {
       setErrorPopoverOpen(true);
@@ -122,27 +117,24 @@ export function AppHeader() {
       setErrorPopoverOpen(false);
       setDismissedErrorCode(null); // Reset dismissed tracking
     }
-
-    // Update refs for next comparison
-    prevMachineErrorRef.current = currentError;
-    prevErrorMessageRef.current = currentErrorMessage;
-    prevPyodideErrorRef.current = currentPyodideError;
-  }, [machineError, machineErrorMessage, pyodideError, dismissedErrorCode]);
+  }, [
+    machineError,
+    machineErrorMessage,
+    pyodideError,
+    dismissedErrorCode,
+    prevMachineError,
+    prevErrorMessage,
+    prevPyodideError,
+  ]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // Handle manual popover dismiss
   const handlePopoverOpenChange = (open: boolean) => {
     setErrorPopoverOpen(open);
 
-    // If user manually closes it, remember the current error state to prevent reopening
-    if (!open) {
-      // For machine errors, track the error code
-      if (hasError(machineError)) {
-        setDismissedErrorCode(machineError);
-      }
-      // Update refs so we don't reopen for the same error message/pyodide error
-      prevErrorMessageRef.current = machineErrorMessage;
-      prevPyodideErrorRef.current = pyodideError;
+    // If user manually closes it, remember the current error code to prevent reopening
+    if (!open && hasError(machineError)) {
+      setDismissedErrorCode(machineError);
     }
   };
 
