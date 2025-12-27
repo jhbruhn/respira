@@ -13,6 +13,10 @@ import { ChartBarIcon } from "@heroicons/react/24/solid";
 import { MachineStatus } from "../../types/machine";
 import { calculatePatternTime } from "../../utils/timeCalculation";
 import {
+  calculateColorBlocks,
+  findCurrentBlockIndex,
+} from "../../utils/colorBlockHelpers";
+import {
   Card,
   CardHeader,
   CardTitle,
@@ -23,7 +27,6 @@ import { ProgressStats } from "./ProgressStats";
 import { ProgressSection } from "./ProgressSection";
 import { ColorBlockList } from "./ColorBlockList";
 import { ProgressActions } from "./ProgressActions";
-import type { ColorBlock } from "./types";
 
 export function ProgressMonitor() {
   // Machine store
@@ -69,36 +72,14 @@ export function ProgressMonitor() {
       : 0;
 
   // Calculate color block information from decoded penStitches
-  const colorBlocks = useMemo(() => {
-    if (!displayPattern || !displayPattern.penStitches) return [];
-
-    const blocks: ColorBlock[] = [];
-
-    // Use the pre-computed color blocks from decoded PEN data
-    for (const penBlock of displayPattern.penStitches.colorBlocks) {
-      const thread = displayPattern.threads[penBlock.colorIndex];
-      blocks.push({
-        colorIndex: penBlock.colorIndex,
-        threadHex: thread?.hex || "#000000",
-        threadCatalogNumber: thread?.catalogNumber ?? null,
-        threadBrand: thread?.brand ?? null,
-        threadDescription: thread?.description ?? null,
-        threadChart: thread?.chart ?? null,
-        startStitch: penBlock.startStitchIndex,
-        endStitch: penBlock.endStitchIndex,
-        stitchCount: penBlock.endStitchIndex - penBlock.startStitchIndex,
-      });
-    }
-
-    return blocks;
-  }, [displayPattern]);
+  const colorBlocks = useMemo(
+    () => calculateColorBlocks(displayPattern),
+    [displayPattern],
+  );
 
   // Determine current color block based on current stitch
   const currentStitch = sewingProgress?.currentStitch || 0;
-  const currentBlockIndex = colorBlocks.findIndex(
-    (block) =>
-      currentStitch >= block.startStitch && currentStitch < block.endStitch,
-  );
+  const currentBlockIndex = findCurrentBlockIndex(colorBlocks, currentStitch);
 
   // Calculate time based on color blocks (matches Brother app calculation)
   const { totalMinutes, elapsedMinutes } = useMemo(() => {
