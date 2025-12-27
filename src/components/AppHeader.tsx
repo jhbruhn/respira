@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useMachineStore } from "../stores/useMachineStore";
 import { useUIStore } from "../stores/useUIStore";
-import { usePrevious } from "../hooks/usePrevious";
+import { useErrorPopoverState } from "@/hooks";
 import { WorkflowStepper } from "./WorkflowStepper";
 import { ErrorPopoverContent } from "./ErrorPopover";
 import {
@@ -61,17 +60,16 @@ export function AppHeader() {
     })),
   );
 
-  // State management for error popover auto-open/close
-  const [errorPopoverOpen, setErrorPopoverOpen] = useState(false);
-  const [dismissedErrorCode, setDismissedErrorCode] = useState<number | null>(
-    null,
-  );
-  const [wasManuallyDismissed, setWasManuallyDismissed] = useState(false);
-
-  // Track previous values for comparison
-  const prevMachineError = usePrevious(machineError);
-  const prevErrorMessage = usePrevious(machineErrorMessage);
-  const prevPyodideError = usePrevious(pyodideError);
+  // Error popover state management
+  const {
+    isOpen: errorPopoverOpen,
+    handleOpenChange: handlePopoverOpenChange,
+  } = useErrorPopoverState({
+    machineError,
+    machineErrorMessage,
+    pyodideError,
+    hasError,
+  });
 
   // Get state visual info for header status badge
   const stateVisual = getStateVisualInfo(machineStatus);
@@ -89,67 +87,6 @@ export function AppHeader() {
   const connectionIndicatorState = isConnected
     ? getStatusIndicatorState(machineStatus)
     : "idle";
-
-  // Auto-open/close error popover based on error state changes
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    // Check if there's any error now
-    const hasAnyError =
-      machineErrorMessage || pyodideError || hasError(machineError);
-    // Check if there was any error before
-    const hadAnyError =
-      prevErrorMessage || prevPyodideError || hasError(prevMachineError);
-
-    // Auto-open popover when new error appears (but not if user manually dismissed)
-    const isNewMachineError =
-      hasError(machineError) &&
-      machineError !== prevMachineError &&
-      machineError !== dismissedErrorCode;
-    const isNewErrorMessage =
-      machineErrorMessage && machineErrorMessage !== prevErrorMessage;
-    const isNewPyodideError = pyodideError && pyodideError !== prevPyodideError;
-
-    if (
-      !wasManuallyDismissed &&
-      (isNewMachineError || isNewErrorMessage || isNewPyodideError)
-    ) {
-      setErrorPopoverOpen(true);
-    }
-
-    // Auto-close popover when all errors are cleared
-    if (!hasAnyError && hadAnyError) {
-      setErrorPopoverOpen(false);
-      setDismissedErrorCode(null); // Reset dismissed tracking
-      setWasManuallyDismissed(false); // Reset manual dismissal flag
-    }
-  }, [
-    machineError,
-    machineErrorMessage,
-    pyodideError,
-    dismissedErrorCode,
-    wasManuallyDismissed,
-    prevMachineError,
-    prevErrorMessage,
-    prevPyodideError,
-  ]);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
-  // Handle manual popover dismiss
-  const handlePopoverOpenChange = (open: boolean) => {
-    setErrorPopoverOpen(open);
-
-    // If user manually closes it while any error is present, remember this to prevent reopening
-    if (
-      !open &&
-      (hasError(machineError) || machineErrorMessage || pyodideError)
-    ) {
-      setWasManuallyDismissed(true);
-      // Also track the specific machine error code if present
-      if (hasError(machineError)) {
-        setDismissedErrorCode(machineError);
-      }
-    }
-  };
 
   return (
     <TooltipProvider>

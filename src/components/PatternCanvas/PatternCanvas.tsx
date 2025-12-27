@@ -21,8 +21,7 @@ import { ThreadLegend } from "./ThreadLegend";
 import { PatternPositionIndicator } from "./PatternPositionIndicator";
 import { ZoomControls } from "./ZoomControls";
 import { PatternLayer } from "./PatternLayer";
-import { useCanvasViewport } from "../../hooks/useCanvasViewport";
-import { usePatternTransform } from "../../hooks/usePatternTransform";
+import { useCanvasViewport, usePatternTransform } from "@/hooks";
 
 export function PatternCanvas() {
   // Machine store

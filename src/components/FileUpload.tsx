@@ -10,9 +10,11 @@ import {
   canUploadPattern,
   getMachineStateCategory,
 } from "../utils/machineStateHelpers";
-import { useFileUpload } from "../hooks/useFileUpload";
-import { usePatternRotationUpload } from "../hooks/usePatternRotationUpload";
-import { usePatternValidation } from "../hooks/usePatternValidation";
+import {
+  useFileUpload,
+  usePatternRotationUpload,
+  usePatternValidation,
+} from "@/hooks";
 import { PatternInfoSkeleton } from "./SkeletonLoader";
 import { PatternInfo } from "./PatternInfo";
 import {

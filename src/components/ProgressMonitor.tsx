@@ -1,4 +1,5 @@
-import { useRef, useEffect, useMemo } from "react";
+import { useMemo } from "react";
+import { useAutoScroll } from "@/hooks";
 import { useShallow } from "zustand/react/shallow";
 import { useMachineStore } from "../stores/useMachineStore";
 import { usePatternStore } from "../stores/usePatternStore";
@@ -54,7 +55,6 @@ export function ProgressMonitor() {
   const pesData = usePatternStore((state) => state.pesData);
   const uploadedPesData = usePatternStore((state) => state.uploadedPesData);
   const displayPattern = uploadedPesData || pesData;
-  const currentBlockRef = useRef<HTMLDivElement>(null);
 
   // State indicators
   const isMaskTraceComplete =
@@ -127,14 +127,7 @@ export function ProgressMonitor() {
   }, [colorBlocks, currentStitch]);
 
   // Auto-scroll to current block
-  useEffect(() => {
-    if (currentBlockRef.current) {
-      currentBlockRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
-    }
-  }, [currentBlockIndex]);
+  const currentBlockRef = useAutoScroll(currentBlockIndex);
 
   return (
     <Card className="p-0 gap-0 lg:h-full border-l-4 border-accent-600 dark:border-accent-500 flex flex-col lg:overflow-hidden">
