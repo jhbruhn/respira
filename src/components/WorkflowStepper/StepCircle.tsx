@@ -28,7 +28,7 @@ export const StepCircle = forwardRef<HTMLDivElement, StepCircleProps>(
         onClick={onClick}
         className={`
           w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 border-2 shadow-md
-          ${stepId <= (isCurrent ? stepId : isComplete ? stepId : stepId - 1) ? "cursor-pointer hover:scale-110" : "cursor-not-allowed"}
+          ${isComplete || isCurrent ? "cursor-pointer hover:scale-110" : "cursor-not-allowed"}
           ${isComplete ? "bg-success-500 dark:bg-success-600 border-success-400 dark:border-success-500 text-white shadow-success-500/30 dark:shadow-success-600/30" : ""}
           ${isCurrent ? "bg-primary-600 dark:bg-primary-700 border-primary-500 dark:border-primary-600 text-white scale-105 lg:scale-110 shadow-primary-600/40 dark:shadow-primary-700/40 ring-2 ring-primary-300 dark:ring-primary-500 ring-offset-2 dark:ring-offset-gray-900" : ""}
           ${isUpcoming ? "bg-primary-700 dark:bg-primary-800 border-primary-500/30 dark:border-primary-600/30 text-primary-200/70 dark:text-primary-300/70" : ""}

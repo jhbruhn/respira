@@ -3,9 +3,9 @@
  */
 
 export interface WorkflowStep {
-  id: number;
-  label: string;
-  description: string;
+  readonly id: number;
+  readonly label: string;
+  readonly description: string;
 }
 
 export const WORKFLOW_STEPS: readonly WorkflowStep[] = [

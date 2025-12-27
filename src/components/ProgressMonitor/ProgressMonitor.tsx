@@ -23,7 +23,7 @@ import { ProgressStats } from "./ProgressStats";
 import { ProgressSection } from "./ProgressSection";
 import { ColorBlockList } from "./ColorBlockList";
 import { ProgressActions } from "./ProgressActions";
-import type { ColorBlock } from "./ColorBlockItem";
+import type { ColorBlock } from "./types";
 
 export function ProgressMonitor() {
   // Machine store

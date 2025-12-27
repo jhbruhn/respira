@@ -17,6 +17,7 @@ interface UploadButtonProps {
   isConnected: boolean;
   isUploading: boolean;
   uploadProgress: number;
+  boundsFits: boolean;
   boundsError: string | null;
   onUpload: () => Promise<void>;
   patternUploaded: boolean;
@@ -28,6 +29,7 @@ export function UploadButton({
   isConnected,
   isUploading,
   uploadProgress,
+  boundsFits,
   boundsError,
   onUpload,
   patternUploaded,
@@ -43,7 +45,7 @@ export function UploadButton({
   return (
     <Button
       onClick={onUpload}
-      disabled={!isConnected || isUploading || !!boundsError}
+      disabled={!isConnected || isUploading || !boundsFits}
       className="flex-1"
       aria-label={
         isUploading

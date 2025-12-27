@@ -98,18 +98,20 @@ export const StepPopover = forwardRef<HTMLDivElement, StepPopoverProps>(
                 <ul
                   className={`list-disc list-inside text-sm ${listColorClasses[content.type]} space-y-1`}
                 >
-                  {content.items.map((item, index) => (
-                    <li
-                      key={index}
-                      className="pl-2"
-                      dangerouslySetInnerHTML={{
-                        __html: item.replace(
-                          /\*\*(.*?)\*\*/g,
-                          "<strong>$1</strong>",
-                        ),
-                      }}
-                    />
-                  ))}
+                  {content.items.map((item, index) => {
+                    // Parse **text** markdown syntax into React elements safely
+                    const parts = item.split(/(\*\*.*?\*\*)/);
+                    return (
+                      <li key={index} className="pl-2">
+                        {parts.map((part, i) => {
+                          if (part.startsWith("**") && part.endsWith("**")) {
+                            return <strong key={i}>{part.slice(2, -2)}</strong>;
+                          }
+                          return part;
+                        })}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

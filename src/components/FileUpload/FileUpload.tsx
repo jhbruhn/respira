@@ -20,7 +20,7 @@ import {
   usePatternRotationUpload,
   usePatternValidation,
 } from "@/hooks";
-import { useDisplayFilename } from "../../hooks/domain/useDisplayFilename";
+import { getDisplayFilename } from "../../utils/displayFilename";
 import { PatternInfoSkeleton } from "../SkeletonLoader";
 import { PatternInfo } from "../PatternInfo";
 import { DocumentTextIcon } from "@heroicons/react/24/solid";
@@ -105,7 +105,7 @@ export function FileUpload() {
   // Use prop pesData if available (from cached pattern), otherwise use local state
   const pesData = pesDataProp || localPesData;
   // Use currentFileName from App state, or local fileName, or resumeFileName for display
-  const displayFileName = useDisplayFilename({
+  const displayFileName = getDisplayFilename({
     currentFileName,
     localFileName: fileName,
     resumeFileName,
@@ -229,6 +229,7 @@ export function FileUpload() {
             isConnected={isConnected}
             isUploading={isUploading}
             uploadProgress={uploadProgress}
+            boundsFits={boundsCheck.fits}
             boundsError={boundsCheck.error}
             onUpload={handleUpload}
             patternUploaded={patternUploaded}

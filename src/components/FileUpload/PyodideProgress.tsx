@@ -25,7 +25,7 @@ export function PyodideProgress({
     <div className="mb-3">
       <div className="flex justify-between items-center mb-1.5">
         <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-          {isFileLoading && !pyodideReady
+          {isFileLoading
             ? "Please wait - initializing Python environment..."
             : pyodideLoadingStep || "Initializing Python environment..."}
         </span>
@@ -35,7 +35,7 @@ export function PyodideProgress({
       </div>
       <Progress value={pyodideProgress} className="h-2.5" />
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 italic">
-        {isFileLoading && !pyodideReady
+        {isFileLoading
           ? "File dialog will open automatically when ready"
           : "This only happens once on first use"}
       </p>

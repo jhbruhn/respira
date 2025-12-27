@@ -5,7 +5,8 @@
  */
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ColorBlockItem, type ColorBlock } from "./ColorBlockItem";
+import { ColorBlockItem } from "./ColorBlockItem";
+import type { ColorBlock } from "./types";
 
 interface ColorBlockListProps {
   colorBlocks: ColorBlock[];

@@ -12,18 +12,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { Progress } from "@/components/ui/progress";
 import { formatThreadMetadata } from "../../utils/threadMetadata";
-
-export interface ColorBlock {
-  colorIndex: number;
-  threadHex: string;
-  startStitch: number;
-  endStitch: number;
-  stitchCount: number;
-  threadCatalogNumber: string | null;
-  threadBrand: string | null;
-  threadDescription: string | null;
-  threadChart: string | null;
-}
+import type { ColorBlock } from "./types";
 
 interface ColorBlockItemProps {
   block: ColorBlock;
