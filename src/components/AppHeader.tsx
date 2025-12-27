@@ -66,6 +66,7 @@ export function AppHeader() {
   const [dismissedErrorCode, setDismissedErrorCode] = useState<number | null>(
     null,
   );
+  const [wasManuallyDismissed, setWasManuallyDismissed] = useState(false);
 
   // Track previous values for comparison
   const prevMachineError = usePrevious(machineError);
@@ -99,7 +100,7 @@ export function AppHeader() {
     const hadAnyError =
       prevErrorMessage || prevPyodideError || hasError(prevMachineError);
 
-    // Auto-open popover when new error appears
+    // Auto-open popover when new error appears (but not if user manually dismissed)
     const isNewMachineError =
       hasError(machineError) &&
       machineError !== prevMachineError &&
@@ -108,7 +109,10 @@ export function AppHeader() {
       machineErrorMessage && machineErrorMessage !== prevErrorMessage;
     const isNewPyodideError = pyodideError && pyodideError !== prevPyodideError;
 
-    if (isNewMachineError || isNewErrorMessage || isNewPyodideError) {
+    if (
+      !wasManuallyDismissed &&
+      (isNewMachineError || isNewErrorMessage || isNewPyodideError)
+    ) {
       setErrorPopoverOpen(true);
     }
 
@@ -116,12 +120,14 @@ export function AppHeader() {
     if (!hasAnyError && hadAnyError) {
       setErrorPopoverOpen(false);
       setDismissedErrorCode(null); // Reset dismissed tracking
+      setWasManuallyDismissed(false); // Reset manual dismissal flag
     }
   }, [
     machineError,
     machineErrorMessage,
     pyodideError,
     dismissedErrorCode,
+    wasManuallyDismissed,
     prevMachineError,
     prevErrorMessage,
     prevPyodideError,
@@ -132,9 +138,16 @@ export function AppHeader() {
   const handlePopoverOpenChange = (open: boolean) => {
     setErrorPopoverOpen(open);
 
-    // If user manually closes it, remember the current error code to prevent reopening
-    if (!open && hasError(machineError)) {
-      setDismissedErrorCode(machineError);
+    // If user manually closes it while any error is present, remember this to prevent reopening
+    if (
+      !open &&
+      (hasError(machineError) || machineErrorMessage || pyodideError)
+    ) {
+      setWasManuallyDismissed(true);
+      // Also track the specific machine error code if present
+      if (hasError(machineError)) {
+        setDismissedErrorCode(machineError);
+      }
     }
   };
 
