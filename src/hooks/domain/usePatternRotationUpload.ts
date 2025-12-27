@@ -42,6 +42,10 @@ export interface UsePatternRotationUploadReturn {
  * - Center shift calculation to maintain visual position
  * - Upload orchestration with proper caching
  *
+ * Note: This hook operates on passed parameters rather than store state,
+ * allowing it to be used as a callback handler. The center calculations
+ * use the same helpers as the store selectors for consistency.
+ *
  * @param params - Upload and store functions
  * @returns Upload handler function
  */
@@ -78,7 +82,8 @@ export function usePatternRotationUpload({
         // Calculate bounds from the DECODED stitches (the actual data that will be rendered)
         const rotatedBounds = calculateBoundsFromDecodedStitches(decoded);
 
-        // Calculate the center of the rotated pattern
+        // Calculate the center shift caused by rotation
+        // Uses the same calculatePatternCenter helper as store selectors
         const originalCenter = calculatePatternCenter(pesData.bounds);
         const rotatedCenter = calculatePatternCenter(rotatedBounds);
         const centerShiftX = rotatedCenter.x - originalCenter.x;
