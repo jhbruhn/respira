@@ -13,7 +13,7 @@ import { SewingMachineError } from "../utils/errorCodeHelpers";
 import { uuidToString } from "../services/PatternCacheService";
 import { createStorageService } from "../platform";
 import type { IStorageService } from "../platform/interfaces/IStorageService";
-import { usePatternStore } from "./usePatternStore";
+import { useEventStore } from "./storeEvents";
 
 interface MachineState {
   // Service instances
@@ -291,16 +291,8 @@ export const useMachineStore = create<MachineState>((set, get) => ({
         sewingProgress: null,
       });
 
-      // Clear uploaded pattern data in pattern store
-      usePatternStore.getState().clearUploadedPattern();
-
-      // Clear upload state in upload store
-      const { useMachineUploadStore } = await import("./useMachineUploadStore");
-      useMachineUploadStore.getState().reset();
-
-      // Clear resume state in cache store
-      const { useMachineCacheStore } = await import("./useMachineCacheStore");
-      useMachineCacheStore.getState().clearResumeState();
+      // Emit pattern deleted event for other stores to react
+      useEventStore.getState().emitPatternDeleted();
 
       await refreshStatus();
     } catch (err) {

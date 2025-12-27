@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { PesPatternData } from "../formats/import/pesImporter";
 import { uuidToString } from "../services/PatternCacheService";
+import { onPatternDeleted } from "./storeEvents";
 
 /**
  * Machine Cache Store
@@ -192,3 +193,18 @@ export const useMachineCacheStore = create<MachineCacheState>((set, get) => ({
     });
   },
 }));
+
+// Subscribe to pattern deleted event.
+// This subscription is intended to persist for the lifetime of the application,
+// so the unsubscribe function returned by `onPatternDeleted` is intentionally
+// not stored or called.
+onPatternDeleted(() => {
+  try {
+    useMachineCacheStore.getState().clearResumeState();
+  } catch (error) {
+    console.error(
+      "[MachineCacheStore] Failed to clear resume state on pattern deleted event:",
+      error,
+    );
+  }
+});

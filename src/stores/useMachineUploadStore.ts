@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { PesPatternData } from "../formats/import/pesImporter";
 import { uuidToString } from "../services/PatternCacheService";
+import { onPatternDeleted } from "./storeEvents";
 
 /**
  * Machine Upload Store
@@ -126,3 +127,18 @@ export const useMachineUploadStore = create<MachineUploadState>((set) => ({
     set({ uploadProgress: 0, isUploading: false });
   },
 }));
+
+// Subscribe to pattern deleted event.
+// This subscription is intended to persist for the lifetime of the application,
+// so the unsubscribe function returned by `onPatternDeleted` is intentionally
+// not stored or called.
+onPatternDeleted(() => {
+  try {
+    useMachineUploadStore.getState().reset();
+  } catch (error) {
+    console.error(
+      "[MachineUploadStore] Failed to reset on pattern deleted event:",
+      error,
+    );
+  }
+});
