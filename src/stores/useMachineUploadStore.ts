@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { PesPatternData } from "../formats/import/pesImporter";
 import { uuidToString } from "../services/PatternCacheService";
+import { onPatternDeleted } from "./storeEvents";
 
 /**
  * Machine Upload Store
@@ -126,3 +127,8 @@ export const useMachineUploadStore = create<MachineUploadState>((set) => ({
     set({ uploadProgress: 0, isUploading: false });
   },
 }));
+
+// Subscribe to pattern deleted event
+onPatternDeleted(() => {
+  useMachineUploadStore.getState().reset();
+});

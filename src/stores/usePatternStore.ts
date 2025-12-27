@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { PesPatternData } from "../formats/import/pesImporter";
+import { onPatternDeleted } from "./storeEvents";
 
 interface PatternState {
   // Original pattern (pre-upload)
@@ -121,3 +122,8 @@ export const useUploadedPatternOffset = () =>
   usePatternStore((state) => state.uploadedPatternOffset);
 export const usePatternRotation = () =>
   usePatternStore((state) => state.patternRotation);
+
+// Subscribe to pattern deleted event
+onPatternDeleted(() => {
+  usePatternStore.getState().clearUploadedPattern();
+});

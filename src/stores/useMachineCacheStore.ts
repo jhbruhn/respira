@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { PesPatternData } from "../formats/import/pesImporter";
 import { uuidToString } from "../services/PatternCacheService";
+import { onPatternDeleted } from "./storeEvents";
 
 /**
  * Machine Cache Store
@@ -192,3 +193,8 @@ export const useMachineCacheStore = create<MachineCacheState>((set, get) => ({
     });
   },
 }));
+
+// Subscribe to pattern deleted event
+onPatternDeleted(() => {
+  useMachineCacheStore.getState().clearResumeState();
+});
