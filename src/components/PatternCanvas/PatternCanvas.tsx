@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
   useMachineStore,
@@ -109,6 +109,26 @@ export function PatternCanvas() {
     ? "text-tertiary-600 dark:text-tertiary-400"
     : "text-gray-600 dark:text-gray-400";
 
+  // Memoize the display pattern to avoid recalculation
+  const displayPattern = useMemo(
+    () => uploadedPesData || pesData,
+    [uploadedPesData, pesData],
+  );
+
+  // Memoize pattern dimensions calculation
+  const patternDimensions = useMemo(() => {
+    if (!displayPattern) return null;
+    const width = (
+      (displayPattern.bounds.maxX - displayPattern.bounds.minX) /
+      10
+    ).toFixed(1);
+    const height = (
+      (displayPattern.bounds.maxY - displayPattern.bounds.minY) /
+      10
+    ).toFixed(1);
+    return `${width} × ${height} mm`;
+  }, [displayPattern]);
+
   return (
     <Card
       className={`p-0 gap-0 lg:h-full flex flex-col border-l-4 ${borderColor}`}
@@ -120,25 +140,7 @@ export function PatternCanvas() {
             <CardTitle className="text-sm">Pattern Preview</CardTitle>
             {hasPattern ? (
               <CardDescription className="text-xs">
-                {(() => {
-                  const displayPattern = uploadedPesData || pesData;
-                  return displayPattern ? (
-                    <>
-                      {(
-                        (displayPattern.bounds.maxX -
-                          displayPattern.bounds.minX) /
-                        10
-                      ).toFixed(1)}{" "}
-                      ×{" "}
-                      {(
-                        (displayPattern.bounds.maxY -
-                          displayPattern.bounds.minY) /
-                        10
-                      ).toFixed(1)}{" "}
-                      mm
-                    </>
-                  ) : null;
-                })()}
+                {patternDimensions}
               </CardDescription>
             ) : (
               <CardDescription className="text-xs">
@@ -182,11 +184,11 @@ export function PatternCanvas() {
             >
               {/* Background layer: grid, origin, hoop */}
               <Layer>
-                {hasPattern && (
+                {displayPattern && (
                   <>
                     <Grid
                       gridSize={100}
-                      bounds={(uploadedPesData || pesData)!.bounds}
+                      bounds={displayPattern.bounds}
                       machineInfo={machineInfo}
                     />
                     <Origin />
@@ -241,42 +243,36 @@ export function PatternCanvas() {
           )}
 
           {/* Pattern info overlays */}
-          {hasPattern &&
-            (() => {
-              const displayPattern = uploadedPesData || pesData;
-              return (
-                displayPattern && (
-                  <>
-                    <ThreadLegend colors={displayPattern.uniqueColors} />
+          {displayPattern && (
+            <>
+              <ThreadLegend colors={displayPattern.uniqueColors} />
 
-                    <PatternPositionIndicator
-                      offset={
-                        isUploading || patternUploaded || uploadedPesData
-                          ? initialUploadedPatternOffset
-                          : localPatternOffset
-                      }
-                      rotation={localPatternRotation}
-                      isLocked={patternUploaded || !!uploadedPesData}
-                      isUploading={isUploading}
-                    />
+              <PatternPositionIndicator
+                offset={
+                  isUploading || patternUploaded || uploadedPesData
+                    ? initialUploadedPatternOffset
+                    : localPatternOffset
+                }
+                rotation={localPatternRotation}
+                isLocked={patternUploaded || !!uploadedPesData}
+                isUploading={isUploading}
+              />
 
-                    <ZoomControls
-                      scale={stageScale}
-                      onZoomIn={handleZoomIn}
-                      onZoomOut={handleZoomOut}
-                      onZoomReset={handleZoomReset}
-                      onCenterPattern={handleCenterPattern}
-                      canCenterPattern={
-                        !!pesData &&
-                        !patternUploaded &&
-                        !isUploading &&
-                        !uploadedPesData
-                      }
-                    />
-                  </>
-                )
-              );
-            })()}
+              <ZoomControls
+                scale={stageScale}
+                onZoomIn={handleZoomIn}
+                onZoomOut={handleZoomOut}
+                onZoomReset={handleZoomReset}
+                onCenterPattern={handleCenterPattern}
+                canCenterPattern={
+                  !!pesData &&
+                  !patternUploaded &&
+                  !isUploading &&
+                  !uploadedPesData
+                }
+              />
+            </>
+          )}
         </div>
       </CardContent>
     </Card>
