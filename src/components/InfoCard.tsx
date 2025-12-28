@@ -103,9 +103,10 @@ function InfoCard({
     warning: ExclamationTriangleIcon,
     error: ExclamationTriangleIcon,
     success: CheckCircleIcon,
-  };
+  } as const;
 
-  const Icon = CustomIcon || (showDefaultIcon ? defaultIcons[variant] : null);
+  const Icon =
+    CustomIcon || (showDefaultIcon && variant ? defaultIcons[variant] : null);
 
   return (
     <div className={cn(infoCardVariants({ variant }), className)} {...props}>
