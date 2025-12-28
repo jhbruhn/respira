@@ -42,7 +42,7 @@ interface MachineState {
   isDeleting: boolean;
 
   // Polling control
-  pollRafId: number | null;
+  pollIntervalId: NodeJS.Timeout | null;
   serviceCountIntervalId: NodeJS.Timeout | null;
 
   // Actions
@@ -81,7 +81,7 @@ export const useMachineStore = create<MachineState>((set, get) => ({
   isPairingError: false,
   isCommunicating: false,
   isDeleting: false,
-  pollRafId: null,
+  pollIntervalId: null,
   serviceCountIntervalId: null,
 
   // Connect to machine
@@ -370,70 +370,48 @@ export const useMachineStore = create<MachineState>((set, get) => ({
       return 2000; // Default for idle states
     };
 
-    // Track last poll time for throttling
-    // We use requestAnimationFrame for smooth UI updates but still need to
-    // respect polling intervals to avoid excessive API calls
-    let lastPollTime = 0;
+    // Main polling function
+    const poll = async () => {
+      await refreshStatus();
 
-    // Main polling function using requestAnimationFrame
-    // Benefits over setTimeout:
-    // - Synchronized with browser refresh rate (typically 60fps)
-    // - Automatically paused when tab is not visible (better battery life)
-    // - Smoother animations and UI updates
-    // - More efficient rendering
-    const poll = async (timestamp: number) => {
-      // Initialize lastPollTime on first call
-      if (lastPollTime === 0) {
-        lastPollTime = timestamp;
+      // Refresh progress during sewing
+      if (get().machineStatus === MachineStatus.SEWING) {
+        await refreshProgress();
       }
 
-      // Check if enough time has passed since last poll
-      const interval = getPollInterval();
-      const elapsed = timestamp - lastPollTime;
-
-      if (elapsed >= interval) {
-        lastPollTime = timestamp;
-
-        await refreshStatus();
-
-        // Refresh progress during sewing
-        if (get().machineStatus === MachineStatus.SEWING) {
-          await refreshProgress();
-        }
-
-        // follows the apps logic:
-        // Check if we have a cached pattern and pattern info needs refreshing
-        const { useMachineCacheStore } = await import("./useMachineCacheStore");
-        if (
-          useMachineCacheStore.getState().resumeAvailable &&
-          get().patternInfo?.totalStitches == 0
-        ) {
-          await refreshPatternInfo();
-        }
+      // follows the apps logic:
+      // Check if we have a cached pattern and pattern info needs refreshing
+      const { useMachineCacheStore } = await import("./useMachineCacheStore");
+      if (
+        useMachineCacheStore.getState().resumeAvailable &&
+        get().patternInfo?.totalStitches == 0
+      ) {
+        await refreshPatternInfo();
       }
 
-      // Schedule next poll using requestAnimationFrame
-      const pollRafId = requestAnimationFrame(poll);
-      set({ pollRafId });
+      // Schedule next poll with updated interval
+      const newInterval = getPollInterval();
+      const pollIntervalId = setTimeout(poll, newInterval);
+      set({ pollIntervalId });
     };
 
-    // Start polling with requestAnimationFrame
-    const pollRafId = requestAnimationFrame(poll);
+    // Start polling
+    const initialInterval = getPollInterval();
+    const pollIntervalId = setTimeout(poll, initialInterval);
 
     // Service count polling (every 10 seconds)
-    // Keep using setInterval for this as 10s is too long for RAF
     const serviceCountIntervalId = setInterval(refreshServiceCount, 10000);
 
-    set({ pollRafId, serviceCountIntervalId });
+    set({ pollIntervalId, serviceCountIntervalId });
   },
 
   // Stop polling
   _stopPolling: () => {
-    const { pollRafId, serviceCountIntervalId } = get();
+    const { pollIntervalId, serviceCountIntervalId } = get();
 
-    if (pollRafId) {
-      cancelAnimationFrame(pollRafId);
-      set({ pollRafId: null });
+    if (pollIntervalId) {
+      clearTimeout(pollIntervalId);
+      set({ pollIntervalId: null });
     }
 
     if (serviceCountIntervalId) {
