@@ -382,6 +382,11 @@ export const useMachineStore = create<MachineState>((set, get) => ({
     // - Smoother animations and UI updates
     // - More efficient rendering
     const poll = async (timestamp: number) => {
+      // Initialize lastPollTime on first call
+      if (lastPollTime === 0) {
+        lastPollTime = timestamp;
+      }
+
       // Check if enough time has passed since last poll
       const interval = getPollInterval();
       const elapsed = timestamp - lastPollTime;
