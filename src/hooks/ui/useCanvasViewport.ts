@@ -2,7 +2,7 @@
  * useCanvasViewport Hook
  *
  * Manages canvas viewport state including zoom, pan, and container size
- * Handles wheel zoom and button zoom operations
+ * Handles wheel zoom, button zoom operations, and stage drag cursor updates
  */
 
 import {
@@ -93,43 +93,45 @@ export function useCanvasViewport({
     setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
   }
 
-  // Wheel zoom handler with RAF throttling
+  // Wheel zoom handler with RAF throttling and delta accumulation
   const wheelThrottleRef = useRef<number | null>(null);
-  const wheelEventRef = useRef<Konva.KonvaEventObject<WheelEvent> | null>(null);
+  const accumulatedDeltaRef = useRef<number>(0);
+  const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
+  const lastStageRef = useRef<Konva.Stage | null>(null);
 
   const handleWheel = useCallback((e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
 
-    // Store the latest event
-    wheelEventRef.current = e;
+    const stage = e.target.getStage();
+    if (!stage) return;
 
-    // Cancel pending throttle if it exists
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return;
+
+    // Accumulate deltaY from all events during throttle period
+    accumulatedDeltaRef.current += e.evt.deltaY;
+    lastPointerRef.current = pointer;
+    lastStageRef.current = stage;
+
+    // Skip if throttle already in progress
     if (wheelThrottleRef.current !== null) {
-      return; // Throttle in progress, skip this event
+      return;
     }
 
     // Schedule update on next animation frame (~16ms)
     wheelThrottleRef.current = requestAnimationFrame(() => {
-      const throttledEvent = wheelEventRef.current;
-      if (!throttledEvent) {
-        wheelThrottleRef.current = null;
-        return;
-      }
+      const accumulatedDelta = accumulatedDeltaRef.current;
+      const pointer = lastPointerRef.current;
+      const stage = lastStageRef.current;
 
-      const stage = throttledEvent.target.getStage();
-      if (!stage) {
+      if (!pointer || !stage || accumulatedDelta === 0) {
         wheelThrottleRef.current = null;
-        return;
-      }
-
-      const pointer = stage.getPointerPosition();
-      if (!pointer) {
-        wheelThrottleRef.current = null;
+        accumulatedDeltaRef.current = 0;
         return;
       }
 
       const scaleBy = 1.1;
-      const direction = throttledEvent.evt.deltaY > 0 ? -1 : 1;
+      const direction = accumulatedDelta > 0 ? -1 : 1;
 
       setStageScale((oldScale) => {
         const newScale = Math.max(
@@ -145,8 +147,9 @@ export function useCanvasViewport({
         return newScale;
       });
 
+      // Reset accumulator and throttle
       wheelThrottleRef.current = null;
-      wheelEventRef.current = null;
+      accumulatedDeltaRef.current = 0;
     });
   }, []);
 
@@ -199,19 +202,12 @@ export function useCanvasViewport({
     setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
   }, [initialScale, containerSize]);
 
-  // Stage drag handlers with throttled cursor updates
-  const lastCursorUpdateRef = useRef<number>(0);
-
+  // Stage drag handlers - cursor updates immediately for better UX
   const handleStageDragStart = useCallback(
     (e: Konva.KonvaEventObject<DragEvent>) => {
-      const now = Date.now();
-      // Throttle cursor updates to ~60fps (16ms)
-      if (now - lastCursorUpdateRef.current > 16) {
-        const stage = e.target.getStage();
-        if (stage) {
-          stage.container().style.cursor = "grabbing";
-        }
-        lastCursorUpdateRef.current = now;
+      const stage = e.target.getStage();
+      if (stage) {
+        stage.container().style.cursor = "grabbing";
       }
     },
     [],
@@ -223,7 +219,6 @@ export function useCanvasViewport({
       if (stage) {
         stage.container().style.cursor = "grab";
       }
-      lastCursorUpdateRef.current = 0;
     },
     [],
   );

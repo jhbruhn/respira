@@ -53,7 +53,6 @@ export const Grid = memo(({ gridSize, bounds, machineInfo }: GridProps) => {
           points={points}
           stroke={gridColor}
           strokeWidth={1}
-          listening={false}
         />
       ))}
       {lines.horizontalLines.map((points, i) => (
@@ -62,7 +61,6 @@ export const Grid = memo(({ gridSize, bounds, machineInfo }: GridProps) => {
           points={points}
           stroke={gridColor}
           strokeWidth={1}
-          listening={false}
         />
       ))}
     </Group>
@@ -76,18 +74,8 @@ export const Origin = memo(() => {
 
   return (
     <Group name="origin" listening={false}>
-      <Line
-        points={[-10, 0, 10, 0]}
-        stroke={originColor}
-        strokeWidth={2}
-        listening={false}
-      />
-      <Line
-        points={[0, -10, 0, 10]}
-        stroke={originColor}
-        strokeWidth={2}
-        listening={false}
-      />
+      <Line points={[-10, 0, 10, 0]} stroke={originColor} strokeWidth={2} />
+      <Line points={[0, -10, 0, 10]} stroke={originColor} strokeWidth={2} />
     </Group>
   );
 });
@@ -114,7 +102,6 @@ export const Hoop = memo(({ machineInfo }: HoopProps) => {
         stroke={hoopColor}
         strokeWidth={3}
         dash={[10, 5]}
-        listening={false}
       />
       <Text
         x={hoopLeft + 10}
@@ -124,7 +111,6 @@ export const Hoop = memo(({ machineInfo }: HoopProps) => {
         fontFamily="sans-serif"
         fontStyle="bold"
         fill={hoopColor}
-        listening={false}
       />
     </Group>
   );
