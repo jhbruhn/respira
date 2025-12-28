@@ -113,7 +113,8 @@ export function usePatternTransform({
     setPatternOffset(centerOffset.x, centerOffset.y);
   }, [pesData, setPatternOffset]);
 
-  // Pattern drag handlers
+  // Pattern drag handler - only updates state when drag is complete
+  // Konva handles the visual drag internally, no need to update React state during drag
   const handlePatternDragEnd = useCallback(
     (e: Konva.KonvaEventObject<DragEvent>) => {
       const newOffset = {

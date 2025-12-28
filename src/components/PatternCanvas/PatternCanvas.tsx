@@ -74,6 +74,8 @@ export function PatternCanvas() {
     handleZoomIn,
     handleZoomOut,
     handleZoomReset,
+    handleStageDragStart,
+    handleStageDragEnd,
   } = useCanvasViewport({
     containerRef,
     pesData,
@@ -165,16 +167,8 @@ export function PatternCanvas() {
               scaleY={stageScale}
               draggable
               onWheel={handleWheel}
-              onDragStart={() => {
-                if (stageRef.current) {
-                  stageRef.current.container().style.cursor = "grabbing";
-                }
-              }}
-              onDragEnd={() => {
-                if (stageRef.current) {
-                  stageRef.current.container().style.cursor = "grab";
-                }
-              }}
+              onDragStart={handleStageDragStart}
+              onDragEnd={handleStageDragEnd}
               ref={(node) => {
                 stageRef.current = node;
                 if (node) {
@@ -182,8 +176,8 @@ export function PatternCanvas() {
                 }
               }}
             >
-              {/* Background layer: grid, origin, hoop */}
-              <Layer>
+              {/* Background layer: grid, origin, hoop - static, no event listening */}
+              <Layer listening={false}>
                 {displayPattern && (
                   <>
                     <Grid

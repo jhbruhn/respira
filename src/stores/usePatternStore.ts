@@ -5,6 +5,9 @@ import { onPatternDeleted } from "./storeEvents";
 import { calculatePatternCenter } from "../components/PatternCanvas/patternCanvasHelpers";
 import { calculateRotatedBounds } from "../utils/rotationUtils";
 
+// Conditional logging for development only
+const isDev = import.meta.env.DEV;
+
 interface PatternState {
   // Original pattern (pre-upload)
   pesData: PesPatternData | null;
@@ -79,13 +82,17 @@ export const usePatternStore = create<PatternState>((set) => ({
   // Update pattern offset (for original pattern only)
   setPatternOffset: (x: number, y: number) => {
     set({ patternOffset: { x, y } });
-    console.log("[PatternStore] Pattern offset changed:", { x, y });
+    if (isDev) {
+      console.log("[PatternStore] Pattern offset changed:", { x, y });
+    }
   },
 
   // Set pattern rotation (for original pattern only)
   setPatternRotation: (rotation: number) => {
     set({ patternRotation: rotation % 360 });
-    console.log("[PatternStore] Pattern rotation changed:", rotation);
+    if (isDev) {
+      console.log("[PatternStore] Pattern rotation changed:", rotation);
+    }
   },
 
   // Set uploaded pattern data (called after upload completes)
@@ -101,13 +108,17 @@ export const usePatternStore = create<PatternState>((set) => ({
       // Optionally set filename if provided (for resume/reconnect scenarios)
       ...(fileName && { currentFileName: fileName }),
     });
-    console.log("[PatternStore] Uploaded pattern set");
+    if (isDev) {
+      console.log("[PatternStore] Uploaded pattern set");
+    }
   },
 
   // Clear uploaded pattern (called when deleting from machine)
   // This reverts to pre-upload state, keeping pesData so user can re-adjust and re-upload
   clearUploadedPattern: () => {
-    console.log("[PatternStore] CLEARING uploaded pattern...");
+    if (isDev) {
+      console.log("[PatternStore] CLEARING uploaded pattern...");
+    }
     set({
       uploadedPesData: null,
       uploadedPatternOffset: { x: 0, y: 0 },
@@ -115,9 +126,11 @@ export const usePatternStore = create<PatternState>((set) => ({
       // Keep pesData, currentFileName, patternOffset, patternRotation
       // so user can adjust and re-upload
     });
-    console.log(
-      "[PatternStore] Uploaded pattern cleared - back to editable mode",
-    );
+    if (isDev) {
+      console.log(
+        "[PatternStore] Uploaded pattern cleared - back to editable mode",
+      );
+    }
   },
 
   // Reset pattern offset to default

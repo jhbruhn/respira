@@ -5,7 +5,13 @@
  * Handles wheel zoom and button zoom operations
  */
 
-import { useState, useEffect, useCallback, type RefObject } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  type RefObject,
+} from "react";
 import type Konva from "konva";
 import type { PesPatternData } from "../../formats/import/pesImporter";
 import type { MachineInfo } from "../../types/machine";
@@ -87,32 +93,70 @@ export function useCanvasViewport({
     setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
   }
 
-  // Wheel zoom handler
+  // Wheel zoom handler with RAF throttling
+  const wheelThrottleRef = useRef<number | null>(null);
+  const wheelEventRef = useRef<Konva.KonvaEventObject<WheelEvent> | null>(null);
+
   const handleWheel = useCallback((e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
 
-    const stage = e.target.getStage();
-    if (!stage) return;
+    // Store the latest event
+    wheelEventRef.current = e;
 
-    const pointer = stage.getPointerPosition();
-    if (!pointer) return;
+    // Cancel pending throttle if it exists
+    if (wheelThrottleRef.current !== null) {
+      return; // Throttle in progress, skip this event
+    }
 
-    const scaleBy = 1.1;
-    const direction = e.evt.deltaY > 0 ? -1 : 1;
+    // Schedule update on next animation frame (~16ms)
+    wheelThrottleRef.current = requestAnimationFrame(() => {
+      const throttledEvent = wheelEventRef.current;
+      if (!throttledEvent) {
+        wheelThrottleRef.current = null;
+        return;
+      }
 
-    setStageScale((oldScale) => {
-      const newScale = Math.max(
-        0.1,
-        Math.min(direction > 0 ? oldScale * scaleBy : oldScale / scaleBy, 2),
-      );
+      const stage = throttledEvent.target.getStage();
+      if (!stage) {
+        wheelThrottleRef.current = null;
+        return;
+      }
 
-      // Zoom towards pointer
-      setStagePos((prevPos) =>
-        calculateZoomToPoint(oldScale, newScale, pointer, prevPos),
-      );
+      const pointer = stage.getPointerPosition();
+      if (!pointer) {
+        wheelThrottleRef.current = null;
+        return;
+      }
 
-      return newScale;
+      const scaleBy = 1.1;
+      const direction = throttledEvent.evt.deltaY > 0 ? -1 : 1;
+
+      setStageScale((oldScale) => {
+        const newScale = Math.max(
+          0.1,
+          Math.min(direction > 0 ? oldScale * scaleBy : oldScale / scaleBy, 2),
+        );
+
+        // Zoom towards pointer
+        setStagePos((prevPos) =>
+          calculateZoomToPoint(oldScale, newScale, pointer, prevPos),
+        );
+
+        return newScale;
+      });
+
+      wheelThrottleRef.current = null;
+      wheelEventRef.current = null;
     });
+  }, []);
+
+  // Cleanup wheel throttle on unmount
+  useEffect(() => {
+    return () => {
+      if (wheelThrottleRef.current !== null) {
+        cancelAnimationFrame(wheelThrottleRef.current);
+      }
+    };
   }, []);
 
   // Zoom control handlers
@@ -155,6 +199,35 @@ export function useCanvasViewport({
     setStagePos({ x: containerSize.width / 2, y: containerSize.height / 2 });
   }, [initialScale, containerSize]);
 
+  // Stage drag handlers with throttled cursor updates
+  const lastCursorUpdateRef = useRef<number>(0);
+
+  const handleStageDragStart = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => {
+      const now = Date.now();
+      // Throttle cursor updates to ~60fps (16ms)
+      if (now - lastCursorUpdateRef.current > 16) {
+        const stage = e.target.getStage();
+        if (stage) {
+          stage.container().style.cursor = "grabbing";
+        }
+        lastCursorUpdateRef.current = now;
+      }
+    },
+    [],
+  );
+
+  const handleStageDragEnd = useCallback(
+    (e: Konva.KonvaEventObject<DragEvent>) => {
+      const stage = e.target.getStage();
+      if (stage) {
+        stage.container().style.cursor = "grab";
+      }
+      lastCursorUpdateRef.current = 0;
+    },
+    [],
+  );
+
   return {
     // State
     stagePos,
@@ -166,5 +239,7 @@ export function useCanvasViewport({
     handleZoomIn,
     handleZoomOut,
     handleZoomReset,
+    handleStageDragStart,
+    handleStageDragEnd,
   };
 }
