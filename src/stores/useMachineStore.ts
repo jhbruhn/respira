@@ -371,9 +371,16 @@ export const useMachineStore = create<MachineState>((set, get) => ({
     };
 
     // Track last poll time for throttling
+    // We use requestAnimationFrame for smooth UI updates but still need to
+    // respect polling intervals to avoid excessive API calls
     let lastPollTime = 0;
 
     // Main polling function using requestAnimationFrame
+    // Benefits over setTimeout:
+    // - Synchronized with browser refresh rate (typically 60fps)
+    // - Automatically paused when tab is not visible (better battery life)
+    // - Smoother animations and UI updates
+    // - More efficient rendering
     const poll = async (timestamp: number) => {
       // Check if enough time has passed since last poll
       const interval = getPollInterval();
@@ -409,6 +416,7 @@ export const useMachineStore = create<MachineState>((set, get) => ({
     const pollRafId = requestAnimationFrame(poll);
 
     // Service count polling (every 10 seconds)
+    // Keep using setInterval for this as 10s is too long for RAF
     const serviceCountIntervalId = setInterval(refreshServiceCount, 10000);
 
     set({ pollRafId, serviceCountIntervalId });
