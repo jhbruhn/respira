@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import type { PesPatternData } from "../formats/import/pesImporter";
 import { onPatternDeleted } from "./storeEvents";
 import { calculatePatternCenter } from "../components/PatternCanvas/patternCanvasHelpers";
@@ -293,28 +294,33 @@ export const selectPatternValidation = (
 };
 
 /**
- * Hook to get pattern center (memoized)
+ * Hook to get pattern center (memoized with shallow comparison)
  */
-export const usePatternCenter = () => usePatternStore(selectPatternCenter);
+export const usePatternCenter = () =>
+  usePatternStore(useShallow(selectPatternCenter));
 
 /**
- * Hook to get uploaded pattern center (memoized)
+ * Hook to get uploaded pattern center (memoized with shallow comparison)
  */
 export const useUploadedPatternCenter = () =>
-  usePatternStore(selectUploadedPatternCenter);
+  usePatternStore(useShallow(selectUploadedPatternCenter));
 
 /**
- * Hook to get rotated bounds (memoized)
+ * Hook to get rotated bounds (memoized with shallow comparison)
  */
-export const useRotatedBounds = () => usePatternStore(selectRotatedBounds);
+export const useRotatedBounds = () =>
+  usePatternStore(useShallow(selectRotatedBounds));
 
 /**
  * Hook to get pattern validation result (requires machineInfo)
- * Use this with caution as it requires external state
+ * Uses shallow comparison to prevent infinite re-renders from new object references
  */
 export const usePatternValidationFromStore = (
   machineInfo: { maxWidth: number; maxHeight: number } | null,
-) => usePatternStore((state) => selectPatternValidation(state, machineInfo));
+) =>
+  usePatternStore(
+    useShallow((state) => selectPatternValidation(state, machineInfo)),
+  );
 
 // Subscribe to pattern deleted event.
 // This subscription is intended to persist for the lifetime of the application,
