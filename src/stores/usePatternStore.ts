@@ -1,6 +1,9 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import type { PesPatternData } from "../formats/import/pesImporter";
 import { onPatternDeleted } from "./storeEvents";
+import { calculatePatternCenter } from "../components/PatternCanvas/patternCanvasHelpers";
+import { calculateRotatedBounds } from "../utils/rotationUtils";
 
 interface PatternState {
   // Original pattern (pre-upload)
@@ -27,6 +30,24 @@ interface PatternState {
   clearUploadedPattern: () => void;
   resetPatternOffset: () => void;
   resetRotation: () => void;
+}
+
+// Computed value types
+export interface PatternCenter {
+  x: number;
+  y: number;
+}
+
+export interface PatternBounds {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
+
+export interface TransformedBounds {
+  bounds: PatternBounds;
+  center: PatternCenter;
 }
 
 export const usePatternStore = create<PatternState>((set) => ({
@@ -122,6 +143,88 @@ export const useUploadedPatternOffset = () =>
   usePatternStore((state) => state.uploadedPatternOffset);
 export const usePatternRotation = () =>
   usePatternStore((state) => state.patternRotation);
+
+// Computed selectors (memoized by Zustand)
+// These provide single source of truth for derived state
+
+/**
+ * Select the geometric center of the pattern's bounds
+ */
+export const selectPatternCenter = (
+  state: PatternState,
+): PatternCenter | null => {
+  if (!state.pesData) return null;
+  return calculatePatternCenter(state.pesData.bounds);
+};
+
+/**
+ * Select the center of the uploaded pattern's bounds
+ */
+export const selectUploadedPatternCenter = (
+  state: PatternState,
+): PatternCenter | null => {
+  if (!state.uploadedPesData) return null;
+  return calculatePatternCenter(state.uploadedPesData.bounds);
+};
+
+/**
+ * Select the rotated bounds of the current pattern
+ * Returns original bounds if no rotation or no pattern
+ */
+export const selectRotatedBounds = (
+  state: PatternState,
+): TransformedBounds | null => {
+  if (!state.pesData) return null;
+
+  const bounds =
+    state.patternRotation && state.patternRotation !== 0
+      ? calculateRotatedBounds(state.pesData.bounds, state.patternRotation)
+      : state.pesData.bounds;
+
+  const center = calculatePatternCenter(bounds);
+
+  return { bounds, center };
+};
+
+/**
+ * Select the center shift caused by rotation
+ * This is used to adjust the offset when rotation is applied
+ * Returns null if no pattern or no rotation
+ */
+export const selectRotationCenterShift = (
+  state: PatternState,
+  rotatedBounds: PatternBounds,
+): { x: number; y: number } | null => {
+  if (!state.pesData) return null;
+  if (!state.patternRotation || state.patternRotation === 0)
+    return { x: 0, y: 0 };
+
+  const originalCenter = calculatePatternCenter(state.pesData.bounds);
+  const rotatedCenter = calculatePatternCenter(rotatedBounds);
+
+  return {
+    x: rotatedCenter.x - originalCenter.x,
+    y: rotatedCenter.y - originalCenter.y,
+  };
+};
+
+/**
+ * Hook to get pattern center (memoized with shallow comparison)
+ */
+export const usePatternCenter = () =>
+  usePatternStore(useShallow(selectPatternCenter));
+
+/**
+ * Hook to get uploaded pattern center (memoized with shallow comparison)
+ */
+export const useUploadedPatternCenter = () =>
+  usePatternStore(useShallow(selectUploadedPatternCenter));
+
+/**
+ * Hook to get rotated bounds (memoized with shallow comparison)
+ */
+export const useRotatedBounds = () =>
+  usePatternStore(useShallow(selectRotatedBounds));
 
 // Subscribe to pattern deleted event.
 // This subscription is intended to persist for the lifetime of the application,

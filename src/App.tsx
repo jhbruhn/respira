@@ -112,8 +112,9 @@ function App() {
       // Use cached uploadedPesData if available, otherwise recalculate
       if (cachedUploadedPesData) {
         // Use the exact uploaded data from cache
-        // Calculate the adjusted offset (same logic as upload)
+        // Calculate the adjusted offset (same logic as upload hook)
         if (rotation !== 0) {
+          // Calculate center shift using the same helper as store selectors
           const originalCenter = calculatePatternCenter(originalPesData.bounds);
           const rotatedCenter = calculatePatternCenter(
             cachedUploadedPesData.bounds,
@@ -140,6 +141,7 @@ function App() {
         }
       } else if (rotation !== 0) {
         // Fallback: recalculate if no cached uploaded data (shouldn't happen for new uploads)
+        // This uses the same transformation logic as usePatternRotationUpload hook
         console.warn("[App] No cached uploaded data, recalculating rotation");
         const rotatedStitches = transformStitchesRotation(
           originalPesData.stitches,
@@ -152,6 +154,7 @@ function App() {
         const decoded = decodePenData(penData);
         const rotatedBounds = calculateBoundsFromDecodedStitches(decoded);
 
+        // Calculate center shift using the same helper as store selectors
         const originalCenter = calculatePatternCenter(originalPesData.bounds);
         const rotatedCenter = calculatePatternCenter(rotatedBounds);
         const centerShiftX = rotatedCenter.x - originalCenter.x;

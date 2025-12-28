@@ -43,6 +43,9 @@ export const PatternLayer = memo(function PatternLayer({
   onTransformEnd,
   attachTransformer,
 }: PatternLayerProps) {
+  // Memoize center calculation - this is the pattern center calculation
+  // Note: We keep this local calculation here since the component receives
+  // pesData as a prop which could be either original or uploaded pattern
   const center = useMemo(
     () => calculatePatternCenter(pesData.bounds),
     [pesData.bounds],
