@@ -108,7 +108,7 @@ export const Hoop = memo(({ machineInfo }: HoopProps) => {
       />
       <Text
         x={hoopLeft + 10}
-        y={hoopTop + 10}
+        y={hoopTop + maxHeight - 24}
         text={`Hoop: ${(maxWidth / 10).toFixed(0)} x ${(maxHeight / 10).toFixed(0)} mm`}
         fontSize={14}
         fontFamily="sans-serif"
