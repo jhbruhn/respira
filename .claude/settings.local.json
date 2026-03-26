@@ -11,7 +11,12 @@
       "Bash(gh issue create:*)",
       "Bash(gh label create:*)",
       "Bash(gh issue view:*)",
-      "Bash(gh pr view:*)"
+      "Bash(gh pr view:*)",
+      "Bash(bd list:*)",
+      "Bash(bd status:*)",
+      "Bash(bd create:*)",
+      "Bash(bd dep add:*)",
+      "Bash(bd ready:*)"
     ],
     "deny": [],
     "ask": []
