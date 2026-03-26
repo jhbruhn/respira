@@ -17,6 +17,7 @@ interface ProgressActionsProps {
   machineStatus: MachineStatus;
   isDeleting: boolean;
   isMaskTraceComplete: boolean;
+  hasSewingProgress: boolean;
   onResumeSewing: () => void;
   onStartSewing: () => void;
   onStartMaskTrace: () => void;
@@ -26,6 +27,7 @@ export function ProgressActions({
   machineStatus,
   isDeleting,
   isMaskTraceComplete,
+  hasSewingProgress,
   onResumeSewing,
   onStartSewing,
   onStartMaskTrace,
@@ -59,7 +61,7 @@ export function ProgressActions({
       )}
 
       {/* Start Mask Trace - secondary action */}
-      {canStartMaskTrace(machineStatus) && (
+      {canStartMaskTrace(machineStatus, hasSewingProgress) && (
         <Button
           onClick={onStartMaskTrace}
           disabled={isDeleting}

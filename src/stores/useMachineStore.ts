@@ -9,7 +9,11 @@ import type {
   SewingProgress,
 } from "../types/machine";
 import { MachineStatus, MachineStatusNames } from "../types/machine";
-import { SewingMachineError } from "../utils/errorCodeHelpers";
+import {
+  SewingMachineError,
+  getErrorStitchRollback,
+} from "../utils/errorCodeHelpers";
+import { getMachineStateCategory } from "../utils/machineStateHelpers";
 import { uuidToString } from "../services/PatternCacheService";
 import { createStorageService } from "../platform";
 import type { IStorageService } from "../platform/interfaces/IStorageService";
@@ -41,6 +45,11 @@ interface MachineState {
   isCommunicating: boolean;
   isDeleting: boolean;
 
+  // Step control state
+  adjustedStitchIndex: number | null;
+  lastRolledBackError: number | null;
+  pausedStitchIndex: number | null; // Position snapshot after pause + auto-rollback, before manual adjustments
+
   // Polling control
   pollIntervalId: NodeJS.Timeout | null;
   serviceCountIntervalId: NodeJS.Timeout | null;
@@ -56,6 +65,8 @@ interface MachineState {
   startSewing: () => Promise<void>;
   resumeSewing: () => Promise<void>;
   deletePattern: () => Promise<void>;
+  setStitchPosition: (index: number) => Promise<void>;
+  adjustStitchPosition: (offset: number) => Promise<void>;
 
   // Initialization
   initialize: () => void;
@@ -64,6 +75,7 @@ interface MachineState {
   _setupSubscriptions: () => void;
   _startPolling: () => void;
   _stopPolling: () => void;
+  _handleErrorStitchRollback: () => Promise<void>;
 }
 
 export const useMachineStore = create<MachineState>((set, get) => ({
@@ -81,6 +93,9 @@ export const useMachineStore = create<MachineState>((set, get) => ({
   isPairingError: false,
   isCommunicating: false,
   isDeleting: false,
+  adjustedStitchIndex: null,
+  lastRolledBackError: null,
+  pausedStitchIndex: null,
   pollIntervalId: null,
   serviceCountIntervalId: null,
 
@@ -103,6 +118,14 @@ export const useMachineStore = create<MachineState>((set, get) => ({
         machineStatusName: MachineStatusNames[state.status] || "Unknown",
         machineError: state.error,
       });
+
+      // Fetch sewing progress so we know if sewing was in progress before reconnect
+      try {
+        const progress = await service.getSewingProgress();
+        set({ sewingProgress: progress });
+      } catch {
+        // Not critical - polling will pick it up
+      }
 
       // Check for resume possibility using cache store
       const { useMachineCacheStore } = await import("./useMachineCacheStore");
@@ -237,7 +260,12 @@ export const useMachineStore = create<MachineState>((set, get) => ({
     if (!isConnected) return;
 
     try {
-      set({ error: null });
+      set({
+        error: null,
+        adjustedStitchIndex: null,
+        lastRolledBackError: null,
+        pausedStitchIndex: null,
+      });
       await service.startSewing();
       await refreshStatus();
     } catch (err) {
@@ -253,7 +281,12 @@ export const useMachineStore = create<MachineState>((set, get) => ({
     if (!isConnected) return;
 
     try {
-      set({ error: null });
+      set({
+        error: null,
+        adjustedStitchIndex: null,
+        lastRolledBackError: null,
+        pausedStitchIndex: null,
+      });
       await service.resumeSewing();
       await refreshStatus();
     } catch (err) {
@@ -301,6 +334,64 @@ export const useMachineStore = create<MachineState>((set, get) => ({
       });
     } finally {
       set({ isDeleting: false });
+    }
+  },
+
+  // Set stitch position to an absolute index
+  setStitchPosition: async (index: number) => {
+    const { isConnected, service, patternInfo } = get();
+    if (!isConnected) return;
+
+    const totalStitches = patternInfo?.totalStitches || 0;
+    const clamped = Math.max(0, Math.min(index, totalStitches));
+
+    try {
+      await service.setStitchIndex(clamped);
+      set({ adjustedStitchIndex: clamped });
+      // Refresh progress so UI reflects the new position
+      await get().refreshProgress();
+    } catch (err) {
+      set({
+        error:
+          err instanceof Error ? err.message : "Failed to set stitch position",
+      });
+    }
+  },
+
+  // Adjust stitch position by a relative offset
+  adjustStitchPosition: async (offset: number) => {
+    const { sewingProgress, adjustedStitchIndex } = get();
+    const currentIndex =
+      adjustedStitchIndex ?? sewingProgress?.currentStitch ?? 0;
+    await get().setStitchPosition(currentIndex + offset);
+  },
+
+  // Handle automatic stitch rollback for thread errors
+  _handleErrorStitchRollback: async () => {
+    const { machineError, sewingProgress, service, lastRolledBackError } =
+      get();
+
+    const rollback = getErrorStitchRollback(machineError);
+    if (rollback === null) return;
+    if (machineError === lastRolledBackError) return;
+
+    const currentStitch = sewingProgress?.currentStitch ?? 0;
+    const newIndex = Math.max(0, currentStitch - rollback);
+
+    console.log(
+      `[StepControl] Auto-rollback: stitch ${currentStitch} -> ${newIndex} (error 0x${machineError.toString(16)}, rollback ${rollback})`,
+    );
+
+    try {
+      await service.setStitchIndex(newIndex);
+      set({
+        adjustedStitchIndex: newIndex,
+        lastRolledBackError: machineError,
+      });
+      // Immediately refresh progress so subsequent polls see consistent state
+      await get().refreshProgress();
+    } catch (err) {
+      console.error("[StepControl] Failed to rollback stitch position:", err);
     }
   },
 
@@ -359,7 +450,7 @@ export const useMachineStore = create<MachineState>((set, get) => ({
         status === MachineStatus.MASK_TRACING ||
         status === MachineStatus.SEWING_DATA_RECEIVE
       ) {
-        return 500;
+        return 1000;
       } else if (
         status === MachineStatus.COLOR_CHANGE_WAIT ||
         status === MachineStatus.MASK_TRACE_LOCK_WAIT ||
@@ -374,9 +465,46 @@ export const useMachineStore = create<MachineState>((set, get) => ({
     const poll = async () => {
       await refreshStatus();
 
+      const currentState = get();
+      const category = getMachineStateCategory(currentState.machineStatus);
+
       // Refresh progress during sewing
-      if (get().machineStatus === MachineStatus.SEWING) {
+      if (currentState.machineStatus === MachineStatus.SEWING) {
         await refreshProgress();
+      }
+
+      // Reset step control state when machine is actively sewing
+      if (category === "active") {
+        if (
+          currentState.adjustedStitchIndex !== null ||
+          currentState.lastRolledBackError !== null ||
+          currentState.pausedStitchIndex !== null
+        ) {
+          set({
+            adjustedStitchIndex: null,
+            lastRolledBackError: null,
+            pausedStitchIndex: null,
+          });
+        }
+      }
+      // Note: we intentionally do NOT clear lastRolledBackError when the error clears
+      // while still paused, so the rollback info text remains visible to the user.
+
+      // Auto-rollback for thread errors when machine is interrupted or paused mid-sew
+      // Only runs once on entering paused state (when pausedStitchIndex is not yet set)
+      const isInterruptedOrPausedMidSew =
+        category === "interrupted" ||
+        (currentState.machineStatus === MachineStatus.SEWING_WAIT &&
+          (currentState.sewingProgress?.currentStitch ?? 0) > 0);
+      if (isInterruptedOrPausedMidSew && get().pausedStitchIndex === null) {
+        // Refresh progress so rollback has accurate current stitch
+        await get().refreshProgress();
+        await get()._handleErrorStitchRollback();
+
+        // Snapshot the paused position (after rollback, before manual adjustments)
+        const postRollbackStitch =
+          get().adjustedStitchIndex ?? get().sewingProgress?.currentStitch ?? 0;
+        set({ pausedStitchIndex: postRollbackStitch });
       }
 
       // follows the apps logic:
@@ -434,6 +562,12 @@ export const usePatternInfo = () =>
   useMachineStore((state) => state.patternInfo);
 export const useSewingProgress = () =>
   useMachineStore((state) => state.sewingProgress);
+export const useAdjustedStitchIndex = () =>
+  useMachineStore((state) => state.adjustedStitchIndex);
+export const useLastRolledBackError = () =>
+  useMachineStore((state) => state.lastRolledBackError);
+export const usePausedStitchIndex = () =>
+  useMachineStore((state) => state.pausedStitchIndex);
 // Derived state: pattern is uploaded if machine has pattern info
 export const usePatternUploaded = () =>
   useMachineStore((state) => state.patternInfo !== null);

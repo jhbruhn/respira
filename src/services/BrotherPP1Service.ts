@@ -626,6 +626,13 @@ export class BrotherPP1Service {
     await this.sendCommand(Commands.MASK_TRACE, payload);
   }
 
+  async setStitchIndex(stitchIndex: number): Promise<void> {
+    const payload = new Uint8Array(2);
+    payload[0] = stitchIndex & 0xff; // Low byte
+    payload[1] = (stitchIndex >> 8) & 0xff; // High byte
+    await this.sendCommand(Commands.NEEDLE_MODE_INSTRUCTIONS, payload);
+  }
+
   async startSewing(): Promise<void> {
     await this.sendCommand(Commands.START_SEWING);
   }

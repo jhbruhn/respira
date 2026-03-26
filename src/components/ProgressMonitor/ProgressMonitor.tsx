@@ -23,10 +23,12 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import { canShowStepControl } from "../../utils/machineStateHelpers";
 import { ProgressStats } from "./ProgressStats";
 import { ProgressSection } from "./ProgressSection";
 import { ColorBlockList } from "./ColorBlockList";
 import { ProgressActions } from "./ProgressActions";
+import { StitchStepControl } from "./StitchStepControl";
 
 export function ProgressMonitor() {
   // Machine store
@@ -35,18 +37,28 @@ export function ProgressMonitor() {
     patternInfo,
     sewingProgress,
     isDeleting,
+    adjustedStitchIndex,
+    lastRolledBackError,
+    pausedStitchIndex,
     startMaskTrace,
     startSewing,
     resumeSewing,
+    adjustStitchPosition,
+    setStitchPosition,
   } = useMachineStore(
     useShallow((state) => ({
       machineStatus: state.machineStatus,
       patternInfo: state.patternInfo,
       sewingProgress: state.sewingProgress,
       isDeleting: state.isDeleting,
+      adjustedStitchIndex: state.adjustedStitchIndex,
+      lastRolledBackError: state.lastRolledBackError,
+      pausedStitchIndex: state.pausedStitchIndex,
       startMaskTrace: state.startMaskTrace,
       startSewing: state.startSewing,
       resumeSewing: state.resumeSewing,
+      adjustStitchPosition: state.adjustStitchPosition,
+      setStitchPosition: state.setStitchPosition,
     })),
   );
 
@@ -66,19 +78,18 @@ export function ProgressMonitor() {
       : patternInfo.totalStitches
     : 0;
 
+  // Use adjustedStitchIndex (from step control) when available, otherwise machine-reported
+  const currentStitch =
+    adjustedStitchIndex ?? sewingProgress?.currentStitch ?? 0;
+
   const progressPercent =
-    totalStitches > 0
-      ? ((sewingProgress?.currentStitch || 0) / totalStitches) * 100
-      : 0;
+    totalStitches > 0 ? (currentStitch / totalStitches) * 100 : 0;
 
   // Calculate color block information from decoded penStitches
   const colorBlocks = useMemo(
     () => calculateColorBlocks(displayPattern),
     [displayPattern],
   );
-
-  // Determine current color block based on current stitch
-  const currentStitch = sewingProgress?.currentStitch || 0;
   const currentBlockIndex = findCurrentBlockIndex(colorBlocks, currentStitch);
 
   // Calculate time based on color blocks (matches Brother app calculation)
@@ -115,7 +126,9 @@ export function ProgressMonitor() {
         {/* Pattern Info */}
         {patternInfo && (
           <ProgressStats
+            currentStitch={currentStitch}
             totalStitches={totalStitches}
+            elapsedMinutes={elapsedMinutes}
             totalMinutes={totalMinutes}
             speed={patternInfo.speed}
           />
@@ -123,13 +136,7 @@ export function ProgressMonitor() {
 
         {/* Progress Bar */}
         {sewingProgress && (
-          <ProgressSection
-            currentStitch={sewingProgress.currentStitch}
-            totalStitches={totalStitches}
-            elapsedMinutes={elapsedMinutes}
-            totalMinutes={totalMinutes}
-            progressPercent={progressPercent}
-          />
+          <ProgressSection progressPercent={progressPercent} />
         )}
 
         {/* Color Blocks */}
@@ -140,11 +147,26 @@ export function ProgressMonitor() {
           currentBlockRef={currentBlockRef}
         />
 
+        {/* Step control for paused/stopped/error states */}
+        {canShowStepControl(machineStatus, currentStitch > 0) && (
+          <StitchStepControl
+            currentStitch={currentStitch}
+            adjustedStitchIndex={adjustedStitchIndex}
+            pausedStitchIndex={pausedStitchIndex}
+            totalStitches={totalStitches}
+            lastRolledBackError={lastRolledBackError}
+            colorBlocks={colorBlocks}
+            onAdjustPosition={adjustStitchPosition}
+            onSetPosition={setStitchPosition}
+          />
+        )}
+
         {/* Action buttons */}
         <ProgressActions
           machineStatus={machineStatus}
           isDeleting={isDeleting}
           isMaskTraceComplete={isMaskTraceComplete}
+          hasSewingProgress={currentStitch > 0}
           onResumeSewing={resumeSewing}
           onStartSewing={startSewing}
           onStartMaskTrace={startMaskTrace}
