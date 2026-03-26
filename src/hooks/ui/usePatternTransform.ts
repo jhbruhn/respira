@@ -101,6 +101,45 @@ export function usePatternTransform({
     }
   }, [localPatternRotation]);
 
+  // Arrow key movement: 1mm per press, 0.1mm with Shift
+  useEffect(() => {
+    if (!pesData || patternUploaded || isUploading) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const step = e.shiftKey ? 1 : 10; // 0.1mm or 1mm in 0.1mm units
+      let dx = 0;
+      let dy = 0;
+
+      switch (e.key) {
+        case "ArrowLeft":
+          dx = -step;
+          break;
+        case "ArrowRight":
+          dx = step;
+          break;
+        case "ArrowUp":
+          dy = -step;
+          break;
+        case "ArrowDown":
+          dy = step;
+          break;
+        default:
+          return;
+      }
+
+      e.preventDefault();
+
+      setLocalPatternOffset((prev) => {
+        const newOffset = { x: prev.x + dx, y: prev.y + dy };
+        setPatternOffset(newOffset.x, newOffset.y);
+        return newOffset;
+      });
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [pesData, patternUploaded, isUploading, setPatternOffset]);
+
   // Center pattern in hoop
   const handleCenterPattern = useCallback(() => {
     if (!pesData) return;

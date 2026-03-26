@@ -82,9 +82,6 @@ export const usePatternStore = create<PatternState>((set) => ({
   // Update pattern offset (for original pattern only)
   setPatternOffset: (x: number, y: number) => {
     set({ patternOffset: { x, y } });
-    if (isDev) {
-      console.log("[PatternStore] Pattern offset changed:", { x, y });
-    }
   },
 
   // Set pattern rotation (for original pattern only)
