@@ -487,13 +487,8 @@ export const useMachineStore = create<MachineState>((set, get) => ({
           });
         }
       }
-      // Reset rollback tracking when error clears while still paused
-      else if (
-        currentState.lastRolledBackError !== null &&
-        currentState.machineError === SewingMachineError.None
-      ) {
-        set({ lastRolledBackError: null });
-      }
+      // Note: we intentionally do NOT clear lastRolledBackError when the error clears
+      // while still paused, so the rollback info text remains visible to the user.
 
       // Auto-rollback for thread errors when machine is interrupted or paused mid-sew
       // Only runs once on entering paused state (when pausedStitchIndex is not yet set)
@@ -508,9 +503,7 @@ export const useMachineStore = create<MachineState>((set, get) => ({
 
         // Snapshot the paused position (after rollback, before manual adjustments)
         const postRollbackStitch =
-          get().adjustedStitchIndex ??
-          get().sewingProgress?.currentStitch ??
-          0;
+          get().adjustedStitchIndex ?? get().sewingProgress?.currentStitch ?? 0;
         set({ pausedStitchIndex: postRollbackStitch });
       }
 

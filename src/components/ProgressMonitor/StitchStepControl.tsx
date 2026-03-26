@@ -1,7 +1,7 @@
 /**
  * StitchStepControl Component
  *
- * Manual stitch position control shown when machine is paused/stopped/interrupted.
+ * Compact stitch position control shown when machine is paused/stopped/interrupted.
  * Allows stepping forward/backward by 1, 10, or 100 stitches,
  * jumping to thread color boundaries, and resetting to current position.
  */
@@ -15,7 +15,10 @@ import {
   ArrowUturnLeftIcon,
 } from "@heroicons/react/24/solid";
 import { Button } from "@/components/ui/button";
-import { getErrorStitchRollback, getErrorMessage } from "../../utils/errorCodeHelpers";
+import {
+  getErrorStitchRollback,
+  getErrorMessage,
+} from "../../utils/errorCodeHelpers";
 import type { ColorBlock } from "./types";
 import { findCurrentBlockIndex } from "../../utils/colorBlockHelpers";
 
@@ -42,7 +45,6 @@ export function StitchStepControl({
 }: StitchStepControlProps) {
   const displayStitch = adjustedStitchIndex ?? currentStitch;
 
-  // Find the start of the current thread color block
   const handleGoToThreadStart = () => {
     const blockIndex = findCurrentBlockIndex(colorBlocks, displayStitch);
     if (blockIndex >= 0) {
@@ -50,14 +52,12 @@ export function StitchStepControl({
     }
   };
 
-  // Reset to the position when the machine was paused (after auto-rollback, before manual adjustments)
   const handleGoToPausedStitch = () => {
     if (pausedStitchIndex !== null) {
       onSetPosition(pausedStitchIndex);
     }
   };
 
-  // Rollback info text
   const rollbackAmount = lastRolledBackError
     ? getErrorStitchRollback(lastRolledBackError)
     : null;
@@ -65,31 +65,48 @@ export function StitchStepControl({
     ? getErrorMessage(lastRolledBackError)
     : null;
 
-  return (
-    <div className="mb-3 bg-gray-200 dark:bg-gray-700/50 p-3 rounded-lg">
-      <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-        Stitch Position
-      </div>
+  const showGoToPaused =
+    pausedStitchIndex !== null && displayStitch !== pausedStitchIndex;
 
-      {/* Current position display */}
-      <div className="text-center mb-2">
-        <span className="text-lg font-bold text-gray-900 dark:text-gray-100 tabular-nums">
-          {displayStitch.toLocaleString()}
+  return (
+    <div className="mb-3 bg-gray-200 dark:bg-gray-700/50 px-3 py-2 rounded-lg">
+      {/* Header: label + stitch count on one line */}
+      <div className="flex items-baseline justify-between mb-1.5">
+        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          Stitch Position
         </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
-          / {totalStitches.toLocaleString()}
+        <span>
+          <span className="text-sm font-bold text-gray-900 dark:text-gray-100 tabular-nums">
+            {displayStitch.toLocaleString()}
+          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+            / {totalStitches.toLocaleString()}
+          </span>
         </span>
       </div>
 
       {/* Rollback info */}
       {rollbackAmount !== null && rollbackErrorName && (
-        <div className="text-xs text-amber-600 dark:text-amber-400 text-center mb-2">
-          Moved back {rollbackAmount} stitches due to {rollbackErrorName.toLowerCase()}
+        <div className="text-xs text-amber-600 dark:text-amber-400 text-center mb-1.5">
+          Moved back {rollbackAmount} stitches (
+          {rollbackErrorName.toLowerCase()})
         </div>
       )}
 
-      {/* Step buttons */}
+      {/* Step buttons + navigation in one row */}
       <div className="flex items-center justify-center gap-1">
+        {colorBlocks.length > 0 && (
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={handleGoToThreadStart}
+            title="Go to the beginning of the selected thread color"
+            aria-label="Go to the beginning of the selected thread color"
+          >
+            <SwatchIcon className="w-4 h-4" />
+          </Button>
+        )}
+
         <Button
           variant="outline"
           size="icon-sm"
@@ -153,34 +170,17 @@ export function StitchStepControl({
         >
           <ChevronDoubleRightIcon className="w-4 h-4" />
         </Button>
-      </div>
 
-      {/* Navigation buttons */}
-      <div className="flex items-center justify-center gap-1 mt-2">
-        {colorBlocks.length > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleGoToThreadStart}
-            title="Go to the beginning of the selected thread color"
-            aria-label="Go to the beginning of the selected thread color"
-          >
-            <SwatchIcon className="w-3.5 h-3.5" />
-            Thread Start
-          </Button>
-        )}
-        {pausedStitchIndex !== null && displayStitch !== pausedStitchIndex && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleGoToPausedStitch}
-            title="Go to the current stitch"
-            aria-label="Go to the current stitch"
-          >
-            <ArrowUturnLeftIcon className="w-3.5 h-3.5" />
-            Current Stitch
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          size="icon-sm"
+          onClick={handleGoToPausedStitch}
+          disabled={!showGoToPaused}
+          title="Go to the current stitch"
+          aria-label="Go to the current stitch"
+        >
+          <ArrowUturnLeftIcon className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );

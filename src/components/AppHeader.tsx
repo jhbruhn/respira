@@ -187,7 +187,9 @@ export function AppHeader() {
                     <button
                       className={cn(
                         "inline-flex items-center rounded-full border border-transparent bg-destructive text-white px-2.5 py-1.5 text-xs font-semibold gap-1.5 cursor-pointer hover:bg-destructive/90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2",
-                        machineErrorMessage || pyodideError
+                        machineErrorMessage ||
+                          pyodideError ||
+                          hasError(machineError)
                           ? "animate-pulse hover:animate-none"
                           : "invisible pointer-events-none",
                       )}
@@ -228,7 +230,9 @@ export function AppHeader() {
                   </PopoverTrigger>
 
                   {/* Error popover content - unchanged */}
-                  {(machineErrorMessage || pyodideError) && (
+                  {(machineErrorMessage ||
+                    pyodideError ||
+                    hasError(machineError)) && (
                     <ErrorPopoverContent
                       machineError={
                         machineError != 0xdd ? machineError : undefined

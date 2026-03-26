@@ -78,19 +78,18 @@ export function ProgressMonitor() {
       : patternInfo.totalStitches
     : 0;
 
+  // Use adjustedStitchIndex (from step control) when available, otherwise machine-reported
+  const currentStitch =
+    adjustedStitchIndex ?? sewingProgress?.currentStitch ?? 0;
+
   const progressPercent =
-    totalStitches > 0
-      ? ((sewingProgress?.currentStitch || 0) / totalStitches) * 100
-      : 0;
+    totalStitches > 0 ? (currentStitch / totalStitches) * 100 : 0;
 
   // Calculate color block information from decoded penStitches
   const colorBlocks = useMemo(
     () => calculateColorBlocks(displayPattern),
     [displayPattern],
   );
-
-  // Determine current color block based on current stitch
-  const currentStitch = sewingProgress?.currentStitch || 0;
   const currentBlockIndex = findCurrentBlockIndex(colorBlocks, currentStitch);
 
   // Calculate time based on color blocks (matches Brother app calculation)
@@ -127,7 +126,9 @@ export function ProgressMonitor() {
         {/* Pattern Info */}
         {patternInfo && (
           <ProgressStats
+            currentStitch={currentStitch}
             totalStitches={totalStitches}
+            elapsedMinutes={elapsedMinutes}
             totalMinutes={totalMinutes}
             speed={patternInfo.speed}
           />
@@ -135,13 +136,7 @@ export function ProgressMonitor() {
 
         {/* Progress Bar */}
         {sewingProgress && (
-          <ProgressSection
-            currentStitch={sewingProgress.currentStitch}
-            totalStitches={totalStitches}
-            elapsedMinutes={elapsedMinutes}
-            totalMinutes={totalMinutes}
-            progressPercent={progressPercent}
-          />
+          <ProgressSection progressPercent={progressPercent} />
         )}
 
         {/* Color Blocks */}

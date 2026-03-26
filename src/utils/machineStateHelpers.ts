@@ -97,10 +97,8 @@ export function canUploadPattern(status: MachineStatus): boolean {
 export function canStartSewing(status: MachineStatus): boolean {
   // Only in specific ready states
   return (
-    status === MachineStatus.SEWING_WAIT ||
     status === MachineStatus.MASK_TRACE_COMPLETE ||
     status === MachineStatus.PAUSE ||
-    status === MachineStatus.STOP ||
     status === MachineStatus.SEWING_INTERRUPTION
   );
 }
@@ -114,7 +112,10 @@ export function canStartMaskTrace(
   status: MachineStatus,
   hasSewingProgress = false,
 ): boolean {
-  if (status === MachineStatus.IDLE || status === MachineStatus.MASK_TRACE_COMPLETE) {
+  if (
+    status === MachineStatus.IDLE ||
+    status === MachineStatus.MASK_TRACE_COMPLETE
+  ) {
     return true;
   }
   // Only allow mask trace in SEWING_WAIT if sewing hasn't started yet
@@ -126,12 +127,14 @@ export function canStartMaskTrace(
 
 /**
  * Determines if sewing can be resumed in the current state.
- * Only for interrupted operations (PAUSE, STOP, SEWING_INTERRUPTION).
+ * Only for PAUSE and SEWING_INTERRUPTION - not STOP, which requires
+ * the user to resolve the error on the machine first.
  */
 export function canResumeSewing(status: MachineStatus): boolean {
-  // Only in interrupted states
-  const category = getMachineStateCategory(status);
-  return category === MachineStateCategory.INTERRUPTED;
+  return (
+    status === MachineStatus.PAUSE ||
+    status === MachineStatus.SEWING_INTERRUPTION
+  );
 }
 
 /**
