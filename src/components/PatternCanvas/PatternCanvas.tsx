@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState } from "react";
+import { useRef, useMemo, useState, useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
   useMachineStore,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { ThreadLegend } from "./ThreadLegend";
 import { PatternPositionIndicator } from "./PatternPositionIndicator";
+import { PositionPresets } from "./PositionPresets";
 import { ZoomControls } from "./ZoomControls";
 import { PatternLayer } from "./PatternLayer";
 import { Switch } from "@/components/ui/switch";
@@ -84,6 +85,14 @@ export function PatternCanvas() {
     machineInfo,
   });
 
+  // Handler for position preset selection
+  const handlePositionPreset = useCallback(
+    (offset: { x: number; y: number }) => {
+      setPatternOffset(offset.x, offset.y);
+    },
+    [setPatternOffset],
+  );
+
   // Pattern transform (position, rotation, drag/transform)
   const {
     localPatternOffset,
@@ -91,7 +100,6 @@ export function PatternCanvas() {
     patternGroupRef,
     transformerRef,
     attachTransformer,
-    handleCenterPattern,
     handlePatternDragEnd,
     handleTransformEnd,
   } = usePatternTransform({
@@ -264,6 +272,20 @@ export function PatternCanvas() {
             <>
               <ThreadLegend colors={displayPattern.uniqueColors} />
 
+              {pesData &&
+                machineInfo &&
+                !patternUploaded &&
+                !isUploading &&
+                !uploadedPesData && (
+                  <PositionPresets
+                    pesData={pesData}
+                    patternRotation={localPatternRotation}
+                    machineInfo={machineInfo}
+                    onPositionSelect={handlePositionPreset}
+                    disabled={false}
+                  />
+                )}
+
               <PatternPositionIndicator
                 offset={
                   isUploading || patternUploaded || uploadedPesData
@@ -280,13 +302,6 @@ export function PatternCanvas() {
                 onZoomIn={handleZoomIn}
                 onZoomOut={handleZoomOut}
                 onZoomReset={handleZoomReset}
-                onCenterPattern={handleCenterPattern}
-                canCenterPattern={
-                  !!pesData &&
-                  !patternUploaded &&
-                  !isUploading &&
-                  !uploadedPesData
-                }
               />
             </>
           )}
