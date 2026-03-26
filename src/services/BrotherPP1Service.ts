@@ -567,12 +567,14 @@ export class BrotherPP1Service {
     rotate: number,
     flip: number,
     frame: number,
-    boundLeft: number,
-    boundTop: number,
-    boundRight: number,
-    boundBottom: number,
+    topLeftX: number,
+    topLeftY: number,
+    bottomRightX: number,
+    bottomRightY: number,
+    centerX: number,
+    centerY: number,
   ): Promise<void> {
-    const payload = new Uint8Array(26);
+    const payload = new Uint8Array(24);
 
     const writeInt16LE = (offset: number, value: number) => {
       payload[offset] = value & 0xff;
@@ -588,27 +590,24 @@ export class BrotherPP1Service {
     payload[10] = flip;
     payload[11] = frame;
 
-    // Pattern bounds (8 bytes)
-    writeInt16LE(12, boundLeft);
-    writeInt16LE(14, boundTop);
-    writeInt16LE(16, boundRight);
-    writeInt16LE(18, boundBottom);
+    // Pattern bounds relative to hoop center (12 bytes)
+    // TopLeft, BottomRight, Center — matching Artspira app format
+    writeInt16LE(12, topLeftX);
+    writeInt16LE(14, topLeftY);
+    writeInt16LE(16, bottomRightX);
+    writeInt16LE(18, bottomRightY);
+    writeInt16LE(20, centerX);
+    writeInt16LE(22, centerY);
 
-    // Repeat moveX and moveY at the end (6 bytes)
-    writeInt16LE(20, moveX);
-    writeInt16LE(22, moveY);
-    payload[24] = flip;
-    payload[25] = frame;
-
-    console.log("[DEBUG] Layout bounds:", {
-      boundLeft,
-      boundTop,
-      boundRight,
-      boundBottom,
+    console.log("[DEBUG] Layout:", {
       moveX,
       moveY,
       sizeX,
       sizeY,
+      topLeft: { x: topLeftX, y: topLeftY },
+      bottomRight: { x: bottomRightX, y: bottomRightY },
+      center: { x: centerX, y: centerY },
+      frame,
     });
 
     await this.sendCommand(Commands.LAYOUT_SEND, payload);
@@ -690,15 +689,13 @@ export class BrotherPP1Service {
     let moveX: number;
     let moveY: number;
 
+    const patternCenterX = (boundLeft + boundRight) / 2;
+    const patternCenterY = (boundTop + boundBottom) / 2;
+
     if (patternOffset) {
       // Use user-defined offset from canvas dragging
       // Pattern offset is in canvas coordinates (0,0 at hoop center)
       // We need to calculate the move that positions pattern's center at the offset position
-      const patternCenterX = (boundLeft + boundRight) / 2;
-      const patternCenterY = (boundTop + boundBottom) / 2;
-
-      // moveX/moveY define where the pattern center should be
-      // offset.x/y is where user dragged the pattern to (relative to hoop center)
       moveX = patternOffset.x - patternCenterX;
       moveY = patternOffset.y - patternCenterY;
 
@@ -710,28 +707,51 @@ export class BrotherPP1Service {
       });
     } else {
       // Auto-center: position pattern center at machine center (0, 0)
-      const patternCenterX = (boundLeft + boundRight) / 2;
-      const patternCenterY = (boundTop + boundBottom) / 2;
       moveX = -patternCenterX;
       moveY = -patternCenterY;
 
       console.log("[LAYOUT] Auto-centering pattern:", { moveX, moveY });
     }
 
-    // Send layout with actual pattern bounds
+    // Calculate pattern bounds relative to hoop center (after applying move offset)
+    // This matches the Artspira app's PointsToBytes format:
+    // each point is (point - canvasCenter) / 10.0 in SC units, but since our
+    // bounds are already in 0.1mm units relative to PES origin, we add moveX/moveY
+    // to translate them to hoop-center-relative coordinates
+    const topLeftX = Math.round(boundLeft + moveX);
+    const topLeftY = Math.round(boundTop + moveY);
+    const bottomRightX = Math.round(boundRight + moveX);
+    const bottomRightY = Math.round(boundBottom + moveY);
+    const centerX = Math.round(patternCenterX + moveX);
+    const centerY = Math.round(patternCenterY + moveY);
+
+    // Dynamic frame selection matching Artspira's GetRealFrame logic:
+    // Use Frame70 (0) if pattern fits within 70mm hoop, otherwise Frame100 (1)
+    const patternWidthMM = (boundRight - boundLeft) / 10;
+    const patternHeightMM = (boundBottom - boundTop) / 10;
+    const moveXMM = Math.round(moveX) * 0.1;
+    const moveYMM = Math.round(moveY) * 0.1;
+    const fitsIn70 =
+      Math.abs(moveXMM) <= (70.0 - patternWidthMM) * 0.5 &&
+      Math.abs(moveYMM) <= (70.0 - patternHeightMM) * 0.5;
+    const frame = fitsIn70 ? 0 : 1;
+
+    // Send layout with pattern bounds relative to hoop center
     // sizeX/sizeY are scaling factors (100 = 100% = no scaling)
     await this.sendLayout(
-      Math.round(moveX), // moveX - position the pattern
-      Math.round(moveY), // moveY - position the pattern
+      Math.round(moveX),
+      Math.round(moveY),
       100, // sizeX (100% - no scaling)
       100, // sizeY (100% - no scaling)
       0, // rotate
       0, // flip
-      1, // frame
-      boundLeft,
-      boundTop,
-      boundRight,
-      boundBottom,
+      frame,
+      topLeftX,
+      topLeftY,
+      bottomRightX,
+      bottomRightY,
+      centerX,
+      centerY,
     );
 
     // Generate random UUID
