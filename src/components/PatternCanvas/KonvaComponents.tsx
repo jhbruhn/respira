@@ -10,67 +10,70 @@ interface GridProps {
   gridSize: number;
   bounds: { minX: number; maxX: number; minY: number; maxY: number };
   machineInfo: MachineInfo | null;
+  colorOverride?: string;
 }
 
-export const Grid = memo(({ gridSize, bounds, machineInfo }: GridProps) => {
-  const lines = useMemo(() => {
-    const gridMinX = machineInfo ? -machineInfo.maxWidth / 2 : bounds.minX;
-    const gridMaxX = machineInfo ? machineInfo.maxWidth / 2 : bounds.maxX;
-    const gridMinY = machineInfo ? -machineInfo.maxHeight / 2 : bounds.minY;
-    const gridMaxY = machineInfo ? machineInfo.maxHeight / 2 : bounds.maxY;
+export const Grid = memo(
+  ({ gridSize, bounds, machineInfo, colorOverride }: GridProps) => {
+    const lines = useMemo(() => {
+      const gridMinX = machineInfo ? -machineInfo.maxWidth / 2 : bounds.minX;
+      const gridMaxX = machineInfo ? machineInfo.maxWidth / 2 : bounds.maxX;
+      const gridMinY = machineInfo ? -machineInfo.maxHeight / 2 : bounds.minY;
+      const gridMaxY = machineInfo ? machineInfo.maxHeight / 2 : bounds.maxY;
 
-    const verticalLines: number[][] = [];
-    const horizontalLines: number[][] = [];
+      const verticalLines: number[][] = [];
+      const horizontalLines: number[][] = [];
 
-    // Vertical lines
-    for (
-      let x = Math.floor(gridMinX / gridSize) * gridSize;
-      x <= gridMaxX;
-      x += gridSize
-    ) {
-      verticalLines.push([x, gridMinY, x, gridMaxY]);
-    }
+      // Vertical lines
+      for (
+        let x = Math.floor(gridMinX / gridSize) * gridSize;
+        x <= gridMaxX;
+        x += gridSize
+      ) {
+        verticalLines.push([x, gridMinY, x, gridMaxY]);
+      }
 
-    // Horizontal lines
-    for (
-      let y = Math.floor(gridMinY / gridSize) * gridSize;
-      y <= gridMaxY;
-      y += gridSize
-    ) {
-      horizontalLines.push([gridMinX, y, gridMaxX, y]);
-    }
+      // Horizontal lines
+      for (
+        let y = Math.floor(gridMinY / gridSize) * gridSize;
+        y <= gridMaxY;
+        y += gridSize
+      ) {
+        horizontalLines.push([gridMinX, y, gridMaxX, y]);
+      }
 
-    return { verticalLines, horizontalLines };
-  }, [gridSize, bounds, machineInfo]);
+      return { verticalLines, horizontalLines };
+    }, [gridSize, bounds, machineInfo]);
 
-  const gridColor = canvasColors.grid();
+    const gridColor = colorOverride ?? canvasColors.grid();
 
-  return (
-    <Group name="grid" listening={false}>
-      {lines.verticalLines.map((points, i) => (
-        <Line
-          key={`v-${i}`}
-          points={points}
-          stroke={gridColor}
-          strokeWidth={1}
-        />
-      ))}
-      {lines.horizontalLines.map((points, i) => (
-        <Line
-          key={`h-${i}`}
-          points={points}
-          stroke={gridColor}
-          strokeWidth={1}
-        />
-      ))}
-    </Group>
-  );
-});
+    return (
+      <Group name="grid" listening={false}>
+        {lines.verticalLines.map((points, i) => (
+          <Line
+            key={`v-${i}`}
+            points={points}
+            stroke={gridColor}
+            strokeWidth={1}
+          />
+        ))}
+        {lines.horizontalLines.map((points, i) => (
+          <Line
+            key={`h-${i}`}
+            points={points}
+            stroke={gridColor}
+            strokeWidth={1}
+          />
+        ))}
+      </Group>
+    );
+  },
+);
 
 Grid.displayName = "Grid";
 
-export const Origin = memo(() => {
-  const originColor = canvasColors.origin();
+export const Origin = memo(({ colorOverride }: { colorOverride?: string }) => {
+  const originColor = colorOverride ?? canvasColors.origin();
 
   return (
     <Group name="origin" listening={false}>

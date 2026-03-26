@@ -1,4 +1,4 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
   useMachineStore,
@@ -8,7 +8,7 @@ import { useMachineUploadStore } from "../../stores/useMachineUploadStore";
 import { usePatternStore } from "../../stores/usePatternStore";
 import { Stage, Layer } from "react-konva";
 import Konva from "konva";
-import { PhotoIcon } from "@heroicons/react/24/solid";
+import { PhotoIcon, SunIcon, MoonIcon } from "@heroicons/react/24/solid";
 import { Grid, Origin, Hoop } from "./KonvaComponents";
 import {
   Card,
@@ -21,6 +21,7 @@ import { ThreadLegend } from "./ThreadLegend";
 import { PatternPositionIndicator } from "./PatternPositionIndicator";
 import { ZoomControls } from "./ZoomControls";
 import { PatternLayer } from "./PatternLayer";
+import { Switch } from "@/components/ui/switch";
 import { useCanvasViewport, usePatternTransform } from "@/hooks";
 
 export function PatternCanvas() {
@@ -103,6 +104,16 @@ export function PatternCanvas() {
     isUploading,
   });
 
+  const [previewDark, setPreviewDark] = useState(
+    () => window.matchMedia("(prefers-color-scheme: dark)").matches,
+  );
+
+  const canvasBg = previewDark
+    ? "bg-gray-900 border-gray-600"
+    : "bg-gray-200 border-gray-300";
+  const canvasGridColor = previewDark ? "#404040" : "#e0e0e0";
+  const canvasOriginColor = previewDark ? "#999999" : "#888888";
+
   const hasPattern = pesData || uploadedPesData;
   const borderColor = hasPattern
     ? "border-tertiary-600 dark:border-tertiary-500"
@@ -138,23 +149,34 @@ export function PatternCanvas() {
       <CardHeader className="p-4 pb-3">
         <div className="flex items-start gap-3">
           <PhotoIcon className={`w-6 h-6 ${iconColor} flex-shrink-0 mt-0.5`} />
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-sm">Pattern Preview</CardTitle>
-            {hasPattern ? (
-              <CardDescription className="text-xs">
-                {patternDimensions}
-              </CardDescription>
-            ) : (
-              <CardDescription className="text-xs">
-                No pattern loaded
-              </CardDescription>
-            )}
+          <div className="flex-1 min-w-0 flex items-center justify-between">
+            <div>
+              <CardTitle className="text-sm">Pattern Preview</CardTitle>
+              {hasPattern ? (
+                <CardDescription className="text-xs">
+                  {patternDimensions}
+                </CardDescription>
+              ) : (
+                <CardDescription className="text-xs">
+                  No pattern loaded
+                </CardDescription>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <SunIcon className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+              <Switch
+                checked={previewDark}
+                onCheckedChange={setPreviewDark}
+                aria-label="Toggle preview background"
+              />
+              <MoonIcon className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+            </div>
           </div>
         </div>
       </CardHeader>
       <CardContent className="px-4 pt-0 pb-4 flex-1 flex flex-col min-h-0">
         <div
-          className="relative w-full flex-1 min-h-0 border border-gray-300 dark:border-gray-600 rounded bg-gray-200 dark:bg-gray-900 overflow-hidden"
+          className={`relative w-full flex-1 min-h-0 border rounded overflow-hidden ${canvasBg}`}
           ref={containerRef}
         >
           {containerSize.width > 0 && (
@@ -184,8 +206,9 @@ export function PatternCanvas() {
                       gridSize={100}
                       bounds={displayPattern.bounds}
                       machineInfo={machineInfo}
+                      colorOverride={canvasGridColor}
                     />
-                    <Origin />
+                    <Origin colorOverride={canvasOriginColor} />
                     {machineInfo && <Hoop machineInfo={machineInfo} />}
                   </>
                 )}
