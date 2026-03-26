@@ -107,14 +107,21 @@ export function canStartSewing(status: MachineStatus): boolean {
 
 /**
  * Determines if mask trace can be started in the current state.
+ * When hasSewingProgress is true, SEWING_WAIT means the machine is paused mid-sew,
+ * not waiting for initial start - mask trace should not be offered.
  */
-export function canStartMaskTrace(status: MachineStatus): boolean {
-  // Can start mask trace when IDLE (after upload), SEWING_WAIT, or after previous trace
-  return (
-    status === MachineStatus.IDLE ||
-    status === MachineStatus.SEWING_WAIT ||
-    status === MachineStatus.MASK_TRACE_COMPLETE
-  );
+export function canStartMaskTrace(
+  status: MachineStatus,
+  hasSewingProgress = false,
+): boolean {
+  if (status === MachineStatus.IDLE || status === MachineStatus.MASK_TRACE_COMPLETE) {
+    return true;
+  }
+  // Only allow mask trace in SEWING_WAIT if sewing hasn't started yet
+  if (status === MachineStatus.SEWING_WAIT && !hasSewingProgress) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -125,6 +132,29 @@ export function canResumeSewing(status: MachineStatus): boolean {
   // Only in interrupted states
   const category = getMachineStateCategory(status);
   return category === MachineStateCategory.INTERRUPTED;
+}
+
+/**
+ * Determines if the step control UI should be shown.
+ * Allows manual stitch position adjustment when machine is paused/stopped/interrupted,
+ * or in SEWING_WAIT if sewing has already started (currentStitch > 0).
+ */
+export function canShowStepControl(
+  status: MachineStatus,
+  hasSewingProgress: boolean,
+): boolean {
+  if (
+    status === MachineStatus.PAUSE ||
+    status === MachineStatus.STOP ||
+    status === MachineStatus.SEWING_INTERRUPTION
+  ) {
+    return true;
+  }
+  // SEWING_WAIT is also the paused state; show controls only if sewing already started
+  if (status === MachineStatus.SEWING_WAIT && hasSewingProgress) {
+    return true;
+  }
+  return false;
 }
 
 /**

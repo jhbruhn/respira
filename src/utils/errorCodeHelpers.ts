@@ -413,6 +413,24 @@ export function getErrorDetails(
 }
 
 /**
+ * Get the number of stitches to roll back for a given error code.
+ * Returns null if the error does not trigger automatic rollback.
+ * Based on Artspira ChangeStitchForError logic.
+ */
+export function getErrorStitchRollback(errorCode: number): number | null {
+  switch (errorCode) {
+    case SewingMachineError.UpperThreadError:
+      return 6;
+    case SewingMachineError.LowerThreadError:
+      return 2;
+    case SewingMachineError.UpperThreadSewingStartError:
+      return 21;
+    default:
+      return null;
+  }
+}
+
+/**
  * Export ErrorInfo type for use in other files
  */
 export type { ErrorInfo };

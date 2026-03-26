@@ -23,10 +23,12 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import { canShowStepControl } from "../../utils/machineStateHelpers";
 import { ProgressStats } from "./ProgressStats";
 import { ProgressSection } from "./ProgressSection";
 import { ColorBlockList } from "./ColorBlockList";
 import { ProgressActions } from "./ProgressActions";
+import { StitchStepControl } from "./StitchStepControl";
 
 export function ProgressMonitor() {
   // Machine store
@@ -35,18 +37,28 @@ export function ProgressMonitor() {
     patternInfo,
     sewingProgress,
     isDeleting,
+    adjustedStitchIndex,
+    lastRolledBackError,
+    pausedStitchIndex,
     startMaskTrace,
     startSewing,
     resumeSewing,
+    adjustStitchPosition,
+    setStitchPosition,
   } = useMachineStore(
     useShallow((state) => ({
       machineStatus: state.machineStatus,
       patternInfo: state.patternInfo,
       sewingProgress: state.sewingProgress,
       isDeleting: state.isDeleting,
+      adjustedStitchIndex: state.adjustedStitchIndex,
+      lastRolledBackError: state.lastRolledBackError,
+      pausedStitchIndex: state.pausedStitchIndex,
       startMaskTrace: state.startMaskTrace,
       startSewing: state.startSewing,
       resumeSewing: state.resumeSewing,
+      adjustStitchPosition: state.adjustStitchPosition,
+      setStitchPosition: state.setStitchPosition,
     })),
   );
 
@@ -140,11 +152,26 @@ export function ProgressMonitor() {
           currentBlockRef={currentBlockRef}
         />
 
+        {/* Step control for paused/stopped/error states */}
+        {canShowStepControl(machineStatus, currentStitch > 0) && (
+          <StitchStepControl
+            currentStitch={currentStitch}
+            adjustedStitchIndex={adjustedStitchIndex}
+            pausedStitchIndex={pausedStitchIndex}
+            totalStitches={totalStitches}
+            lastRolledBackError={lastRolledBackError}
+            colorBlocks={colorBlocks}
+            onAdjustPosition={adjustStitchPosition}
+            onSetPosition={setStitchPosition}
+          />
+        )}
+
         {/* Action buttons */}
         <ProgressActions
           machineStatus={machineStatus}
           isDeleting={isDeleting}
           isMaskTraceComplete={isMaskTraceComplete}
+          hasSewingProgress={currentStitch > 0}
           onResumeSewing={resumeSewing}
           onStartSewing={startSewing}
           onStartMaskTrace={startMaskTrace}
