@@ -71,12 +71,12 @@ export function ProgressMonitor() {
   const isMaskTraceComplete =
     machineStatus === MachineStatus.MASK_TRACE_COMPLETE;
 
-  // Use PEN stitch count as fallback when machine reports 0 total stitches
-  const totalStitches = patternInfo
-    ? patternInfo.totalStitches === 0 && displayPattern?.penStitches
-      ? displayPattern.penStitches.stitches.length
-      : patternInfo.totalStitches
-    : 0;
+  // Use our own PEN stitch count as the source of truth for total stitches.
+  // The machine's patternInfo.totalStitches uses a different counting method than
+  // currentStitch (e.g. excludes lock stitches), so it can't be used as the max.
+  const totalStitches = displayPattern?.penStitches
+    ? displayPattern.penStitches.stitches.length
+    : (patternInfo?.totalStitches ?? 0);
 
   // Use adjustedStitchIndex (from step control) when available, otherwise machine-reported
   const currentStitch =
@@ -156,8 +156,10 @@ export function ProgressMonitor() {
             totalStitches={totalStitches}
             lastRolledBackError={lastRolledBackError}
             colorBlocks={colorBlocks}
-            onAdjustPosition={adjustStitchPosition}
-            onSetPosition={setStitchPosition}
+            onAdjustPosition={(offset) =>
+              adjustStitchPosition(offset, totalStitches)
+            }
+            onSetPosition={(index) => setStitchPosition(index, totalStitches)}
           />
         )}
 

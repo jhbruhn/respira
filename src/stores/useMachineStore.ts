@@ -65,8 +65,8 @@ interface MachineState {
   startSewing: () => Promise<void>;
   resumeSewing: () => Promise<void>;
   deletePattern: () => Promise<void>;
-  setStitchPosition: (index: number) => Promise<void>;
-  adjustStitchPosition: (offset: number) => Promise<void>;
+  setStitchPosition: (index: number, maxStitches?: number) => Promise<void>;
+  adjustStitchPosition: (offset: number, maxStitches?: number) => Promise<void>;
 
   // Initialization
   initialize: () => void;
@@ -338,11 +338,11 @@ export const useMachineStore = create<MachineState>((set, get) => ({
   },
 
   // Set stitch position to an absolute index
-  setStitchPosition: async (index: number) => {
+  setStitchPosition: async (index: number, maxStitches?: number) => {
     const { isConnected, service, patternInfo } = get();
     if (!isConnected) return;
 
-    const totalStitches = patternInfo?.totalStitches || 0;
+    const totalStitches = maxStitches ?? patternInfo?.totalStitches ?? 0;
     const clamped = Math.max(0, Math.min(index, totalStitches));
 
     try {
@@ -359,11 +359,11 @@ export const useMachineStore = create<MachineState>((set, get) => ({
   },
 
   // Adjust stitch position by a relative offset
-  adjustStitchPosition: async (offset: number) => {
+  adjustStitchPosition: async (offset: number, maxStitches?: number) => {
     const { sewingProgress, adjustedStitchIndex } = get();
     const currentIndex =
       adjustedStitchIndex ?? sewingProgress?.currentStitch ?? 0;
-    await get().setStitchPosition(currentIndex + offset);
+    await get().setStitchPosition(currentIndex + offset, maxStitches);
   },
 
   // Handle automatic stitch rollback for thread errors
