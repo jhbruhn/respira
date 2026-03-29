@@ -57,6 +57,12 @@ export interface ThreadColorInfo {
 // Type-safe Brother color data
 const brotherColors = brotherColorData as BrotherColor[];
 
+// Maximum RGB Euclidean distance to accept a catalog number match.
+// PES catalog numbers from pystitch use a different numbering scheme than our
+// Brother color database, so a catalog hit can resolve to the wrong color.
+// A match is only trusted if the database entry's RGB is within this distance.
+const CATALOG_COLOR_MATCH_THRESHOLD = 50;
+
 /**
  * Convert RGB values to hex color string
  */
@@ -266,25 +272,32 @@ export function enhanceThreadWithBrotherColor(
 ): ThreadColorInfo {
   const { matchByRGB = true } = options;
 
-  // First, try to match by catalog number
-  if (thread.catalogNumber) {
-    const brotherInfo = mapThreadCode(thread.catalogNumber);
-    if (brotherInfo) {
-      // Found a Brother color match by catalog number - use Brother data
-      return brotherInfo;
-    }
-  }
-
-  // Second, try exact RGB matching if enabled (replicates BrotherColor.FromColor logic)
   const cleanHex = thread.hex.replace("#", "");
   const r = parseInt(cleanHex.slice(0, 2), 16);
   const g = parseInt(cleanHex.slice(2, 4), 16);
   const b = parseInt(cleanHex.slice(4, 6), 16);
 
+  // First, try to match by catalog number — but only accept the match if the
+  // catalog entry's RGB is close to the thread's actual color. PES catalog
+  // numbers from pystitch use a different numbering scheme than our Brother
+  // color database, so a catalog hit can be the wrong color entirely.
+  if (thread.catalogNumber) {
+    const brotherInfo = mapThreadCode(thread.catalogNumber);
+    if (brotherInfo?.rgb) {
+      const dr = brotherInfo.rgb.r - r;
+      const dg = brotherInfo.rgb.g - g;
+      const db = brotherInfo.rgb.b - b;
+      const distance = Math.sqrt(dr * dr + dg * dg + db * db);
+      if (distance <= CATALOG_COLOR_MATCH_THRESHOLD) {
+        return brotherInfo;
+      }
+    }
+  }
+
+  // Try exact RGB matching (replicates BrotherColor.FromColor logic)
   if (matchByRGB) {
     const brotherColor = findBrotherColorByRGB(r, g, b);
     if (brotherColor) {
-      // Found exact RGB match - use Brother data
       return brotherColorToThreadInfo(brotherColor);
     }
   }
