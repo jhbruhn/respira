@@ -3,6 +3,7 @@ import { useMachineStore, usePatternUploaded } from "../stores/useMachineStore";
 import { usePatternStore } from "../stores/usePatternStore";
 import { ConnectionPrompt } from "./ConnectionPrompt";
 import { FileUpload } from "./FileUpload";
+import { HoopAlignment } from "./HoopAlignment";
 import { PatternSummaryCard } from "./PatternSummaryCard";
 import { ProgressMonitor } from "./ProgressMonitor";
 
@@ -31,6 +32,9 @@ export function LeftSidebar() {
 
       {/* Pattern File - Show during upload stage (before pattern is uploaded) */}
       {isConnected && !patternUploaded && <FileUpload />}
+
+      {/* Hoop photo alignment - available during the pattern-loading stage */}
+      {isConnected && !patternUploaded && <HoopAlignment />}
 
       {/* Compact Pattern Summary - Show after upload (during sewing stages) */}
       {isConnected && patternUploaded && hasPattern && <PatternSummaryCard />}
