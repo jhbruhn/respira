@@ -113,6 +113,23 @@ function createWindow() {
     },
   });
 
+  // In development, forward renderer console output to the terminal (renderer
+  // logs otherwise only appear in DevTools), filtering the chatty per-poll
+  // Bluetooth TX/RX traces. Not enabled in packaged builds — use DevTools there.
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    mainWindow.webContents.on("console-message", (event) => {
+      const msg = event.message;
+      if (
+        msg.includes("[TX]") ||
+        msg.includes("[RX]") ||
+        msg.includes("[TX-NoResp]")
+      ) {
+        return;
+      }
+      console.log(`[renderer] ${msg}`);
+    });
+  }
+
   // Handle Web Bluetooth device selection
   // This is CRITICAL - Electron doesn't show browser's native picker
   // The handler may be called multiple times as new devices are discovered
