@@ -5,7 +5,14 @@ import { encodeStitchesToPen } from "../pen/encoder";
 // Message types from main thread
 export type WorkerMessage =
   | { type: "INITIALIZE"; pyodideIndexURL?: string; pystitchWheelURL?: string }
-  | { type: "CONVERT_PES"; fileData: ArrayBuffer; fileName: string };
+  | { type: "CONVERT_PES"; fileData: ArrayBuffer; fileName: string }
+  | {
+      type: "WRITE_PES";
+      // [x, y, cmd, colorIndex] in 0.1 mm, same units pystitch/pyembroidery use.
+      stitches: number[][];
+      // Distinct thread colours as "#RRGGBB", indexed by colorIndex.
+      colors: string[];
+    };
 
 // Response types to main thread
 export type WorkerResponse =
@@ -44,7 +51,9 @@ export type WorkerResponse =
         };
       };
     }
-  | { type: "CONVERT_ERROR"; error: string };
+  | { type: "CONVERT_ERROR"; error: string }
+  | { type: "WRITE_COMPLETE"; data: number[] } // PES file bytes as an array
+  | { type: "WRITE_ERROR"; error: string };
 
 console.log("[PatternConverterWorker] Worker script loaded");
 
@@ -393,6 +402,84 @@ for i, stitch in enumerate(pattern.stitches):
   }
 }
 
+/**
+ * Write a stitch array to a PES file using pystitch and return the bytes.
+ * Input stitches are `[x, y, cmd, colorIndex]` in 0.1 mm (pystitch's own unit).
+ */
+async function writePes(stitches: number[][], colors: string[]) {
+  if (!pyodide) {
+    throw new Error("Pyodide not initialized");
+  }
+
+  try {
+    pyodide.registerJsModule("js_emb_constants", jsEmbConstants);
+    pyodide.registerJsModule("js_pes_input", { stitches, colors });
+
+    const result = await pyodide.runPythonAsync(`
+import pystitch
+from pystitch.EmbConstant import STITCH, JUMP, COLOR_CHANGE, END
+from js_emb_constants import MOVE as JS_MOVE
+from js_pes_input import stitches as js_stitches, colors as js_colors
+
+stitches = js_stitches.to_py()
+colors = list(js_colors.to_py())
+
+pattern = pystitch.EmbPattern()
+for hexcol in colors:
+    pattern.add_thread(int(str(hexcol).lstrip('#'), 16))
+if not colors:
+    pattern.add_thread(0x000000)
+
+last_color = 0
+for x, y, cmd, ci in stitches:
+    ci = int(ci)
+    while ci > last_color:
+        pattern.color_change()
+        last_color += 1
+    if int(cmd) & int(JS_MOVE):
+        pattern.add_stitch_absolute(JUMP, float(x), float(y))
+    else:
+        pattern.add_stitch_absolute(STITCH, float(x), float(y))
+pattern.end()
+
+out_path = '/tmp/studio_out.pes'
+try:
+    pystitch.write_pes(pattern, out_path, {"version": "6"})
+except Exception:
+    pystitch.write(pattern, out_path)
+
+with open(out_path, 'rb') as f:
+    data = list(f.read())
+data
+    `);
+
+    const bytes: number[] = Array.from(result as ArrayLike<number>);
+    try {
+      result?.destroy?.();
+    } catch {
+      // ignore
+    }
+    try {
+      pyodide.FS.unlink("/tmp/studio_out.pes");
+    } catch {
+      // ignore
+    }
+
+    self.postMessage({
+      type: "WRITE_COMPLETE",
+      data: bytes,
+    } as WorkerResponse);
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : "Unknown error";
+    console.error("[PyodideWorker] PES write error:", err);
+    self.postMessage({
+      type: "WRITE_ERROR",
+      error: errorMsg,
+    } as WorkerResponse);
+    throw err;
+  }
+}
+
 // Handle messages from main thread
 self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
   const message = event.data;
@@ -411,6 +498,11 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
       case "CONVERT_PES":
         console.log("[PatternConverterWorker] Starting PES conversion...");
         await convertPesToPen(message.fileData);
+        break;
+
+      case "WRITE_PES":
+        console.log("[PatternConverterWorker] Starting PES write...");
+        await writePes(message.stitches, message.colors);
         break;
 
       default:

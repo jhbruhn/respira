@@ -10,12 +10,15 @@ interface UIState {
 
   // UI state
   showErrorPopover: boolean;
+  /** Which pattern-source panel the left sidebar shows. */
+  sidebarMode: "upload" | "studio";
 
   // Actions
   initializePyodide: () => Promise<void>;
   setPyodideProgress: (progress: number, step: string) => void;
   toggleErrorPopover: () => void;
   setErrorPopover: (show: boolean) => void;
+  setSidebarMode: (mode: "upload" | "studio") => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -25,6 +28,7 @@ export const useUIStore = create<UIState>((set) => ({
   pyodideProgress: 0,
   pyodideLoadingStep: "",
   showErrorPopover: false,
+  sidebarMode: "upload",
 
   // Initialize Pyodide with progress tracking
   initializePyodide: async () => {
@@ -74,6 +78,11 @@ export const useUIStore = create<UIState>((set) => ({
   // Set error popover visibility
   setErrorPopover: (show: boolean) => {
     set({ showErrorPopover: show });
+  },
+
+  // Switch the left sidebar between PES upload and the Studio editor
+  setSidebarMode: (mode) => {
+    set({ sidebarMode: mode });
   },
 }));
 

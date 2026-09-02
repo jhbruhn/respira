@@ -39,10 +39,17 @@ export class ElectronFileService implements IFileService {
     }
   }
 
-  async saveFileDialog(data: Uint8Array, defaultName: string): Promise<void> {
+  async saveFileDialog(
+    data: Uint8Array,
+    defaultName: string,
+    options?: { description?: string; extensions?: string[] },
+  ): Promise<void> {
     if (!window.electronAPI) {
       throw new Error("Electron API not available");
     }
+
+    const extensions = options?.extensions ?? ["pen"];
+    const description = options?.description ?? "Files";
 
     try {
       const filePath = await window.electronAPI.invoke<string | null>(
@@ -50,7 +57,7 @@ export class ElectronFileService implements IFileService {
         {
           defaultPath: defaultName,
           filters: [
-            { name: "PEN Files", extensions: ["pen"] },
+            { name: description, extensions },
             { name: "All Files", extensions: ["*"] },
           ],
         },
