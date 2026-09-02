@@ -23,9 +23,20 @@ export class BrowserFileService implements IFileService {
     });
   }
 
-  async saveFileDialog(): Promise<void> {
-    // No-op in browser - could implement download if needed in the future
-    console.warn("saveFileDialog not implemented in browser");
+  async saveFileDialog(data: Uint8Array, defaultName: string): Promise<void> {
+    // Browser: trigger a download of the bytes.
+    const blob = new Blob([data as BlobPart], {
+      type: "application/octet-stream",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = defaultName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Revoke on the next tick so the download has started.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   hasNativeDialogs(): boolean {

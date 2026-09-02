@@ -301,6 +301,38 @@ class PatternConverterClient {
   }
 
   /**
+   * Write a stitch array to a PES file via the worker. Returns the file bytes.
+   * `stitches` are `[x, y, cmd, colorIndex]` in 0.1 mm; `colors` are `#RRGGBB`.
+   */
+  async writePes(stitches: number[][], colors: string[]): Promise<Uint8Array> {
+    if (this.state !== "ready") {
+      throw new Error(
+        "Pyodide worker not initialized. Call initialize() first.",
+      );
+    }
+    const worker = this.worker;
+    if (!worker) {
+      throw new Error("Worker not available");
+    }
+
+    return new Promise<Uint8Array>((resolve, reject) => {
+      const handleMessage = (event: MessageEvent<WorkerResponse>) => {
+        const message = event.data;
+        if (message.type === "WRITE_COMPLETE") {
+          worker.removeEventListener("message", handleMessage);
+          resolve(new Uint8Array(message.data));
+        } else if (message.type === "WRITE_ERROR") {
+          worker.removeEventListener("message", handleMessage);
+          reject(new Error(message.error));
+        }
+      };
+      worker.addEventListener("message", handleMessage);
+      const msg: WorkerMessage = { type: "WRITE_PES", stitches, colors };
+      worker.postMessage(msg);
+    });
+  }
+
+  /**
    * Setup worker event listeners
    */
   private setupWorkerListeners() {
