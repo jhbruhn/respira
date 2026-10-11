@@ -20,10 +20,12 @@ interface ColorBlockItemProps {
   currentStitch: number;
   isCurrent: boolean;
   isCompleted: boolean;
+  /** When set, the block is clickable to move the stitch position to its start. */
+  onSelect?: (block: ColorBlock) => void;
 }
 
 export const ColorBlockItem = forwardRef<HTMLDivElement, ColorBlockItemProps>(
-  ({ block, index, currentStitch, isCurrent, isCompleted }, ref) => {
+  ({ block, index, currentStitch, isCurrent, isCompleted, onSelect }, ref) => {
     // Calculate progress within current block
     let blockProgress = 0;
     if (isCurrent) {
@@ -49,8 +51,25 @@ export const ColorBlockItem = forwardRef<HTMLDivElement, ColorBlockItemProps>(
             : isCurrent
               ? "border-gray-400 dark:border-gray-500 bg-white dark:bg-gray-700"
               : "border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800/50 opacity-70"
+        }${
+          onSelect
+            ? " cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            : ""
         }`}
-        role="listitem"
+        role={onSelect ? "button" : "listitem"}
+        tabIndex={onSelect ? 0 : undefined}
+        title={onSelect ? "Start sewing from this color block" : undefined}
+        onClick={onSelect ? () => onSelect(block) : undefined}
+        onKeyDown={
+          onSelect
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelect(block);
+                }
+              }
+            : undefined
+        }
         aria-label={`Thread ${block.colorIndex + 1}, ${block.stitchCount} stitches, ${isCompleted ? "completed" : isCurrent ? "in progress" : "pending"}`}
       >
         <div className="flex items-center gap-2.5">

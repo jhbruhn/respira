@@ -161,6 +161,21 @@ export function canShowStepControl(
 }
 
 /**
+ * Determines if the user may pick the color block to sew from (opt-in toggle):
+ * before the first start (before or after the mask trace) and while paused.
+ */
+export function canChooseStartBlock(status: MachineStatus): boolean {
+  return (
+    status === MachineStatus.IDLE ||
+    status === MachineStatus.SEWING_WAIT ||
+    status === MachineStatus.MASK_TRACE_COMPLETE ||
+    status === MachineStatus.PAUSE ||
+    status === MachineStatus.STOP ||
+    status === MachineStatus.SEWING_INTERRUPTION
+  );
+}
+
+/**
  * Determines if disconnect should show a confirmation dialog.
  * Confirms if disconnecting during active operation or while waiting.
  */

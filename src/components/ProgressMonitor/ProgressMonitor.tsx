@@ -4,7 +4,7 @@
  * Orchestrates progress monitoring UI with stats, progress bar, color blocks, and action buttons
  */
 
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useAutoScroll } from "@/hooks";
 import { useShallow } from "zustand/react/shallow";
 import { useMachineStore } from "../../stores/useMachineStore";
@@ -23,7 +23,11 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { canShowStepControl } from "../../utils/machineStateHelpers";
+import { Switch } from "@/components/ui/switch";
+import {
+  canChooseStartBlock,
+  canShowStepControl,
+} from "../../utils/machineStateHelpers";
 import { ProgressStats } from "./ProgressStats";
 import { ProgressSection } from "./ProgressSection";
 import { ColorBlockList } from "./ColorBlockList";
@@ -104,6 +108,36 @@ export function ProgressMonitor() {
     };
   }, [colorBlocks, currentStitch]);
 
+  // Opt-in "start from color block" mode: blocks become clickable and the step
+  // control shows before the first start. Switched off automatically once the
+  // machine leaves the states where a start point can be chosen (e.g. sewing).
+  const canChooseStart = canChooseStartBlock(machineStatus);
+  const [chooseStart, setChooseStart] = useState(false);
+  const [prevCanChooseStart, setPrevCanChooseStart] = useState(canChooseStart);
+  // Stitch position when the mode was switched on, restored when switched off
+  const positionBeforeChooseRef = useRef<number | null>(null);
+  if (canChooseStart !== prevCanChooseStart) {
+    setPrevCanChooseStart(canChooseStart);
+    if (!canChooseStart) setChooseStart(false);
+  }
+  const isChoosingStart = chooseStart && canChooseStart;
+
+  const handleChooseStartChange = (enabled: boolean) => {
+    setChooseStart(enabled);
+    if (enabled) {
+      positionBeforeChooseRef.current = currentStitch;
+      return;
+    }
+    const previous = positionBeforeChooseRef.current;
+    positionBeforeChooseRef.current = null;
+    if (previous !== null && previous !== currentStitch) {
+      setStitchPosition(previous, totalStitches);
+    }
+  };
+
+  const showStepControl =
+    canShowStepControl(machineStatus, currentStitch > 0) || isChoosingStart;
+
   // Auto-scroll to current block
   const currentBlockRef = useAutoScroll<HTMLDivElement>(currentBlockIndex);
 
@@ -139,17 +173,40 @@ export function ProgressMonitor() {
           <ProgressSection progressPercent={progressPercent} />
         )}
 
+        {/* Opt-in: start sewing from a chosen color block */}
+        {canChooseStart && colorBlocks.length > 1 && (
+          <div className="flex items-center justify-between gap-3 mb-3 flex-shrink-0">
+            <label
+              htmlFor="choose-start-block"
+              className="text-xs text-gray-600 dark:text-gray-400"
+            >
+              Start from color block
+            </label>
+            <Switch
+              id="choose-start-block"
+              checked={isChoosingStart}
+              onCheckedChange={handleChooseStartChange}
+            />
+          </div>
+        )}
+
         {/* Color Blocks */}
         <ColorBlockList
           colorBlocks={colorBlocks}
           currentStitch={currentStitch}
           currentBlockIndex={currentBlockIndex}
           currentBlockRef={currentBlockRef}
+          onSelectBlock={
+            isChoosingStart
+              ? (block) => setStitchPosition(block.startStitch, totalStitches)
+              : undefined
+          }
         />
 
         {/* Step control for paused/stopped/error states */}
-        {canShowStepControl(machineStatus, currentStitch > 0) && (
+        {showStepControl && (
           <StitchStepControl
+            isBeforeStart={isChoosingStart}
             currentStitch={currentStitch}
             adjustedStitchIndex={adjustedStitchIndex}
             pausedStitchIndex={pausedStitchIndex}

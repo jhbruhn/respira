@@ -31,6 +31,8 @@ interface StitchStepControlProps {
   colorBlocks: ColorBlock[];
   onAdjustPosition: (offset: number) => void;
   onSetPosition: (index: number) => void;
+  /** True while "start from color block" is switched on: choosing a start point. */
+  isBeforeStart?: boolean;
 }
 
 export function StitchStepControl({
@@ -42,6 +44,7 @@ export function StitchStepControl({
   colorBlocks,
   onAdjustPosition,
   onSetPosition,
+  isBeforeStart = false,
 }: StitchStepControlProps) {
   const displayStitch = adjustedStitchIndex ?? currentStitch;
 
@@ -73,7 +76,7 @@ export function StitchStepControl({
       {/* Header: label + stitch count on one line */}
       <div className="flex items-baseline justify-between mb-1.5">
         <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-          Stitch Position
+          {isBeforeStart ? "Start Position" : "Stitch Position"}
         </span>
         <span>
           <span className="text-sm font-bold text-gray-900 dark:text-gray-100 tabular-nums">
@@ -84,6 +87,12 @@ export function StitchStepControl({
           </span>
         </span>
       </div>
+
+      {isBeforeStart && (
+        <div className="text-xs text-gray-500 dark:text-gray-400 text-center mb-1.5">
+          Click a color block to start sewing from there
+        </div>
+      )}
 
       {/* Rollback info */}
       {rollbackAmount !== null && rollbackErrorName && (
