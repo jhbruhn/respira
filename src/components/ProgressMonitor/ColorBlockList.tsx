@@ -13,6 +13,8 @@ interface ColorBlockListProps {
   currentStitch: number;
   currentBlockIndex: number;
   currentBlockRef: React.RefObject<HTMLDivElement | null>;
+  /** When set, blocks are clickable to jump the stitch position to their start. */
+  onSelectBlock?: (block: ColorBlock) => void;
 }
 
 export function ColorBlockList({
@@ -20,6 +22,7 @@ export function ColorBlockList({
   currentStitch,
   currentBlockIndex,
   currentBlockRef,
+  onSelectBlock,
 }: ColorBlockListProps) {
   if (colorBlocks.length === 0) return null;
 
@@ -43,6 +46,7 @@ export function ColorBlockList({
                 currentStitch={currentStitch}
                 isCurrent={isCurrent}
                 isCompleted={isCompleted}
+                onSelect={onSelectBlock}
               />
             );
           })}
