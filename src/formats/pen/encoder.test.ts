@@ -6,7 +6,7 @@ import {
   encodeStitchesToPen,
   LOCK_STITCH_JUMP_SIZE,
 } from "./encoder";
-import { decodeAllPenStitches } from "./decoder";
+import { decodeAllPenStitches, decodePenData } from "./decoder";
 import { STITCH, MOVE, TRIM, END } from "../import/constants";
 
 // PEN format flag constants for testing
@@ -570,6 +570,99 @@ describe("encodeStitchesToPen", () => {
     // 3. Final stitch with DATA_END
     expect(decoded[idx].x).toBe(20);
     expect(decoded[idx].isDataEnd).toBe(true);
+  });
+
+  it("preserves a stationary trim before a short jump and an arrival stitch", () => {
+    const stitches = [
+      [0, 0, STITCH, 0],
+      [20, 0, STITCH, 0],
+      [20, 0, TRIM, 0],
+      [22, 0, MOVE, 0],
+      [22, 0, STITCH, 0],
+      [23, 0, STITCH | END, 0],
+    ];
+    const original = stitches.map((stitch) => [...stitch]);
+    const decoded = decodeAllPenStitches(
+      encodeStitchesToPen(stitches).penBytes,
+    );
+    const trimIndex = decoded.findIndex((stitch) => stitch.isCut);
+
+    expect(trimIndex).toBeGreaterThan(0);
+    expect(decoded[trimIndex - 1]).toMatchObject({
+      x: 20,
+      y: 0,
+      xFlags: 0,
+      yFlags: 0,
+    });
+    expect(
+      decoded.slice(trimIndex).map(({ x, y, xFlags, yFlags }) => ({
+        x,
+        y,
+        xFlags,
+        yFlags,
+      })),
+    ).toEqual([
+      { x: 20, y: 0, xFlags: 0, yFlags: PEN_CUT_DATA },
+      { x: 22, y: 0, xFlags: 0, yFlags: PEN_FEED_DATA },
+      { x: 22, y: 0, xFlags: 0, yFlags: 0 },
+      { x: 23, y: 0, xFlags: 5, yFlags: 0 },
+    ]);
+    expect(stitches).toEqual(original);
+  });
+
+  it("preserves repeated needle commands at the same coordinates", () => {
+    const stitches = [
+      [0, 0, STITCH, 0],
+      [20, 0, STITCH, 0],
+      [20, 0, STITCH, 0],
+      [20, 0, STITCH, 0],
+      [21, 0, STITCH | END, 0],
+    ];
+    const decoded = decodeAllPenStitches(
+      encodeStitchesToPen(stitches).penBytes,
+    );
+    // The encoder's generated starting locks are near the origin, so they
+    // cannot be mistaken for these three deliberate repeated needle commands.
+    const repeated = decoded.filter(
+      (stitch) => stitch.x === 20 && stitch.y === 0,
+    );
+
+    expect(repeated).toHaveLength(3);
+    expect(
+      repeated.every((stitch) => stitch.xFlags === 0 && stitch.yFlags === 0),
+    ).toBe(true);
+  });
+
+  it("keeps a stationary trim and repeated stitches on their color sides", () => {
+    const stitches = [
+      [0, 0, STITCH, 0],
+      [20, 0, STITCH, 0],
+      [20, 0, TRIM, 0],
+      [20, 0, STITCH, 1],
+      [20, 0, STITCH, 1],
+      [21, 0, STITCH | END, 1],
+    ];
+    const result = encodeStitchesToPen(stitches);
+    const decoded = decodePenData(new Uint8Array(result.penBytes));
+
+    expect(decoded.colorBlocks).toHaveLength(2);
+    const [first, second] = decoded.colorBlocks.map((block) =>
+      decoded.stitches
+        .slice(block.startStitchIndex, block.endStitchIndex + 1)
+        .filter((stitch) => stitch.x === 20 && stitch.y === 0)
+        .map(({ xFlags, yFlags }) => ({ xFlags, yFlags })),
+    );
+    // Generated locks lie beside this coordinate. The explicit CUT remains
+    // distinct from the encoder's automatic COLOR_END + CUT marker.
+    expect(first).toEqual([
+      { xFlags: 0, yFlags: 0 },
+      { xFlags: 0, yFlags: PEN_CUT_DATA },
+      { xFlags: 3, yFlags: PEN_CUT_DATA },
+    ]);
+    expect(second).toEqual([
+      { xFlags: 0, yFlags: 0 },
+      { xFlags: 0, yFlags: 0 },
+    ]);
   });
 
   it("should handle empty stitch array", () => {

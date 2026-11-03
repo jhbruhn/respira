@@ -2,9 +2,8 @@
  * Embroidery command constants
  * These are bitmask flags used to identify stitch types in parsed embroidery files
  *
- * Note: PyStitch may use sequential values (0, 1, 2, etc.) internally,
- * but pyembroidery (which PyStitch is based on) uses these bitmask values
- * for compatibility with the embroidery format specifications.
+ * These are Respira's internal flags, not PyStitch/pyembroidery command codes.
+ * The import adapter maps the reader's discrete commands to these values.
  */
 
 // Stitch type flags (bitmasks - can be combined)

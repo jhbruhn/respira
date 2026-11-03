@@ -1,6 +1,10 @@
 import { loadPyodide, type PyodideInterface } from "pyodide";
 import { STITCH, MOVE, TRIM, END } from "./constants";
 import { encodeStitchesToPen } from "../pen/encoder";
+import {
+  PES_TEMP_FILE_NAME,
+  PYSTITCH_PES_PARSE_SCRIPT,
+} from "./pystitchParser";
 
 // Message types from main thread
 export type WorkerMessage =
@@ -163,105 +167,11 @@ async function convertPesToPen(fileData: ArrayBuffer) {
     const uint8Array = new Uint8Array(fileData);
 
     // Write file to Pyodide virtual filesystem
-    const tempFileName = "/tmp/pattern.pes";
+    const tempFileName = PES_TEMP_FILE_NAME;
     pyodide.FS.writeFile(tempFileName, uint8Array);
 
     // Read the pattern using PyStitch (same logic as original converter)
-    const result = await pyodide.runPythonAsync(`
-import pystitch
-from pystitch.EmbConstant import STITCH, JUMP, TRIM, STOP, END, COLOR_CHANGE
-from js_emb_constants import STITCH as JS_STITCH, MOVE as JS_MOVE, TRIM as JS_TRIM, END as JS_END
-
-# Read the PES file
-pattern = pystitch.read('${tempFileName}')
-
-def map_cmd(pystitch_cmd):
-    """Map PyStitch command to our JavaScript constant values
-
-    This ensures we have known, consistent values regardless of PyStitch's internal values.
-    Our JS constants use pyembroidery-style bitmask values:
-    STITCH = 0x00, MOVE/JUMP = 0x10, TRIM = 0x20, END = 0x100
-    """
-    if pystitch_cmd == STITCH:
-        return JS_STITCH
-    elif pystitch_cmd == JUMP:
-        return JS_MOVE  # PyStitch JUMP maps to our MOVE constant
-    elif pystitch_cmd == TRIM:
-        return JS_TRIM
-    elif pystitch_cmd == END:
-        return JS_END
-    else:
-        # For any other commands, preserve as bitmask
-        result = JS_STITCH
-        if pystitch_cmd & JUMP:
-            result |= JS_MOVE
-        if pystitch_cmd & TRIM:
-            result |= JS_TRIM
-        if pystitch_cmd & END:
-            result |= JS_END
-        return result
-
-# Use the raw stitches list which preserves command flags
-# Each stitch in pattern.stitches is [x, y, cmd]
-# We need to assign color indices based on COLOR_CHANGE commands
-# and filter out COLOR_CHANGE and STOP commands (they're not actual stitches)
-#
-# IMPORTANT: In PES files, COLOR_CHANGE commands can appear before finishing
-# stitches (tack/lock stitches) that semantically belong to the PREVIOUS color.
-# We need to detect this pattern and assign colors correctly.
-
-stitches_with_colors = []
-current_color = 0
-
-for i, stitch in enumerate(pattern.stitches):
-    x, y, cmd = stitch
-
-    # Check for color change command
-    if cmd == COLOR_CHANGE:
-        current_color += 1
-        continue
-
-    # Check for stop command - skip it
-    if cmd == STOP:
-        continue
-
-    # Check for standalone END command (no stitch data)
-    if cmd == END:
-        continue
-
-    # PyStitch inserts duplicate stitches at the same coordinates during color changes
-    # Skip any stitch that has the exact same position as the previous one
-    if len(stitches_with_colors) > 0:
-        last_stitch = stitches_with_colors[-1]
-        last_x, last_y = last_stitch[0], last_stitch[1]
-
-        if x == last_x and y == last_y:
-            # Duplicate position - skip it
-            continue
-
-    # Add actual stitch with current color index and mapped command
-    mapped_cmd = map_cmd(cmd)
-    stitches_with_colors.append([x, y, mapped_cmd, current_color])
-
-# Convert to JSON-serializable format
-{
-    'stitches': stitches_with_colors,
-    'threads': [
-        {
-            'color': thread.color if hasattr(thread, 'color') else 0,
-            'hex': thread.hex_color() if hasattr(thread, 'hex_color') else '#000000',
-            'catalog_number': thread.catalog_number if hasattr(thread, 'catalog_number') else -1,
-            'brand': thread.brand if hasattr(thread, 'brand') else "",
-            'description': thread.description if hasattr(thread, 'description') else "",
-            'chart': thread.chart if hasattr(thread, 'chart') else ""
-        }
-        for thread in pattern.threadlist
-    ],
-    'thread_count': len(pattern.threadlist),
-    'stitch_count': len(stitches_with_colors),
-    'color_changes': current_color
-}
-    `);
+    const result = await pyodide.runPythonAsync(PYSTITCH_PES_PARSE_SCRIPT);
 
     // Convert Python result to JavaScript
     const data = result.toJs({ dict_converter: Object.fromEntries });
